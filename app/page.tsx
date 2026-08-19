@@ -9,6 +9,20 @@ export default function Home() {
           <h1 className="mt-2 text-3xl font-semibold text-[#17324d]">
             Nền tảng ứng dụng quản trị nhà trường
           </h1>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a
+              className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white"
+              href="/login"
+            >
+              Đăng nhập
+            </a>
+            <a
+              className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]"
+              href="/thiet-lap"
+            >
+              Thiết lập đơn vị
+            </a>
+          </div>
         </header>
 
         <section className="grid flex-1 content-center gap-4 py-10 sm:grid-cols-2">

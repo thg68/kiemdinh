@@ -38,6 +38,9 @@ yarn-error.log*
 # temporary scaffold folder
 /kiemdinh-app/
 
+# supabase local state
+supabase/.temp/
+
 # vercel
 .vercel
 

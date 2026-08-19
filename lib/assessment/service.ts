@@ -1,0 +1,139 @@
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import {
+  CapHoc,
+  KetQuaTieuChi,
+  xacDinhMucToanTruongTuKetQua,
+  xacDinhMucTuKetQua,
+} from "./level-engine";
+
+type SupabaseClient = ReturnType<typeof createBrowserSupabaseClient>;
+
+export type TuDanhGiaRow = {
+  id: string;
+  co_so_id: string;
+  nam_hoc_id: string;
+  tieu_chi_id: string;
+  cap_hoc: CapHoc;
+  mo_ta_muc_1: string | null;
+  dat_muc_1: boolean;
+  mo_ta_muc_2: string | null;
+  dat_muc_2: boolean;
+  muc_dat: 0 | 1 | 2;
+  ngay_cap_nhat: string;
+};
+
+export type CriterionForAssessment = {
+  id: string;
+  ma: string;
+  ten: string;
+  la_bat_buoc: boolean;
+};
+
+export type EvidenceCodeLink = {
+  tieu_chi_id: string;
+  ma: string;
+};
+
+export async function docDuLieuTinhMuc(
+  supabase: SupabaseClient,
+  coSoId: string,
+  namHocId: string,
+  capHoc: CapHoc,
+) {
+  const [{ data: criteriaData, error: criteriaError }, { data: assessmentData, error: assessmentError }] =
+    await Promise.all([
+      supabase
+        .from("tieu_chi")
+        .select("id, ma, ten, la_bat_buoc")
+        .order("ma", { ascending: true }),
+      supabase
+        .from("tu_danh_gia")
+        .select("*")
+        .eq("co_so_id", coSoId)
+        .eq("nam_hoc_id", namHocId)
+        .eq("cap_hoc", capHoc),
+    ]);
+
+  if (criteriaError) {
+    throw criteriaError;
+  }
+
+  if (assessmentError) {
+    throw assessmentError;
+  }
+
+  const { data: evidenceData, error: evidenceError } = await supabase
+    .from("minh_chung")
+    .select("id, ma, minh_chung_tieu_chi(tieu_chi_id)")
+    .eq("co_so_id", coSoId)
+    .eq("nam_hoc_id", namHocId)
+    .is("deleted_at", null);
+
+  if (evidenceError) {
+    throw evidenceError;
+  }
+
+  const evidenceByCriterion = new Map<string, string[]>();
+
+  for (const item of evidenceData ?? []) {
+    const links = (item.minh_chung_tieu_chi ?? []) as { tieu_chi_id: string }[];
+
+    for (const link of links) {
+      const current = evidenceByCriterion.get(link.tieu_chi_id) ?? [];
+      current.push(item.ma);
+      evidenceByCriterion.set(link.tieu_chi_id, current);
+    }
+  }
+
+  const assessments = ((assessmentData ?? []) as TuDanhGiaRow[]).reduce(
+    (map, item) => map.set(item.tieu_chi_id, item),
+    new Map<string, TuDanhGiaRow>(),
+  );
+
+  const ketQuaTieuChi = ((criteriaData ?? []) as CriterionForAssessment[]).map<KetQuaTieuChi>(
+    (criterion) => {
+      const row = assessments.get(criterion.id);
+
+      return {
+        id: criterion.id,
+        ma: criterion.ma,
+        ten: criterion.ten,
+        laBatBuoc: criterion.la_bat_buoc,
+        mucDat: row?.muc_dat ?? 0,
+        moTaMuc1: row?.mo_ta_muc_1 ?? "",
+        moTaMuc2: row?.mo_ta_muc_2 ?? "",
+        maMinhChung: evidenceByCriterion.get(criterion.id) ?? [],
+      };
+    },
+  );
+
+  return { ketQuaTieuChi, assessments: Array.from(assessments.values()) };
+}
+
+export async function xacDinhMuc(
+  coSoId: string,
+  namHocId: string,
+  capHoc: CapHoc,
+  supabase = createBrowserSupabaseClient(),
+) {
+  const { ketQuaTieuChi } = await docDuLieuTinhMuc(supabase, coSoId, namHocId, capHoc);
+
+  return xacDinhMucTuKetQua(ketQuaTieuChi);
+}
+
+export async function xacDinhMucToanTruong(
+  coSoId: string,
+  namHocId: string,
+  capHocList: CapHoc[],
+  supabase = createBrowserSupabaseClient(),
+) {
+  const cacCapHoc = await Promise.all(
+    capHocList.map(async (capHoc) => {
+      const { ketQuaTieuChi } = await docDuLieuTinhMuc(supabase, coSoId, namHocId, capHoc);
+
+      return { capHoc, ketQuaTieuChi };
+    }),
+  );
+
+  return xacDinhMucToanTruongTuKetQua(cacCapHoc);
+}

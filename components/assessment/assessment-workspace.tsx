@@ -1,0 +1,657 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  createBrowserSupabaseClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
+import {
+  CapHoc,
+  KetQuaTieuChi,
+  kiemTraRangBuocCapNhat,
+  xacDinhMucToanTruongTuKetQua,
+  xacDinhMucTuKetQua,
+} from "@/lib/assessment/level-engine";
+
+type Profile = {
+  id: string;
+  co_so_id: string;
+  ho_ten: string;
+};
+
+type School = {
+  id: string;
+  ten: string;
+  cap_hoc: CapHoc[];
+};
+
+type SchoolYear = {
+  id: string;
+  ten: string;
+  trang_thai: string;
+};
+
+type Criterion = {
+  id: string;
+  ma: string;
+  ten: string;
+  la_bat_buoc: boolean;
+};
+
+type AssessmentRow = {
+  id: string;
+  tieu_chi_id: string;
+  mo_ta_muc_1: string | null;
+  dat_muc_1: boolean;
+  mo_ta_muc_2: string | null;
+  dat_muc_2: boolean;
+  muc_dat: 0 | 1 | 2;
+};
+
+type EvidenceOption = {
+  id: string;
+  ma: string;
+  ten: string;
+  tieuChiIds: string[];
+};
+
+const capHocLabels: Record<CapHoc, string> = {
+  mam_non: "Mầm non",
+  tieu_hoc: "Tiểu học",
+  thcs: "THCS",
+  thpt: "THPT",
+  gdtx: "GDTX",
+  khac: "Khác",
+};
+
+function toKetQuaTieuChi(
+  criteria: Criterion[],
+  assessments: AssessmentRow[],
+  evidence: EvidenceOption[],
+) {
+  return criteria.map<KetQuaTieuChi>((criterion) => {
+    const row = assessments.find((item) => item.tieu_chi_id === criterion.id);
+
+    return {
+      id: criterion.id,
+      ma: criterion.ma,
+      ten: criterion.ten,
+      laBatBuoc: criterion.la_bat_buoc,
+      mucDat: row?.muc_dat ?? 0,
+      moTaMuc1: row?.mo_ta_muc_1 ?? "",
+      moTaMuc2: row?.mo_ta_muc_2 ?? "",
+      maMinhChung: evidence
+        .filter((item) => item.tieuChiIds.includes(criterion.id))
+        .map((item) => item.ma),
+    };
+  });
+}
+
+export function AssessmentWorkspace() {
+  const router = useRouter();
+  const supabase = useMemo(() => {
+    if (!isSupabaseConfigured()) {
+      return null;
+    }
+
+    return createBrowserSupabaseClient();
+  }, []);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [school, setSchool] = useState<School | null>(null);
+  const [years, setYears] = useState<SchoolYear[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [assessments, setAssessments] = useState<AssessmentRow[]>([]);
+  const [evidence, setEvidence] = useState<EvidenceOption[]>([]);
+  const [selectedCapHoc, setSelectedCapHoc] = useState<CapHoc>("mam_non");
+  const [selectedCriterionId, setSelectedCriterionId] = useState("");
+  const [whatIfCriterionId, setWhatIfCriterionId] = useState("");
+  const [whatIfLevel, setWhatIfLevel] = useState<0 | 1 | 2>(2);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const activeYear = years.find((year) => year.trang_thai === "dang_hoat_dong") ?? years[0];
+  const capHocList = school?.cap_hoc?.length ? school.cap_hoc : [selectedCapHoc];
+  const ketQuaTieuChi = toKetQuaTieuChi(criteria, assessments, evidence);
+  const giaiTrinh = xacDinhMucTuKetQua(ketQuaTieuChi);
+  const selectedCriterion =
+    criteria.find((criterion) => criterion.id === selectedCriterionId) ?? criteria[0];
+
+  const whatIfKetQua = ketQuaTieuChi.map((item) => {
+    if (item.id !== whatIfCriterionId) {
+      return item;
+    }
+
+    return {
+      ...item,
+      mucDat: whatIfLevel,
+      moTaMuc1: whatIfLevel >= 1 ? item.moTaMuc1 || "Giả định đủ mô tả Mức 1" : "",
+      moTaMuc2: whatIfLevel >= 2 ? item.moTaMuc2 || "Giả định đủ mô tả Mức 2" : item.moTaMuc2,
+      maMinhChung: (item.maMinhChung?.length ?? 0) > 0 ? item.maMinhChung : ["MC.GIA-DINH"],
+    } satisfies KetQuaTieuChi;
+  });
+  const whatIfResult = xacDinhMucTuKetQua(whatIfKetQua);
+
+  const loadData = useCallback(async () => {
+    if (!supabase) {
+      setMessage("Chưa cấu hình Supabase trong .env.local.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setMessage("");
+
+    const { data: userData } = await supabase.auth.getUser();
+
+    if (!userData.user) {
+      router.replace("/login");
+      return;
+    }
+
+    const { data: profileData, error: profileError } = await supabase
+      .from("nguoi_dung")
+      .select("id, co_so_id, ho_ten")
+      .eq("auth_user_id", userData.user.id)
+      .maybeSingle();
+
+    if (profileError || !profileData) {
+      setMessage(profileError?.message ?? "Bạn cần thiết lập cơ sở giáo dục trước.");
+      setLoading(false);
+      return;
+    }
+
+    setProfile(profileData as Profile);
+
+    const [{ data: schoolData }, { data: yearData }, { data: criterionData }] =
+      await Promise.all([
+        supabase
+          .from("co_so_giao_duc")
+          .select("id, ten, cap_hoc")
+          .eq("id", profileData.co_so_id)
+          .maybeSingle(),
+        supabase
+          .from("nam_hoc")
+          .select("id, ten, trang_thai")
+          .eq("co_so_id", profileData.co_so_id)
+          .order("ngay_bat_dau", { ascending: false }),
+        supabase
+          .from("tieu_chi")
+          .select("id, ma, ten, la_bat_buoc")
+          .order("ma", { ascending: true }),
+      ]);
+
+    const loadedSchool = schoolData as School | null;
+    const loadedCriteria = (criterionData ?? []) as Criterion[];
+
+    setSchool(loadedSchool);
+    setYears((yearData ?? []) as SchoolYear[]);
+    setCriteria(loadedCriteria);
+    setSelectedCriterionId((current) => current || loadedCriteria[0]?.id || "");
+    setWhatIfCriterionId((current) => current || loadedCriteria[0]?.id || "");
+
+    if (loadedSchool?.cap_hoc?.[0]) {
+      setSelectedCapHoc(loadedSchool.cap_hoc[0]);
+    }
+
+    setLoading(false);
+  }, [router, supabase]);
+
+  const loadAssessmentData = useCallback(async () => {
+    if (!supabase || !profile || !activeYear) {
+      return;
+    }
+
+    const [{ data: assessmentData, error: assessmentError }, { data: evidenceData, error: evidenceError }] =
+      await Promise.all([
+        supabase
+          .from("tu_danh_gia")
+          .select("id, tieu_chi_id, mo_ta_muc_1, dat_muc_1, mo_ta_muc_2, dat_muc_2, muc_dat")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", activeYear.id)
+          .eq("cap_hoc", selectedCapHoc),
+        supabase
+          .from("minh_chung")
+          .select("id, ma, ten, minh_chung_tieu_chi(tieu_chi_id)")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", activeYear.id)
+          .is("deleted_at", null)
+          .order("ma", { ascending: true }),
+      ]);
+
+    if (assessmentError || evidenceError) {
+      setMessage(assessmentError?.message ?? evidenceError?.message ?? "Không tải được dữ liệu tự đánh giá.");
+      return;
+    }
+
+    setAssessments((assessmentData ?? []) as AssessmentRow[]);
+    setEvidence(
+      ((evidenceData ?? []) as {
+        id: string;
+        ma: string;
+        ten: string;
+        minh_chung_tieu_chi?: { tieu_chi_id: string }[];
+      }[]).map((item) => ({
+        id: item.id,
+        ma: item.ma,
+        ten: item.ten,
+        tieuChiIds: (item.minh_chung_tieu_chi ?? []).map((link) => link.tieu_chi_id),
+      })),
+    );
+  }, [activeYear, profile, selectedCapHoc, supabase]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadData]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadAssessmentData();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadAssessmentData]);
+
+  if (loading) {
+    return <p className="text-sm text-[#52606d]">Đang tải tự đánh giá...</p>;
+  }
+
+  if (!profile || !activeYear) {
+    return (
+      <div className="border border-[#d8d6c9] bg-white p-5">
+        <p className="text-sm text-[#52606d]">Chưa có đơn vị hoặc năm học đang hoạt động.</p>
+        <Link className="mt-3 inline-block bg-[#17324d] px-4 py-2 text-sm font-semibold text-white" href="/thiet-lap">
+          Thiết lập ngay
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6">
+      <section className="grid gap-4 border border-[#d8d6c9] bg-white p-5 lg:grid-cols-[1fr_auto]">
+        <div>
+          <p className="text-sm text-[#52606d]">{activeYear.ten}</p>
+          <h2 className="mt-1 text-2xl font-semibold text-[#17324d]">{giaiTrinh.mucDat}</h2>
+          <p className="mt-2 text-sm leading-6 text-[#52606d]">{giaiTrinh.lyDo}</p>
+          <p className="mt-1 text-sm font-medium text-[#7a3f18]">{giaiTrinh.khoangCach}</p>
+        </div>
+
+        <label className="text-sm font-medium">
+          Cấp học
+          <select
+            className="mt-2 w-full min-w-48 border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            value={selectedCapHoc}
+            onChange={(event) => setSelectedCapHoc(event.target.value as CapHoc)}
+          >
+            {capHocList.map((capHoc) => (
+              <option key={capHoc} value={capHoc}>
+                {capHocLabels[capHoc] ?? capHoc}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      {message ? <Message text={message} /> : null}
+
+      <GapBoard
+        ketQuaTieuChi={ketQuaTieuChi}
+        selectedCriterionId={selectedCriterion?.id ?? ""}
+        onSelect={setSelectedCriterionId}
+      />
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {selectedCriterion ? (
+          <CriterionAssessmentForm
+            activeYearId={activeYear.id}
+            criterion={selectedCriterion}
+            evidence={evidence}
+            profile={profile}
+            row={assessments.find((item) => item.tieu_chi_id === selectedCriterion.id) ?? null}
+            selectedCapHoc={selectedCapHoc}
+            supabase={supabase}
+            onDone={async (text) => {
+              setMessage(text);
+              await loadAssessmentData();
+            }}
+          />
+        ) : (
+          <p className="border border-[#d8d6c9] bg-white p-5 text-sm text-[#52606d]">
+            Chưa có tiêu chí trong bộ tiêu chuẩn.
+          </p>
+        )}
+
+        <WhatIfPanel
+          capHocList={capHocList}
+          criteria={criteria}
+          selectedCriterionId={whatIfCriterionId}
+          setSelectedCriterionId={setWhatIfCriterionId}
+          setWhatIfLevel={setWhatIfLevel}
+          whatIfLevel={whatIfLevel}
+          whatIfResult={whatIfResult}
+          wholeSchoolResult={xacDinhMucToanTruongTuKetQua(
+            capHocList.map((capHoc) => ({
+              capHoc,
+              ketQuaTieuChi: capHoc === selectedCapHoc ? whatIfKetQua : ketQuaTieuChi,
+            })),
+          )}
+        />
+      </section>
+    </div>
+  );
+}
+
+function GapBoard(props: {
+  ketQuaTieuChi: KetQuaTieuChi[];
+  selectedCriterionId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <section className="border border-[#d8d6c9] bg-white">
+      <div className="border-b border-[#d8d6c9] px-5 py-4">
+        <h2 className="text-lg font-semibold text-[#17324d]">Gap Board</h2>
+      </div>
+      <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-5">
+        {props.ketQuaTieuChi.map((item) => {
+          const rangBuoc = kiemTraRangBuocCapNhat(item);
+          const dangThieu = item.laBatBuoc && item.mucDat < 1;
+          const tone = dangThieu
+            ? "border-[#ba1a1a] bg-[#fff3f1]"
+            : item.mucDat === 2
+              ? "border-[#2f7d32] bg-[#f1f8f1]"
+              : item.mucDat === 1
+                ? "border-[#b7791f] bg-[#fff8e8]"
+                : "border-[#d8d6c9] bg-white";
+
+          return (
+            <button
+              className={`min-h-28 border p-3 text-left text-sm ${tone} ${
+                props.selectedCriterionId === item.id ? "outline outline-2 outline-[#17324d]" : ""
+              }`}
+              key={item.id}
+              type="button"
+              onClick={() => item.id && props.onSelect(item.id)}
+            >
+              <span className="block font-semibold text-[#17324d]">
+                {item.ma} {item.laBatBuoc ? "bắt buộc" : ""}
+              </span>
+              <span className="mt-2 block text-[#52606d]">{item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`}</span>
+              {!rangBuoc.hopLe ? (
+                <span className="mt-2 block text-xs leading-5 text-[#8a2a0a]">{rangBuoc.loi[0]}</span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function CriterionAssessmentForm(props: {
+  activeYearId: string;
+  criterion: Criterion;
+  evidence: EvidenceOption[];
+  profile: Profile;
+  row: AssessmentRow | null;
+  selectedCapHoc: CapHoc;
+  supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
+  onDone: (message: string) => Promise<void>;
+}) {
+  const [moTaMuc1, setMoTaMuc1] = useState("");
+  const [moTaMuc2, setMoTaMuc2] = useState("");
+  const [mucDat, setMucDat] = useState<0 | 1 | 2>(0);
+  const [selectedEvidenceIds, setSelectedEvidenceIds] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setMoTaMuc1(props.row?.mo_ta_muc_1 ?? "");
+      setMoTaMuc2(props.row?.mo_ta_muc_2 ?? "");
+      setMucDat(props.row?.muc_dat ?? 0);
+      setSelectedEvidenceIds(
+        props.evidence
+          .filter((item) => item.tieuChiIds.includes(props.criterion.id))
+          .map((item) => item.id),
+      );
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [props.criterion.id, props.evidence, props.row]);
+
+  function toggleEvidence(id: string) {
+    setSelectedEvidenceIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!props.supabase) {
+      await props.onDone("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    const selectedEvidenceCodes = props.evidence
+      .filter((item) => selectedEvidenceIds.includes(item.id))
+      .map((item) => item.ma);
+    const rangBuoc = kiemTraRangBuocCapNhat({
+      id: props.criterion.id,
+      ma: props.criterion.ma,
+      ten: props.criterion.ten,
+      laBatBuoc: props.criterion.la_bat_buoc,
+      mucDat,
+      moTaMuc1,
+      moTaMuc2,
+      maMinhChung: selectedEvidenceCodes,
+    });
+
+    if (!rangBuoc.hopLe) {
+      await props.onDone(rangBuoc.loi.join(" "));
+      return;
+    }
+
+    setSaving(true);
+
+    for (const evidenceId of selectedEvidenceIds) {
+      const evidence = props.evidence.find((item) => item.id === evidenceId);
+
+      if (!evidence?.tieuChiIds.includes(props.criterion.id)) {
+        const { error } = await props.supabase.rpc("fn_gan_minh_chung_tieu_chi", {
+          p_minh_chung_id: evidenceId,
+          p_tieu_chi_ids: [props.criterion.id],
+        });
+
+        if (error) {
+          setSaving(false);
+          await props.onDone(error.message);
+          return;
+        }
+      }
+    }
+
+    const removedEvidenceIds = props.evidence
+      .filter((item) => item.tieuChiIds.includes(props.criterion.id))
+      .map((item) => item.id)
+      .filter((id) => !selectedEvidenceIds.includes(id));
+
+    if (removedEvidenceIds.length > 0) {
+      const { error } = await props.supabase
+        .from("minh_chung_tieu_chi")
+        .delete()
+        .eq("tieu_chi_id", props.criterion.id)
+        .in("minh_chung_id", removedEvidenceIds);
+
+      if (error) {
+        setSaving(false);
+        await props.onDone(error.message);
+        return;
+      }
+    }
+
+    const { error } = await props.supabase.from("tu_danh_gia").upsert(
+      {
+        co_so_id: props.profile.co_so_id,
+        nam_hoc_id: props.activeYearId,
+        tieu_chi_id: props.criterion.id,
+        cap_hoc: props.selectedCapHoc,
+        mo_ta_muc_1: moTaMuc1,
+        dat_muc_1: mucDat >= 1,
+        mo_ta_muc_2: moTaMuc2,
+        dat_muc_2: mucDat >= 2,
+        muc_dat: mucDat,
+        nguoi_nhap: props.profile.id,
+      },
+      { onConflict: "co_so_id,nam_hoc_id,tieu_chi_id,cap_hoc" },
+    );
+
+    setSaving(false);
+    await props.onDone(error ? error.message : "Đã lưu tự đánh giá cho tiêu chí.");
+  }
+
+  return (
+    <form className="grid gap-4 border border-[#d8d6c9] bg-white p-5" onSubmit={handleSubmit}>
+      <div>
+        <p className="text-sm font-semibold text-[#7a3f18]">
+          {props.criterion.ma} {props.criterion.la_bat_buoc ? "bắt buộc" : ""}
+        </p>
+        <h2 className="mt-1 text-xl font-semibold text-[#17324d]">{props.criterion.ten}</h2>
+      </div>
+
+      <fieldset className="grid gap-2 text-sm font-medium">
+        <legend>Mức tự đánh giá</legend>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {[
+            { value: 0, label: "Chưa đạt" },
+            { value: 1, label: "Mức 1" },
+            { value: 2, label: "Mức 2" },
+          ].map((option) => (
+            <label className="border border-[#d8d6c9] px-3 py-2" key={option.value}>
+              <input
+                checked={mucDat === option.value}
+                className="mr-2"
+                name="mucDat"
+                type="radio"
+                onChange={() => setMucDat(option.value as 0 | 1 | 2)}
+              />
+              {option.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <label className="text-sm font-medium">
+        Mô tả hiện trạng Mức 1
+        <textarea
+          className="mt-2 min-h-28 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          value={moTaMuc1}
+          onChange={(event) => setMoTaMuc1(event.target.value)}
+        />
+      </label>
+
+      <label className="text-sm font-medium">
+        Mô tả hiện trạng Mức 2
+        <textarea
+          className="mt-2 min-h-28 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          value={moTaMuc2}
+          onChange={(event) => setMoTaMuc2(event.target.value)}
+        />
+      </label>
+
+      <fieldset className="grid gap-2 text-sm font-medium">
+        <legend>Mã minh chứng đính kèm</legend>
+        <div className="grid max-h-64 gap-2 overflow-auto border border-[#d8d6c9] p-3">
+          {props.evidence.length === 0 ? (
+            <p className="text-sm text-[#52606d]">Chưa có minh chứng trong năm học này.</p>
+          ) : (
+            props.evidence.map((item) => (
+              <label className="flex items-start gap-2 border border-[#e4e1d5] p-2" key={item.id}>
+                <input
+                  checked={selectedEvidenceIds.includes(item.id)}
+                  type="checkbox"
+                  onChange={() => toggleEvidence(item.id)}
+                />
+                <span>
+                  <strong className="text-[#17324d]">{item.ma}</strong> {item.ten}
+                </span>
+              </label>
+            ))
+          )}
+        </div>
+      </fieldset>
+
+      <button
+        className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white disabled:bg-[#8da0b2]"
+        disabled={saving}
+      >
+        {saving ? "Đang lưu..." : "Lưu tự đánh giá"}
+      </button>
+    </form>
+  );
+}
+
+function WhatIfPanel(props: {
+  capHocList: CapHoc[];
+  criteria: Criterion[];
+  selectedCriterionId: string;
+  setSelectedCriterionId: (id: string) => void;
+  whatIfLevel: 0 | 1 | 2;
+  setWhatIfLevel: (level: 0 | 1 | 2) => void;
+  whatIfResult: ReturnType<typeof xacDinhMucTuKetQua>;
+  wholeSchoolResult: ReturnType<typeof xacDinhMucToanTruongTuKetQua>;
+}) {
+  return (
+    <aside className="grid content-start gap-4 border border-[#d8d6c9] bg-white p-5">
+      <h2 className="text-lg font-semibold text-[#17324d]">What-if</h2>
+      <label className="text-sm font-medium">
+        Tiêu chí giả định
+        <select
+          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          value={props.selectedCriterionId}
+          onChange={(event) => props.setSelectedCriterionId(event.target.value)}
+        >
+          {props.criteria.map((criterion) => (
+            <option key={criterion.id} value={criterion.id}>
+              {criterion.ma} - {criterion.ten}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="text-sm font-medium">
+        Mức giả định
+        <select
+          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          value={props.whatIfLevel}
+          onChange={(event) => props.setWhatIfLevel(Number(event.target.value) as 0 | 1 | 2)}
+        >
+          <option value={0}>Chưa đạt</option>
+          <option value={1}>Mức 1</option>
+          <option value={2}>Mức 2</option>
+        </select>
+      </label>
+      <div className="border border-[#d8d6c9] p-3">
+        <p className="text-sm text-[#52606d]">Cấp học đang xem</p>
+        <p className="mt-1 font-semibold text-[#17324d]">{props.whatIfResult.mucDat}</p>
+      </div>
+      <div className="border border-[#d8d6c9] p-3">
+        <p className="text-sm text-[#52606d]">Toàn trường</p>
+        <p className="mt-1 font-semibold text-[#17324d]">{props.wholeSchoolResult.mucDat}</p>
+        <p className="mt-2 text-xs leading-5 text-[#52606d]">{props.wholeSchoolResult.lyDo}</p>
+      </div>
+    </aside>
+  );
+}
+
+function Message({ text }: { text: string }) {
+  return (
+    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+      {text}
+    </p>
+  );
+}

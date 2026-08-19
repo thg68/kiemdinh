@@ -4,7 +4,7 @@
 
 Nguyên tắc nền: minh chứng là sản phẩm phụ của vận hành nhà trường, không phải việc làm thêm để phục vụ kiểm định.
 
-## Chạy local
+## Chạy Local
 
 ```bash
 npm install
@@ -14,21 +14,29 @@ npm run dev
 
 Sau đó mở `http://localhost:3000`.
 
-Điền `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` trong `.env.local` khi đã có dự án Supabase.
+Điền `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` trong `.env.local`. Áp dụng các migration trong `supabase/migrations/` theo đúng thứ tự trước khi dùng dữ liệu thật.
 
-Áp dụng các migration trong `supabase/migrations/` lên Supabase theo thứ tự trước khi dùng ứng dụng.
+## Kiểm Thử
+
+```bash
+npm run test
+npm run lint
+npm run build
+```
 
 ## Hướng Dẫn Ban Đầu
 
-Đăng nhập tại `/login`, sau đó vào `/thiet-lap` để tạo cơ sở giáo dục và chọn hoặc tạo năm học đang hoạt động.
+Đăng nhập tại `/login`, vào `/thiet-lap` để tạo cơ sở giáo dục và chọn hoặc tạo năm học đang hoạt động.
 
-Kho minh chứng nằm tại `/minh-chung`; trang kiểm tra sức khỏe nằm tại `/minh-chung/suc-khoe`.
+Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng tại `/minh-chung/suc-khoe`.
+
+Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
 
 ## Cấu Trúc Thư Mục
 
 - `app/`: giao diện Next.js App Router.
 - `components/`: thành phần giao diện dùng lại.
-- `lib/`: mã dùng chung, bao gồm cấu hình Supabase.
+- `lib/`: mã dùng chung, Supabase client và engine tính mức.
 - `supabase/migrations/`: migration PostgreSQL/RLS cho Supabase.
 - `public/`: tài nguyên tĩnh.
 
@@ -44,14 +52,19 @@ Migration `002_evidence_module.sql` bổ sung permission codes, mapping role-quy
 
 Migration `003_hardening.sql` bổ sung bảng `van_ban_lien_quan`, siết quyền Teacher theo phân công tiêu chí khi tạo minh chứng và cấp quyền audit helper cho server-side flow. Signed URL được tạo qua API route `/api/minh-chung/[id]/signed-url`, không tạo trực tiếp từ UI.
 
-## Checklist Kiểm Thử Thủ Công Sprint 2
+## Ghi Chú Sprint 3
 
-- Đăng nhập, tạo cơ sở giáo dục và năm học đang hoạt động nếu chưa có.
-- Vào `/minh-chung`, tải một tệp mới, chọn nhiều tiêu chí và chọn một tiêu chí gốc; kiểm tra mã dạng `MC.x.y.01`.
-- Dùng lại minh chứng vừa tạo để gắn thêm tiêu chí khác; kiểm tra mã không đổi và trang chi tiết hiển thị tất cả tiêu chí.
-- Bấm “Xem tệp 10 phút” ở trang chi tiết; kiểm tra request đi qua `/api/minh-chung/[id]/signed-url`, URL trả về là signed URL và không phải public URL vĩnh viễn.
-- Tạo hai minh chứng bằng cùng một tệp; vào `/minh-chung/suc-khoe` kiểm tra nhóm trùng SHA-256.
-- Tạo minh chứng không gắn tiêu chí bằng thao tác SQL thử nghiệm nếu cần; kiểm tra mục “mồ côi”.
-- Gán ngày hết giá trị trước ngày hiện tại; kiểm tra cảnh báo hết hiệu lực.
-- Kiểm tra bảng `nhat_ky_truy_cap` có log khi tạo, đọc danh sách, đọc chi tiết, tạo signed URL và gắn tiêu chí.
-- Dùng tài khoản khác tenant hoặc vai trò không phù hợp để thử request trực tiếp; PostgreSQL/RLS phải từ chối.
+Migration `004_assessment_module.sql` bổ sung quyền `assessment.*`, siết RLS cho `tu_danh_gia`, chặn đánh dấu đạt khi thiếu mô tả hoặc mã minh chứng, và tự ghi `lich_su_tu_danh_gia` khi mức thay đổi.
+
+Engine tính mức nằm tại `lib/assessment/level-engine.ts`, trả về kết quả kèm lý do, điểm chặn lên mức kế tiếp và khoảng cách cần xử lý.
+
+## Checklist Kiểm Thử Thủ Công Sprint 3
+
+- Vào `/tu-danh-gia` khi chưa có năm học đang hoạt động; màn hình phải hướng về `/thiet-lap`, không trắng trang.
+- Chọn một tiêu chí, thử lưu Mức 1 khi chưa có mô tả hoặc chưa gắn minh chứng; UI và trigger CSDL phải từ chối.
+- Gắn một mã minh chứng có sẵn cho tiêu chí, nhập mô tả Mức 1 và lưu; `tu_danh_gia.muc_dat` phải là `1`.
+- Thử lưu Mức 2 khi thiếu mô tả Mức 2; phải bị từ chối.
+- Sau khi nâng hoặc hạ mức, kiểm tra `lich_su_tu_danh_gia` có dòng ghi người đổi, mức cũ, mức mới và thời điểm.
+- Gap Board phải tô nổi tiêu chí bắt buộc chưa đạt và cập nhật kết quả ngay sau khi lưu.
+- What-if đổi tạm một tiêu chí lên Mức 1 hoặc Mức 2; kết quả trên màn hình thay đổi nhưng CSDL không phát sinh bản ghi mới.
+- Dùng vai trò không được phân công để ghi tiêu chí; RLS/RPC phải từ chối thao tác.

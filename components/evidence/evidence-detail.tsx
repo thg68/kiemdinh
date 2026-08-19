@@ -10,7 +10,6 @@ import {
 import {
   Evidence,
   EvidenceCriterionLink,
-  Profile,
   formatEvidenceStatus,
 } from "@/lib/evidence";
 
@@ -23,7 +22,6 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
 
     return createBrowserSupabaseClient();
   }, []);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const [links, setLinks] = useState<EvidenceCriterionLink[]>([]);
   const [message, setMessage] = useState("");
@@ -46,8 +44,6 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       .select("id, co_so_id, ho_ten")
       .eq("auth_user_id", userData.user.id)
       .maybeSingle();
-
-    setProfile((profileData ?? null) as Profile | null);
 
     const { data: evidenceData, error } = await supabase
       .from("minh_chung")
@@ -95,41 +91,55 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       return;
     }
 
-    const { data, error } = await supabase.storage
-      .from("evidence")
-      .createSignedUrl(evidence.storage_path, 600);
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
 
-    if (error || !data?.signedUrl) {
-      setMessage(error?.message ?? "Không tạo được liên kết tạm thời.");
+    if (!accessToken) {
+      setMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
       return;
     }
 
-    if (profile) {
-      await supabase.from("nhat_ky_truy_cap").insert({
-        co_so_id: profile.co_so_id,
-        nguoi_dung_id: profile.id,
-        hanh_dong: "EVIDENCE_FILE_SIGNED_URL_CREATED",
-        doi_tuong: "minh_chung",
-        doi_tuong_id: evidence.id,
-        du_lieu_moi: { expires_in: 600 },
-      });
+    const response = await fetch(`/api/minh-chung/${evidence.id}/signed-url`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    const payload = (await response.json()) as {
+      signedUrl?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !payload.signedUrl) {
+      setMessage(payload.error ?? "Không tạo được liên kết tạm thời.");
+      return;
     }
 
-    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    window.open(payload.signedUrl, "_blank", "noopener,noreferrer");
   }
 
   if (!evidence) {
-    return <p className="text-sm text-[#52606d]">{message || "Đang tải minh chứng..."}</p>;
+    return (
+      <p className="text-sm text-[#52606d]">
+        {message || "Đang tải minh chứng..."}
+      </p>
+    );
   }
 
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
-        <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/minh-chung">
+        <Link
+          className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]"
+          href="/minh-chung"
+        >
           Quay lại kho
         </Link>
         {evidence.storage_path ? (
-          <button className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white" onClick={openFile}>
+          <button
+            className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white"
+            onClick={openFile}
+          >
             Xem tệp 10 phút
           </button>
         ) : null}
@@ -155,9 +165,15 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
           {evidence.ten}
         </h1>
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-          <Info label="Trạng thái" value={formatEvidenceStatus(evidence.trang_thai_xac_minh)} />
+          <Info
+            label="Trạng thái"
+            value={formatEvidenceStatus(evidence.trang_thai_xac_minh)}
+          />
           <Info label="Ngày ban hành" value={evidence.ngay_ban_hanh ?? "Chưa ghi"} />
-          <Info label="Ngày hết giá trị" value={evidence.ngay_het_gia_tri ?? "Không ghi hạn"} />
+          <Info
+            label="Ngày hết giá trị"
+            value={evidence.ngay_het_gia_tri ?? "Không ghi hạn"}
+          />
           <Info label="SHA-256" value={evidence.hash_tep ?? "Không có"} />
         </dl>
       </section>
@@ -175,7 +191,10 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
             </p>
           ) : (
             links.map((link) => (
-              <div className="grid gap-2 px-5 py-4 sm:grid-cols-[140px_1fr]" key={link.tieu_chi_id}>
+              <div
+                className="grid gap-2 px-5 py-4 sm:grid-cols-[140px_1fr]"
+                key={link.tieu_chi_id}
+              >
                 <p className="font-semibold text-[#17324d]">
                   {link.tieu_chi?.ma}
                   {link.la_tieu_chi_goc ? " - gốc" : ""}

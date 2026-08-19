@@ -40,12 +40,16 @@ Migration `001_init.sql` tạo schema nền, RLS theo `co_so_id`, bảng nối n
 
 Migration `002_evidence_module.sql` bổ sung permission codes, mapping role-quyền cho nhóm minh chứng, RLS chi tiết cho `minh_chung`/`minh_chung_tieu_chi`, bucket Storage private `evidence` và RPC tạo/gắn minh chứng có audit.
 
+## Ghi Chú Sprint 2.5
+
+Migration `003_hardening.sql` bổ sung bảng `van_ban_lien_quan`, siết quyền Teacher theo phân công tiêu chí khi tạo minh chứng và cấp quyền audit helper cho server-side flow. Signed URL được tạo qua API route `/api/minh-chung/[id]/signed-url`, không tạo trực tiếp từ UI.
+
 ## Checklist Kiểm Thử Thủ Công Sprint 2
 
 - Đăng nhập, tạo cơ sở giáo dục và năm học đang hoạt động nếu chưa có.
 - Vào `/minh-chung`, tải một tệp mới, chọn nhiều tiêu chí và chọn một tiêu chí gốc; kiểm tra mã dạng `MC.x.y.01`.
 - Dùng lại minh chứng vừa tạo để gắn thêm tiêu chí khác; kiểm tra mã không đổi và trang chi tiết hiển thị tất cả tiêu chí.
-- Bấm “Xem tệp 10 phút” ở trang chi tiết; kiểm tra URL là signed URL và không phải public URL vĩnh viễn.
+- Bấm “Xem tệp 10 phút” ở trang chi tiết; kiểm tra request đi qua `/api/minh-chung/[id]/signed-url`, URL trả về là signed URL và không phải public URL vĩnh viễn.
 - Tạo hai minh chứng bằng cùng một tệp; vào `/minh-chung/suc-khoe` kiểm tra nhóm trùng SHA-256.
 - Tạo minh chứng không gắn tiêu chí bằng thao tác SQL thử nghiệm nếu cần; kiểm tra mục “mồ côi”.
 - Gán ngày hết giá trị trước ngày hiện tại; kiểm tra cảnh báo hết hiệu lực.

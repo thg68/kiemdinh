@@ -24,10 +24,13 @@ export default function Home() {
             <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/tu-danh-gia">
               Tự đánh giá
             </Link>
+            <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/bao-cao">
+              Xuất báo cáo
+            </Link>
           </div>
         </header>
 
-        <section className="grid flex-1 content-center gap-4 py-10 sm:grid-cols-3">
+        <section className="grid flex-1 content-center gap-4 py-10 sm:grid-cols-4">
           <div className="border border-[#d8d6c9] bg-white p-5">
             <h2 className="text-lg font-semibold text-[#17324d]">
               Vận hành trước
@@ -52,6 +55,15 @@ export default function Home() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#52606d]">
               Kết quả tự đánh giá luôn kèm lý do, điểm chặn và khoảng cách.
+            </p>
+          </div>
+
+          <div className="border border-[#d8d6c9] bg-white p-5">
+            <h2 className="text-lg font-semibold text-[#17324d]">
+              Xuất dữ liệu chuẩn
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-[#52606d]">
+              Mẫu 1, Mẫu 2, danh mục minh chứng, gói tệp và JSON theo năm học.
             </p>
           </div>
         </section>

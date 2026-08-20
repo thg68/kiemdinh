@@ -32,6 +32,8 @@ Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng
 
 Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
 
+Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
+
 ## Cấu Trúc Thư Mục
 
 - `app/`: giao diện Next.js App Router.
@@ -58,6 +60,14 @@ Migration `004_assessment_module.sql` bổ sung quyền `assessment.*`, siết R
 
 Engine tính mức nằm tại `lib/assessment/level-engine.ts`, trả về kết quả kèm lý do, điểm chặn lên mức kế tiếp và khoảng cách cần xử lý.
 
+## Ghi Chú Sprint 4
+
+Module xuất báo cáo nằm tại `/bao-cao`, các API tải file nằm dưới `/api/bao-cao/*`. Hệ thống dùng token người dùng hiện tại để đọc Supabase, vì vậy RLS vẫn kiểm soát quyền khi xuất file.
+
+Mẫu 1 `.docx` chèn cảnh báo đỏ `[CHƯA CÓ DỮ LIỆU - không xuất bản chính thức]` nếu thiếu mô tả hiện trạng hoặc thiếu mã minh chứng, không tự sinh nội dung thay nhà trường.
+
+Các định dạng đã có: Mẫu 1 `.docx`, Mẫu 2 `.docx`, danh mục minh chứng `.xlsx`, gói minh chứng `.zip`, JSON đầy đủ theo năm học.
+
 ## Checklist Kiểm Thử Thủ Công Sprint 3
 
 - Vào `/tu-danh-gia` khi chưa có năm học đang hoạt động; màn hình phải hướng về `/thiet-lap`, không trắng trang.
@@ -68,3 +78,16 @@ Engine tính mức nằm tại `lib/assessment/level-engine.ts`, trả về kế
 - Gap Board phải tô nổi tiêu chí bắt buộc chưa đạt và cập nhật kết quả ngay sau khi lưu.
 - What-if đổi tạm một tiêu chí lên Mức 1 hoặc Mức 2; kết quả trên màn hình thay đổi nhưng CSDL không phát sinh bản ghi mới.
 - Dùng vai trò không được phân công để ghi tiêu chí; RLS/RPC phải từ chối thao tác.
+
+## Checklist Kiểm Thử Thủ Công Sprint 4
+
+- Đăng nhập bằng tài khoản thuộc một cơ sở giáo dục đã có năm học, minh chứng và tự đánh giá thật.
+- Vào `/bao-cao`, chọn đúng năm học và cấp học đang kiểm thử.
+- Xuất Mẫu 1 `.docx`; mở file, kiểm tra đủ bìa ngoài, bìa trong, mục lục, Phần I-IV, đủ 15 tiêu chí và bảng mô tả hiện trạng.
+- Với tiêu chí thiếu mô tả hoặc thiếu mã minh chứng, file phải có cảnh báo đỏ `[CHƯA CÓ DỮ LIỆU - không xuất bản chính thức]`.
+- Kiểm tra các mã minh chứng trong Mẫu 1 nằm trong ngoặc đơn và không bị cấp lại mã mới.
+- Xuất Mẫu 2 `.docx`; kiểm tra bảng kế hoạch cải tiến lấy dữ liệu từ `ke_hoach_cai_tien`.
+- Xuất danh mục minh chứng `.xlsx`; kiểm tra cột TT, mã, tên, vị trí/đường dẫn, ghi chú.
+- Xuất gói minh chứng `.zip`; kiểm tra có `danh-muc-minh-chung.xlsx` và các tệp trong thư mục `minh-chung` được đặt tên theo mã.
+- Xuất JSON; kiểm tra có dữ liệu cơ sở, năm học, tiêu chí, tự đánh giá, minh chứng và kế hoạch cải tiến.
+- Dùng tài khoản không có quyền hoặc khác đơn vị gọi trực tiếp API `/api/bao-cao/*`; RLS phải từ chối hoặc không trả dữ liệu ngoài phạm vi.

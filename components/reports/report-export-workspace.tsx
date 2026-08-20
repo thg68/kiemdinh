@@ -76,6 +76,7 @@ export function ReportExportWorkspace() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [downloading, setDownloading] = useState("");
+  const [creatingDemo, setCreatingDemo] = useState(false);
 
   const capHocList = school?.cap_hoc?.length ? school.cap_hoc : [selectedCapHoc];
 
@@ -283,6 +284,32 @@ export function ReportExportWorkspace() {
     setMessage("Đã tạo file. Nếu Mẫu 1 còn cảnh báo đỏ, chưa được coi là báo cáo xuất bản chính thức.");
   }
 
+  async function createDemoData() {
+    if (!supabase) {
+      setMessage("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    setCreatingDemo(true);
+    setMessage("");
+
+    const { data, error } = await supabase.rpc("fn_tao_du_lieu_demo_sprint4");
+
+    setCreatingDemo(false);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setSelectedYearId(String(data?.nam_hoc_id ?? selectedYearId));
+    setSelectedCapHoc((data?.cap_hoc ?? selectedCapHoc) as CapHoc);
+    setMessage(
+      `Đã tạo dữ liệu DEMO cho Sprint 4: ${data?.so_tu_danh_gia ?? 0} tự đánh giá, ${data?.so_minh_chung_moi ?? 0} minh chứng mới.`,
+    );
+    await loadStandardNotes();
+  }
+
   if (loading) {
     return <p className="text-sm text-[#52606d]">Đang tải dữ liệu xuất báo cáo...</p>;
   }
@@ -330,6 +357,21 @@ export function ReportExportWorkspace() {
       </section>
 
       {message ? <Message text={message} /> : null}
+
+      <section className="border border-[#d8d6c9] bg-white p-5">
+        <h2 className="text-lg font-semibold text-[#17324d]">Dữ liệu demo</h2>
+        <p className="mt-1 text-sm leading-6 text-[#52606d]">
+          Tạo dữ liệu có nhãn [DEMO] cho đơn vị hiện tại để thử xuất file. Dữ liệu này không thay thế minh chứng thật của nhà trường.
+        </p>
+        <button
+          className="mt-4 border border-[#7a3f18] px-4 py-2.5 text-sm font-semibold text-[#7a3f18] disabled:border-[#c9c6b8] disabled:text-[#8da0b2]"
+          disabled={creatingDemo}
+          type="button"
+          onClick={createDemoData}
+        >
+          {creatingDemo ? "Đang tạo dữ liệu demo..." : "Tạo dữ liệu demo Sprint 4"}
+        </button>
+      </section>
 
       <StandardNotesForm
         notes={standardNotes}

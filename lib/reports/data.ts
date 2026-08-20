@@ -94,6 +94,15 @@ export type CouncilMember = {
   thu_tu: number;
 };
 
+export type StandardNote = {
+  id: string;
+  tieu_chuan_id: string;
+  cap_hoc: CapHoc;
+  diem_manh_noi_bat: string | null;
+  han_che_trong_tam: string | null;
+  dinh_huong_cai_tien: string | null;
+};
+
 export type ReportData = {
   profile: ReportProfile;
   school: ReportSchool;
@@ -105,6 +114,7 @@ export type ReportData = {
   evidence: ReportEvidence[];
   plans: ImprovementPlan[];
   councilMembers: CouncilMember[];
+  standardNotes: StandardNote[];
   ketQuaTieuChi: KetQuaTieuChi[];
   giaiTrinh: ReturnType<typeof xacDinhMucTuKetQua>;
 };
@@ -156,6 +166,18 @@ export async function collectReportData(
   capHoc: CapHoc,
 ): Promise<ReportData> {
   const profile = await getReportProfile(supabase);
+  const { data: canExport, error: permissionError } = await supabase.rpc("fn_has_permission", {
+    p_permission: "report.export",
+    p_co_so_id: profile.co_so_id,
+  });
+
+  if (permissionError) {
+    throw new Error(permissionError.message);
+  }
+
+  if (!canExport) {
+    throw new Error("Bạn chưa có quyền xuất báo cáo của cơ sở giáo dục này.");
+  }
 
   const [
     { data: schoolData, error: schoolError },
@@ -166,6 +188,7 @@ export async function collectReportData(
     { data: assessmentData, error: assessmentError },
     { data: evidenceData, error: evidenceError },
     { data: planData, error: planError },
+    { data: noteData, error: noteError },
     { data: councilData },
   ] = await Promise.all([
     supabase
@@ -205,6 +228,12 @@ export async function collectReportData(
       .eq("nam_hoc_id", namHocId)
       .order("created_at", { ascending: true }),
     supabase
+      .from("nhan_xet_tieu_chuan")
+      .select("id, tieu_chuan_id, cap_hoc, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", namHocId)
+      .eq("cap_hoc", capHoc),
+    supabase
       .from("hoi_dong_tu_danh_gia")
       .select("id, thanh_vien_hoi_dong(thu_tu, chuc_vu, vai_tro_hoi_dong, nguoi_dung:nguoi_dung_id(ho_ten))")
       .eq("co_so_id", profile.co_so_id)
@@ -220,7 +249,8 @@ export async function collectReportData(
     levelError ??
     assessmentError ??
     evidenceError ??
-    planError;
+    planError ??
+    noteError;
 
   if (firstError) {
     throw new Error(firstError.message);
@@ -313,6 +343,7 @@ export async function collectReportData(
       }),
     ),
     councilMembers,
+    standardNotes: (noteData ?? []) as StandardNote[],
     ketQuaTieuChi,
     giaiTrinh: xacDinhMucTuKetQua(ketQuaTieuChi),
   };

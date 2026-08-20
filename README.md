@@ -66,6 +66,8 @@ Module xuất báo cáo nằm tại `/bao-cao`, các API tải file nằm dướ
 
 Mẫu 1 `.docx` chèn cảnh báo đỏ `[CHƯA CÓ DỮ LIỆU - không xuất bản chính thức]` nếu thiếu mô tả hiện trạng hoặc thiếu mã minh chứng, không tự sinh nội dung thay nhà trường.
 
+Migration `005_report_module.sql` bổ sung quyền `report.*`, bảng `nhan_xet_tieu_chuan` để nhập Điểm mạnh/Hạn chế/Định hướng cải tiến theo từng tiêu chuẩn, RLS cho `bao_cao` và dữ liệu nhận xét.
+
 Các định dạng đã có: Mẫu 1 `.docx`, Mẫu 2 `.docx`, danh mục minh chứng `.xlsx`, gói minh chứng `.zip`, JSON đầy đủ theo năm học.
 
 ## Checklist Kiểm Thử Thủ Công Sprint 3
@@ -83,6 +85,7 @@ Các định dạng đã có: Mẫu 1 `.docx`, Mẫu 2 `.docx`, danh mục minh 
 
 - Đăng nhập bằng tài khoản thuộc một cơ sở giáo dục đã có năm học, minh chứng và tự đánh giá thật.
 - Vào `/bao-cao`, chọn đúng năm học và cấp học đang kiểm thử.
+- Nhập và lưu nhận xét theo từng tiêu chuẩn để Mẫu 1 có dữ liệu thật cho Điểm mạnh, Hạn chế và Định hướng cải tiến.
 - Xuất Mẫu 1 `.docx`; mở file, kiểm tra đủ bìa ngoài, bìa trong, mục lục, Phần I-IV, đủ 15 tiêu chí và bảng mô tả hiện trạng.
 - Với tiêu chí thiếu mô tả hoặc thiếu mã minh chứng, file phải có cảnh báo đỏ `[CHƯA CÓ DỮ LIỆU - không xuất bản chính thức]`.
 - Kiểm tra các mã minh chứng trong Mẫu 1 nằm trong ngoặc đơn và không bị cấp lại mã mới.

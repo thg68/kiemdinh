@@ -159,6 +159,17 @@ function warningParagraph(label: string) {
   return p([text(`${label}: `, { bold: true }), text(CANH_BAO_THIEU_DU_LIEU, { color: RED })]);
 }
 
+function standardNoteParagraph(data: ReportData, standardId: string, field: "diem_manh_noi_bat" | "han_che_trong_tam" | "dinh_huong_cai_tien", label: string) {
+  const note = data.standardNotes.find((item) => item.tieu_chuan_id === standardId);
+  const value = note?.[field]?.trim();
+
+  if (!value) {
+    return warningParagraph(label);
+  }
+
+  return p([text(`${label}: `, { bold: true }), value]);
+}
+
 function cover(data: ReportData) {
   return [
     p([data.school.co_quan_quan_ly ?? ""], { center: true }),
@@ -234,9 +245,9 @@ export async function buildSelfAssessmentDocx(data: ReportData) {
       children.push(...criterionSection(data, criterion));
     }
 
-    children.push(warningParagraph("Điểm mạnh nổi bật"));
-    children.push(warningParagraph("Điểm hạn chế trọng tâm và nguyên nhân cốt lõi"));
-    children.push(warningParagraph("Định hướng cải tiến chất lượng"));
+    children.push(standardNoteParagraph(data, standard.id, "diem_manh_noi_bat", "Điểm mạnh nổi bật"));
+    children.push(standardNoteParagraph(data, standard.id, "han_che_trong_tam", "Điểm hạn chế trọng tâm và nguyên nhân cốt lõi"));
+    children.push(standardNoteParagraph(data, standard.id, "dinh_huong_cai_tien", "Định hướng cải tiến chất lượng"));
     children.push(p([text("Bảng tổng hợp kết quả:", { bold: true })]));
     children.push(standardSummary(data, standard.id));
   }

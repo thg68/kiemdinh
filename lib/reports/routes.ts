@@ -8,6 +8,23 @@ export type ReportRouteContext = {
   supabase: ReturnType<typeof createRequestSupabaseClient>;
 };
 
+export async function logReportExport(
+  context: ReportRouteContext,
+  reportType: string,
+) {
+  await context.supabase.rpc("fn_log_audit", {
+    p_hanh_dong: "REPORT_EXPORTED",
+    p_doi_tuong: "bao_cao",
+    p_doi_tuong_id: context.data.year.id,
+    p_du_lieu_cu: null,
+    p_du_lieu_moi: {
+      loai_bao_cao: reportType,
+      nam_hoc_id: context.data.year.id,
+      cap_hoc: context.data.capHoc,
+    },
+  });
+}
+
 export async function withReportData(
   request: NextRequest,
   handler: (context: ReportRouteContext) => Promise<Response>,

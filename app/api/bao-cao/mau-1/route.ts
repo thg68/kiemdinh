@@ -1,13 +1,15 @@
 import { NextRequest } from "next/server";
 import { buildSelfAssessmentDocx } from "@/lib/reports/docx";
-import { downloadResponse, withReportData } from "@/lib/reports/routes";
+import { downloadResponse, logReportExport, withReportData } from "@/lib/reports/routes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  return withReportData(request, async ({ data }) => {
+  return withReportData(request, async (context) => {
+    const { data } = context;
     const buffer = await buildSelfAssessmentDocx(data);
+    await logReportExport(context, "mau_1_tu_danh_gia");
 
     return downloadResponse(
       buffer,

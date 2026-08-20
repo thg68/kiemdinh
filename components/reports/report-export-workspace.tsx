@@ -26,6 +26,20 @@ type SchoolYear = {
   trang_thai: string;
 };
 
+type Standard = {
+  id: string;
+  so_thu_tu: number;
+  ten: string;
+};
+
+type StandardNote = {
+  id?: string;
+  tieu_chuan_id: string;
+  diem_manh_noi_bat: string | null;
+  han_che_trong_tam: string | null;
+  dinh_huong_cai_tien: string | null;
+};
+
 const capHocLabels: Record<CapHoc, string> = {
   mam_non: "Mầm non",
   tieu_hoc: "Tiểu học",
@@ -55,6 +69,8 @@ export function ReportExportWorkspace() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [years, setYears] = useState<SchoolYear[]>([]);
+  const [standards, setStandards] = useState<Standard[]>([]);
+  const [standardNotes, setStandardNotes] = useState<StandardNote[]>([]);
   const [selectedYearId, setSelectedYearId] = useState("");
   const [selectedCapHoc, setSelectedCapHoc] = useState<CapHoc>("mam_non");
   const [loading, setLoading] = useState(true);
@@ -94,7 +110,7 @@ export function ReportExportWorkspace() {
 
     setProfile(profileData as Profile);
 
-    const [{ data: schoolData }, { data: yearData }] = await Promise.all([
+    const [{ data: schoolData }, { data: yearData }, { data: standardData }] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
         .select("id, ten, cap_hoc")
@@ -105,6 +121,7 @@ export function ReportExportWorkspace() {
         .select("id, ten, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
+      supabase.from("tieu_chuan").select("id, so_thu_tu, ten").order("so_thu_tu"),
     ]);
 
     const loadedSchool = schoolData as School | null;
@@ -113,6 +130,7 @@ export function ReportExportWorkspace() {
 
     setSchool(loadedSchool);
     setYears(loadedYears);
+    setStandards((standardData ?? []) as Standard[]);
     setSelectedYearId((current) => current || activeYear?.id || "");
 
     if (loadedSchool?.cap_hoc?.[0]) {
@@ -122,6 +140,26 @@ export function ReportExportWorkspace() {
     setLoading(false);
   }, [router, supabase]);
 
+  const loadStandardNotes = useCallback(async () => {
+    if (!supabase || !profile || !selectedYearId || !selectedCapHoc) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("nhan_xet_tieu_chuan")
+      .select("id, tieu_chuan_id, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", selectedYearId)
+      .eq("cap_hoc", selectedCapHoc);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setStandardNotes((data ?? []) as StandardNote[]);
+  }, [profile, selectedCapHoc, selectedYearId, supabase]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadData();
@@ -129,6 +167,71 @@ export function ReportExportWorkspace() {
 
     return () => window.clearTimeout(timer);
   }, [loadData]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadStandardNotes();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadStandardNotes]);
+
+  function updateNote(standardId: string, field: keyof Omit<StandardNote, "id" | "tieu_chuan_id">, value: string) {
+    setStandardNotes((current) => {
+      const existing = current.find((item) => item.tieu_chuan_id === standardId);
+
+      if (existing) {
+        return current.map((item) =>
+          item.tieu_chuan_id === standardId ? { ...item, [field]: value } : item,
+        );
+      }
+
+      return [
+        ...current,
+        {
+          tieu_chuan_id: standardId,
+          diem_manh_noi_bat: "",
+          han_che_trong_tam: "",
+          dinh_huong_cai_tien: "",
+          [field]: value,
+        },
+      ];
+    });
+  }
+
+  async function saveStandardNotes() {
+    if (!supabase || !profile || !selectedYearId) {
+      setMessage("Chưa đủ thông tin để lưu nhận xét.");
+      return;
+    }
+
+    const rows = standards.map((standard) => {
+      const note = standardNotes.find((item) => item.tieu_chuan_id === standard.id);
+
+      return {
+        co_so_id: profile.co_so_id,
+        nam_hoc_id: selectedYearId,
+        tieu_chuan_id: standard.id,
+        cap_hoc: selectedCapHoc,
+        diem_manh_noi_bat: note?.diem_manh_noi_bat ?? "",
+        han_che_trong_tam: note?.han_che_trong_tam ?? "",
+        dinh_huong_cai_tien: note?.dinh_huong_cai_tien ?? "",
+        nguoi_cap_nhat: profile.id,
+      };
+    });
+
+    const { error } = await supabase
+      .from("nhan_xet_tieu_chuan")
+      .upsert(rows, { onConflict: "co_so_id,nam_hoc_id,tieu_chuan_id,cap_hoc" });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage("Đã lưu nhận xét theo tiêu chuẩn cho Mẫu 1.");
+    await loadStandardNotes();
+  }
 
   async function download(endpoint: string) {
     if (!supabase || !selectedYearId || !selectedCapHoc) {
@@ -228,6 +331,13 @@ export function ReportExportWorkspace() {
 
       {message ? <Message text={message} /> : null}
 
+      <StandardNotesForm
+        notes={standardNotes}
+        onSave={saveStandardNotes}
+        onUpdate={updateNote}
+        standards={standards}
+      />
+
       <section className="border border-[#d8d6c9] bg-white">
         <div className="border-b border-[#d8d6c9] px-5 py-4">
           <h2 className="text-lg font-semibold text-[#17324d]">Xuất dữ liệu</h2>
@@ -250,6 +360,74 @@ export function ReportExportWorkspace() {
         </div>
       </section>
     </div>
+  );
+}
+
+function StandardNotesForm(props: {
+  standards: Standard[];
+  notes: StandardNote[];
+  onUpdate: (
+    standardId: string,
+    field: keyof Omit<StandardNote, "id" | "tieu_chuan_id">,
+    value: string,
+  ) => void;
+  onSave: () => Promise<void>;
+}) {
+  if (props.standards.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="border border-[#d8d6c9] bg-white">
+      <div className="border-b border-[#d8d6c9] px-5 py-4">
+        <h2 className="text-lg font-semibold text-[#17324d]">Nhận xét theo tiêu chuẩn cho Mẫu 1</h2>
+        <p className="mt-1 text-sm leading-6 text-[#52606d]">
+          Các ô này đi thẳng vào phần Điểm mạnh, Hạn chế và Định hướng cải tiến. Để trống thì file Mẫu 1 sẽ cảnh báo đỏ.
+        </p>
+      </div>
+      <div className="grid gap-5 p-5">
+        {props.standards.map((standard) => {
+          const note = props.notes.find((item) => item.tieu_chuan_id === standard.id);
+
+          return (
+            <fieldset className="grid gap-3 border border-[#e4e1d5] p-4" key={standard.id}>
+              <legend className="px-2 text-sm font-semibold text-[#17324d]">
+                Tiêu chuẩn {standard.so_thu_tu}: {standard.ten}
+              </legend>
+              <label className="text-sm font-medium">
+                Điểm mạnh nổi bật
+                <textarea
+                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  value={note?.diem_manh_noi_bat ?? ""}
+                  onChange={(event) => props.onUpdate(standard.id, "diem_manh_noi_bat", event.target.value)}
+                />
+              </label>
+              <label className="text-sm font-medium">
+                Điểm hạn chế trọng tâm và nguyên nhân cốt lõi
+                <textarea
+                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  value={note?.han_che_trong_tam ?? ""}
+                  onChange={(event) => props.onUpdate(standard.id, "han_che_trong_tam", event.target.value)}
+                />
+              </label>
+              <label className="text-sm font-medium">
+                Định hướng cải tiến chất lượng
+                <textarea
+                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  value={note?.dinh_huong_cai_tien ?? ""}
+                  onChange={(event) => props.onUpdate(standard.id, "dinh_huong_cai_tien", event.target.value)}
+                />
+              </label>
+            </fieldset>
+          );
+        })}
+      </div>
+      <div className="border-t border-[#d8d6c9] px-5 py-4">
+        <button className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white" type="button" onClick={props.onSave}>
+          Lưu nhận xét Mẫu 1
+        </button>
+      </div>
+    </section>
   );
 }
 

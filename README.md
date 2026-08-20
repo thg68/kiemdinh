@@ -24,6 +24,12 @@ npm run lint
 npm run build
 ```
 
+Kiểm tra manifest import trước khi chạy thật:
+
+```bash
+npm run import:school-year -- --manifest=data/import-manifest.example.csv --dry-run=true
+```
+
 ## Hướng Dẫn Ban Đầu
 
 Đăng nhập tại `/login`, vào `/thiet-lap` để tạo cơ sở giáo dục và chọn hoặc tạo năm học đang hoạt động.
@@ -33,6 +39,8 @@ Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng
 Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
+
+Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 
 ## Cấu Trúc Thư Mục
 

@@ -1,0 +1,5 @@
+loai_dong,ma_tieu_chi,tieu_chuan_so,cap_hoc,ten_minh_chung,file_path,duong_dan,ngay_ban_hanh,ngay_het_gia_tri,loai_tep,word_path,mo_ta_muc_1,dat_muc_1,mo_ta_muc_2,dat_muc_2,diem_manh_noi_bat,han_che_trong_tam,dinh_huong_cai_tien,noi_dung,muc_tieu,hoat_dong,chi_so_ket_qua,thoi_gian_bat_dau,thoi_gian_ket_thuc,nguon_luc,minh_chung_du_kien,muc_do_thuc_hien,ghi_chu
+evidence,1.1,,mam_non,[TEN MINH CHUNG THAT],C:\du-lieu-truong\minh-chung\ke-hoach-nam-hoc.pdf,,2026-09-05,,application/pdf,,,,,,,,,,,,,,,,,
+assessment,1.1,,mam_non,,,,,,,"C:\du-lieu-truong\mo-ta\1.1.docx",[MO TA MUC 1 NEU KHONG DUNG WORD],true,[MO TA MUC 2 NEU CO],true,,,,,,,,,,,,
+standard_note,,1,mam_non,,,,,,,,,,,,[DIEM MANH THAT],[HAN CHE THAT],[DINH HUONG CAI TIEN THAT],,,,,,,,,
+plan,1.3,1,mam_non,,,,,,,,,,,,,,,[NOI DUNG CAI TIEN THAT],[MUC TIEU THAT],[HOAT DONG/GIAI PHAP THAT],[CHI SO KET QUA THAT],2026-09-01,2026-12-31,[NGUON LUC THAT],[MINH CHUNG DU KIEN],dang_thuc_hien,[GHI CHU]

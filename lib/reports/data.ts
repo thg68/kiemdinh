@@ -38,6 +38,7 @@ export type ReportCriterion = {
   ma: string;
   ten: string;
   la_bat_buoc: boolean;
+  loai_hinh_ap_dung: string;
   tieu_chuan_id: string;
   tieu_chuan?: ReportStandard;
   muc_1: string;
@@ -205,7 +206,7 @@ export async function collectReportData(
     supabase.from("tieu_chuan").select("id, so_thu_tu, ten").order("so_thu_tu"),
     supabase
       .from("tieu_chi")
-      .select("id, ma, ten, la_bat_buoc, tieu_chuan_id, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
       .order("ma", { ascending: true }),
     supabase.from("muc_tieu_chi").select("tieu_chi_id, muc, noi_dung_yeu_cau"),
     supabase
@@ -276,16 +277,18 @@ export async function collectReportData(
 
   const criteria = ((criterionData ?? []) as (Omit<ReportCriterion, "muc_1" | "muc_2" | "tieu_chuan"> & {
     tieu_chuan?: ReportStandard | ReportStandard[] | null;
-  })[]).map((criterion) => {
-    const levels = levelByCriterion.get(criterion.id) ?? { muc_1: "", muc_2: "" };
+  })[])
+    .filter((criterion) => criterion.loai_hinh_ap_dung === (schoolData as ReportSchool).loai_hinh)
+    .map((criterion) => {
+      const levels = levelByCriterion.get(criterion.id) ?? { muc_1: "", muc_2: "" };
 
-    return {
-      ...criterion,
-      tieu_chuan: firstArrayItem(criterion.tieu_chuan) ?? undefined,
-      muc_1: levels.muc_1,
-      muc_2: levels.muc_2,
-    };
-  });
+      return {
+        ...criterion,
+        tieu_chuan: firstArrayItem(criterion.tieu_chuan) ?? undefined,
+        muc_1: levels.muc_1,
+        muc_2: levels.muc_2,
+      };
+    });
 
   const evidence = ((evidenceData ?? []) as (Omit<ReportEvidence, "tieuChiIds"> & {
     minh_chung_tieu_chi?: { tieu_chi_id: string }[];

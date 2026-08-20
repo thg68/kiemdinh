@@ -24,6 +24,7 @@ type Profile = {
 type School = {
   id: string;
   ten: string;
+  loai_hinh: string;
   cap_hoc: CapHoc[];
 };
 
@@ -38,6 +39,7 @@ type Criterion = {
   ma: string;
   ten: string;
   la_bat_buoc: boolean;
+  loai_hinh_ap_dung: string;
 };
 
 type AssessmentRow = {
@@ -168,7 +170,7 @@ export function AssessmentWorkspace() {
       await Promise.all([
         supabase
           .from("co_so_giao_duc")
-          .select("id, ten, cap_hoc")
+          .select("id, ten, loai_hinh, cap_hoc")
           .eq("id", profileData.co_so_id)
           .maybeSingle(),
         supabase
@@ -178,12 +180,14 @@ export function AssessmentWorkspace() {
           .order("ngay_bat_dau", { ascending: false }),
         supabase
           .from("tieu_chi")
-          .select("id, ma, ten, la_bat_buoc")
+          .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung")
           .order("ma", { ascending: true }),
       ]);
 
     const loadedSchool = schoolData as School | null;
-    const loadedCriteria = (criterionData ?? []) as Criterion[];
+    const loadedCriteria = ((criterionData ?? []) as Criterion[]).filter(
+      (criterion) => criterion.loai_hinh_ap_dung === (loadedSchool?.loai_hinh ?? "mam_non"),
+    );
 
     setSchool(loadedSchool);
     setYears((yearData ?? []) as SchoolYear[]);

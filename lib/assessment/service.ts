@@ -27,6 +27,7 @@ export type CriterionForAssessment = {
   ma: string;
   ten: string;
   la_bat_buoc: boolean;
+  loai_hinh_ap_dung: string;
 };
 
 export type EvidenceCodeLink = {
@@ -40,11 +41,20 @@ export async function docDuLieuTinhMuc(
   namHocId: string,
   capHoc: CapHoc,
 ) {
-  const [{ data: criteriaData, error: criteriaError }, { data: assessmentData, error: assessmentError }] =
+  const [
+    { data: schoolData, error: schoolError },
+    { data: criteriaData, error: criteriaError },
+    { data: assessmentData, error: assessmentError },
+  ] =
     await Promise.all([
       supabase
+        .from("co_so_giao_duc")
+        .select("loai_hinh")
+        .eq("id", coSoId)
+        .maybeSingle(),
+      supabase
         .from("tieu_chi")
-        .select("id, ma, ten, la_bat_buoc")
+        .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung")
         .order("ma", { ascending: true }),
       supabase
         .from("tu_danh_gia")
@@ -53,6 +63,10 @@ export async function docDuLieuTinhMuc(
         .eq("nam_hoc_id", namHocId)
         .eq("cap_hoc", capHoc),
     ]);
+
+  if (schoolError) {
+    throw schoolError;
+  }
 
   if (criteriaError) {
     throw criteriaError;
@@ -90,7 +104,12 @@ export async function docDuLieuTinhMuc(
     new Map<string, TuDanhGiaRow>(),
   );
 
-  const ketQuaTieuChi = ((criteriaData ?? []) as CriterionForAssessment[]).map<KetQuaTieuChi>(
+  // TT57 có 3 phụ lục riêng; engine chỉ tính trên bộ tiêu chí đúng loại hình của cơ sở.
+  const criteriaForSchool = ((criteriaData ?? []) as CriterionForAssessment[]).filter(
+    (criterion) => criterion.loai_hinh_ap_dung === (schoolData?.loai_hinh ?? "mam_non"),
+  );
+
+  const ketQuaTieuChi = criteriaForSchool.map<KetQuaTieuChi>(
     (criterion) => {
       const row = assessments.get(criterion.id);
 

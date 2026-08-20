@@ -15,6 +15,7 @@ export type Criterion = {
   ma: string;
   ten: string;
   la_bat_buoc: boolean;
+  loai_hinh_ap_dung?: string;
   tieu_chuan_id: string;
   tieu_chuan?: {
     so_thu_tu: number;

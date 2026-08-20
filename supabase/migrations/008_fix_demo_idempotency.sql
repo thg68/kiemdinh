@@ -1,5 +1,4 @@
--- Sprint 4 demo: tao bo du lieu demo co gan nhan [DEMO] cho tai khoan dang dang nhap.
--- Du lieu nay chi dung de thu luong xuat file, khong duoc tinh la du lieu that cua checkpoint.
+-- Sprint 4 demo hardening: tao lai ham demo idempotent cho ke hoach cai tien.
 
 create or replace function fn_tao_du_lieu_demo_sprint4()
 returns jsonb
@@ -11,6 +10,7 @@ declare
   v_co_so_id uuid := fn_current_co_so_id();
   v_nguoi_dung_id uuid := fn_current_nguoi_dung_id();
   v_nam_hoc_id uuid;
+  v_loai_hinh loai_hinh_co_so;
   v_cap_hoc cap_hoc;
   v_tieu_chi record;
   v_tieu_chuan record;
@@ -41,15 +41,19 @@ begin
     raise exception 'Co so giao duc chua co nam hoc.';
   end if;
 
-  select coalesce(cap_hoc[1], 'mam_non'::cap_hoc) into v_cap_hoc
+  select loai_hinh, coalesce(cap_hoc[1], 'mam_non'::cap_hoc)
+  into v_loai_hinh, v_cap_hoc
   from co_so_giao_duc
   where id = v_co_so_id;
 
   for v_tieu_chi in
     select id, ma, ten, la_bat_buoc
     from tieu_chi
+    where loai_hinh_ap_dung = v_loai_hinh
     order by ma
   loop
+    v_minh_chung_id := null;
+
     select mc.id into v_minh_chung_id
     from minh_chung mc
     join minh_chung_tieu_chi mctc on mctc.minh_chung_id = mc.id
@@ -170,6 +174,11 @@ begin
       nguoi_cap_nhat = excluded.nguoi_cap_nhat;
   end loop;
 
+  delete from ke_hoach_cai_tien
+  where co_so_id = v_co_so_id
+    and nam_hoc_id = v_nam_hoc_id
+    and ghi_chu = '[DEMO] Ban ghi mau de thu Mau 2.';
+
   insert into ke_hoach_cai_tien(
     co_so_id,
     nam_hoc_id,
@@ -197,15 +206,15 @@ begin
     '[DEMO] Ra soat minh chung, phan cong nguoi phu trach va cap nhat tien do hang thang.',
     '[DEMO] Hoan thanh minh chung va bien ban ra soat dung han.',
     current_date,
-    current_date + interval '90 days',
+    current_date + 90,
     v_nguoi_dung_id,
     '[DEMO] Thoi gian cua hoi dong tu danh gia va to chuyen mon.',
     '[DEMO] Bien ban ra soat, danh muc minh chung cap nhat.',
     'dang_thuc_hien',
     '[DEMO] Ban ghi mau de thu Mau 2.'
   from tieu_chi tc
-  where tc.ma in ('1.3', '2.1', '3.1', '4.1')
-  on conflict do nothing;
+  where tc.loai_hinh_ap_dung = v_loai_hinh
+    and tc.ma in ('1.3', '2.1', '3.1', '4.1');
 
   perform fn_log_audit(
     'DEMO_SPRINT4_CREATED',
@@ -224,5 +233,4 @@ begin
 end;
 $$;
 
-revoke all on function fn_tao_du_lieu_demo_sprint4() from public;
 grant execute on function fn_tao_du_lieu_demo_sprint4() to authenticated;

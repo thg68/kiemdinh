@@ -69,7 +69,7 @@ export function EvidenceHealth() {
 
     setYear(yearData as SchoolYear);
 
-    const [{ data: evidenceData }, { data: criterionData }] = await Promise.all([
+    const [{ data: evidenceData }, { data: schoolData }] = await Promise.all([
       supabase
         .from("minh_chung")
         .select("*")
@@ -77,10 +77,17 @@ export function EvidenceHealth() {
         .eq("nam_hoc_id", yearData.id)
         .is("deleted_at", null),
       supabase
-        .from("tieu_chi")
-        .select("id, ma, ten, la_bat_buoc, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
-        .order("ma", { ascending: true }),
+        .from("co_so_giao_duc")
+        .select("loai_hinh")
+        .eq("id", profile.co_so_id)
+        .maybeSingle(),
     ]);
+
+    const { data: criterionData } = await supabase
+      .from("tieu_chi")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
+      .eq("loai_hinh_ap_dung", schoolData?.loai_hinh ?? "mam_non")
+      .order("ma", { ascending: true });
 
     const rows = (evidenceData ?? []) as Evidence[];
     const ids = rows.map((item) => item.id);

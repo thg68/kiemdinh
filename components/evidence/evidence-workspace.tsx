@@ -87,17 +87,24 @@ export function EvidenceWorkspace() {
 
     setProfile(profileData);
 
-    const [{ data: yearData }, { data: criterionData }] = await Promise.all([
+    const [{ data: yearData }, { data: schoolData }] = await Promise.all([
       supabase
         .from("nam_hoc")
         .select("id, ten, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
       supabase
-        .from("tieu_chi")
-        .select("id, ma, ten, la_bat_buoc, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
-        .order("ma", { ascending: true }),
+        .from("co_so_giao_duc")
+        .select("loai_hinh")
+        .eq("id", profileData.co_so_id)
+        .maybeSingle(),
     ]);
+
+    const { data: criterionData } = await supabase
+      .from("tieu_chi")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
+      .eq("loai_hinh_ap_dung", schoolData?.loai_hinh ?? "mam_non")
+      .order("ma", { ascending: true });
 
     setYears((yearData ?? []) as SchoolYear[]);
     setCriteria((criterionData ?? []) as unknown as Criterion[]);

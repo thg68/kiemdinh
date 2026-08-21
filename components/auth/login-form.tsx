@@ -67,6 +67,13 @@ export function LoginForm() {
 
   return (
     <div className="surface-card w-full max-w-md p-6">
+      <div>
+        <h2 className="section-title text-2xl">Tài khoản</h2>
+        <p className="muted mt-2 text-sm">
+          Dùng email được cấp cho nhà trường hoặc tạo tài khoản thiết lập ban đầu.
+        </p>
+      </div>
+
       <div className="segmented-control grid-cols-2 text-sm font-medium">
         <button
           type="button"
@@ -80,7 +87,7 @@ export function LoginForm() {
           className={`segmented-option ${mode === "dang_ky" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_ky")}
         >
-          Tạo tài khoản
+          Tạo tài khoản đơn vị
         </button>
       </div>
 
@@ -129,7 +136,7 @@ export function LoginForm() {
             ? "Đang xử lý..."
             : mode === "dang_nhap"
               ? "Đăng nhập"
-              : "Tạo tài khoản"}
+              : "Tạo tài khoản đơn vị"}
         </button>
       </form>
 

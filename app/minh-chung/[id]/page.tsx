@@ -1,4 +1,5 @@
 import { EvidenceDetail } from "@/components/evidence/evidence-detail";
+import { ApplicationShell } from "@/components/layout/application-shell";
 
 export default async function EvidenceDetailPage({
   params,
@@ -8,10 +9,12 @@ export default async function EvidenceDetailPage({
   const { id } = await params;
 
   return (
-    <main className="app-shell">
-      <div className="content-wrap max-w-5xl">
-        <EvidenceDetail evidenceId={id} />
-      </div>
-    </main>
+    <ApplicationShell
+      active="evidence"
+      title="Chi tiết minh chứng"
+      description="Xem mã, tệp hoặc liên kết và toàn bộ tiêu chí đang sử dụng minh chứng này."
+    >
+      <EvidenceDetail evidenceId={id} />
+    </ApplicationShell>
   );
 }

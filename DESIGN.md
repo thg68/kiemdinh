@@ -27,6 +27,7 @@
 ## UI Rules
 
 - Không hiển thị label kiểu `Module 1`, `Module M2`, `Sprint 3` trong giao diện người dùng.
+- Landing page dùng câu chuyện sản phẩm thay vì danh sách sprint; app sau đăng nhập dùng shell thống nhất với sidebar và topbar để người dùng không phải học lại điều hướng ở từng màn hình.
 - Hierarchy thể hiện bằng typography, khoảng trắng, bố cục và card hierarchy.
 - Không đổi logic nghiệp vụ, API, route, auth hoặc flow khi chỉnh UI.
 - Màu đỏ/vàng/xanh chỉ dùng cho trạng thái nghiệp vụ như thiếu minh chứng, cảnh báo hoặc đạt mức.

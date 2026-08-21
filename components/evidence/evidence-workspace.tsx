@@ -263,10 +263,17 @@ export function EvidenceWorkspace() {
                     {item.ma} - {item.ten}
                   </Link>
                   <p className="mt-2 text-sm text-[var(--color-graphite)]/70">
-                    {item.criteria.length > 0
-                      ? item.criteria.map((criterion) => criterion.ma).join(", ")
-                      : "Chưa gắn tiêu chí"}
+                    {item.criteria.length > 0 ? "Tiêu chí đang dùng:" : "Chưa gắn tiêu chí"}
                   </p>
+                  {item.criteria.length > 0 ? (
+                    <ul className="mt-2 grid gap-1 text-sm text-[var(--color-graphite)]/80">
+                      {item.criteria.map((criterion) => (
+                        <li className="leading-5" key={criterion.id}>
+                          <strong className="text-[var(--color-ink-navy)]">{criterion.ma}</strong> - {criterion.ten}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
                 <div className="text-sm text-[var(--color-graphite)]/70">
                   <p>{formatEvidenceStatus(item.trang_thai_xac_minh)}</p>

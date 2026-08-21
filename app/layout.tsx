@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Geist_Mono, Noto_Serif } from "next/font/google";
+import { AppLenis } from "@/components/motion/app-lenis";
 import "./globals.css";
 
 const beVietnam = Be_Vietnam_Pro({
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="vi"
       className={`${beVietnam.variable} ${notoSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AppLenis />
+        {children}
+      </body>
     </html>
   );
 }

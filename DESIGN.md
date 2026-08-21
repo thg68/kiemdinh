@@ -28,7 +28,7 @@
 
 - Không hiển thị label kiểu `Module 1`, `Module M2`, `Sprint 3` trong giao diện người dùng.
 - Landing page dùng câu chuyện sản phẩm thay vì danh sách sprint; app sau đăng nhập dùng shell thống nhất với sidebar và topbar để người dùng không phải học lại điều hướng ở từng màn hình.
-- Landing page dùng Lenis cho cuộn mượt và anchor navigation; các màn hình nghiệp vụ không khởi tạo Lenis để giữ thao tác nhập liệu ổn định.
+- Toàn ứng dụng dùng Lenis cho cuộn mượt và anchor navigation; vùng cuộn nội bộ có thể đánh dấu `data-lenis-prevent` để giữ thao tác nhập liệu ổn định.
 - Hierarchy thể hiện bằng typography, khoảng trắng, bố cục và card hierarchy.
 - Không đổi logic nghiệp vụ, API, route, auth hoặc flow khi chỉnh UI.
 - Màu đỏ/vàng/xanh chỉ dùng cho trạng thái nghiệp vụ như thiếu minh chứng, cảnh báo hoặc đạt mức.

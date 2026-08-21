@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 
-export function LandingLenis() {
+export function AppLenis() {
   useEffect(() => {
     const lenis = new Lenis({
       anchors: {
@@ -12,6 +12,7 @@ export function LandingLenis() {
       autoRaf: true,
       duration: 1,
       easing: (time) => Math.min(1, 1.001 - 2 ** (-10 * time)),
+      prevent: (node) => Boolean(node.closest("[data-lenis-prevent]")),
       stopInertiaOnNavigate: true,
     });
 

@@ -408,7 +408,7 @@ function GapBoard(props: {
 
           return (
             <button
-              className={`relative grid min-h-36 grid-rows-[auto_1fr_auto] rounded-[var(--radius-card)] border p-3 text-left text-sm transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
+              className={`grid min-h-40 grid-rows-[auto_auto_1fr_auto] rounded-[var(--radius-card)] border p-3 text-left text-sm transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
                 props.selectedCriterionId === item.id ? "outline outline-2 outline-[var(--color-electric-cobalt)]" : ""
               }`}
               key={item.id}
@@ -416,14 +416,16 @@ function GapBoard(props: {
               title={`${item.ma} - ${item.ten}`}
               onClick={() => item.id && props.onSelect(item.id)}
             >
-              {item.laBatBuoc ? (
-                <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
-                  Bắt buộc
-                </span>
-              ) : null}
-              <span className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2 pr-20 font-semibold leading-5 text-[var(--color-ink-navy)]">
-                <span className="tabular-nums">{item.ma}</span>
-                <span className="line-clamp-3">{item.ten}</span>
+              <span className="flex min-h-6 items-start justify-between gap-2">
+                <span className="font-semibold tabular-nums leading-6 text-[var(--color-ink-navy)]">{item.ma}</span>
+                {item.laBatBuoc ? (
+                  <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
+                    Bắt buộc
+                  </span>
+                ) : null}
+              </span>
+              <span className="mt-2 block line-clamp-3 font-semibold leading-5 text-[var(--color-ink-navy)]">
+                {item.ten}
               </span>
               <span className="mt-2 min-h-7 text-xs leading-5 text-[var(--color-warning)]">
                 {!rangBuoc.hopLe ? rangBuoc.loi[0] : ""}

@@ -50,6 +50,7 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/kich-ban-video-demo-10-phut.md`: kịch bản quay video demo 10 phút.
 - `docs/definition-of-done-m0-m4.md`: kiểm tra Định nghĩa Hoàn thành cho M0-M4.
 - `docs/nhap-noi-dung-phu-luc-tt57.md`: nguyên tắc nhập nội dung phụ lục TT57 vào bảng dữ liệu.
+- `docs/phan-quyen-phu-luc-b.md`: mô tả phân quyền và RLS theo Phụ lục B.
 - `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
 
 ## Cấu Trúc Thư Mục

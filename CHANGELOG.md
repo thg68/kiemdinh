@@ -61,3 +61,4 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Rà soát lint, test, build và dependency audit.
 - Bổ sung migration `009` để có đủ khung tiêu chuẩn cho 3 loại hình và RPC tạo năm học mới có kế thừa tự đánh giá.
 - Ghi rõ điểm còn theo dõi: nhập nội dung phụ lục TT57 chính thức và kiểm thử bằng dữ liệu trường thật.
+- Bổ sung migration `010` để siết RLS/RBAC theo Phụ lục B: phân công, tự đánh giá, minh chứng, Storage và báo cáo đã phê duyệt.

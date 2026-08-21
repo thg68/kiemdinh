@@ -44,6 +44,10 @@ supabase/.temp/
 # vercel
 .vercel
 
+# agent tool installs not used by this project
+/.agent/
+/.gemini/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

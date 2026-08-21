@@ -6,6 +6,10 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   globalIgnores([
+    ".agent/**",
+    ".agents/**",
+    ".codex/**",
+    ".gemini/**",
     ".next/**",
     "out/**",
     "build/**",

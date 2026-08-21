@@ -15,9 +15,6 @@ export default function LoginPage() {
 
       <div className="content-wrap grid min-h-[calc(100vh-9rem)] items-center gap-10 px-5 py-12 md:grid-cols-[minmax(0,1fr)_430px]">
         <section>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--color-warm-gold)]">
-            Không gian làm việc
-          </p>
           <h1 className="page-title">
             Đăng nhập hệ thống quản trị nhà trường
           </h1>

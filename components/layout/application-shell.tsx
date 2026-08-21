@@ -46,26 +46,12 @@ export function ApplicationShell({
             ))}
           </nav>
 
+          <div className="mt-8 border-t border-[var(--color-border)] pt-6">
+            <LogoutButton />
+          </div>
         </aside>
 
         <main className="app-main">
-          <div className="app-topbar">
-            <div>
-              <p className="text-sm font-semibold text-[var(--color-ink-navy)]">
-                Không gian làm việc
-              </p>
-              <p className="mt-1 text-xs text-[var(--color-graphite)]/65">
-                Năm học và đơn vị được tải từ dữ liệu thật trong từng màn hình.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-[var(--color-graphite)]/65">
-              <span className="mini-badge hidden sm:inline-flex">RLS</span>
-              <span className="mini-badge hidden sm:inline-flex">Signed URL</span>
-              <span className="mini-badge hidden lg:inline-flex">Nhật ký</span>
-              <LogoutButton />
-            </div>
-          </div>
-
           <div className="mx-auto grid w-full max-w-[var(--container-width)] gap-8">
             <header className="page-header">
               <h1 className="page-title">{title}</h1>

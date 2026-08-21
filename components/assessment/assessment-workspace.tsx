@@ -127,6 +127,7 @@ export function AssessmentWorkspace() {
   const giaiTrinh = xacDinhMucTuKetQua(ketQuaTieuChi);
   const selectedCriterion =
     criteria.find((criterion) => criterion.id === selectedCriterionId) ?? criteria[0];
+  const whatIfCriterion = ketQuaTieuChi.find((item) => item.id === whatIfCriterionId);
 
   const whatIfKetQua = ketQuaTieuChi.map((item) => {
     if (item.id !== whatIfCriterionId) {
@@ -334,6 +335,8 @@ export function AssessmentWorkspace() {
       <GapBoard
         ketQuaTieuChi={ketQuaTieuChi}
         selectedCriterionId={selectedCriterion?.id ?? ""}
+        whatIfCriterionId={whatIfCriterionId}
+        whatIfLevel={whatIfLevel}
         onSelect={setSelectedCriterionId}
       />
 
@@ -361,9 +364,15 @@ export function AssessmentWorkspace() {
         <WhatIfPanel
           capHocList={capHocList}
           criteria={criteria}
+          currentResult={giaiTrinh}
           selectedCriterionId={whatIfCriterionId}
-          setSelectedCriterionId={setWhatIfCriterionId}
+          selectedCriterionName={whatIfCriterion ? `${whatIfCriterion.ma} - ${whatIfCriterion.ten}` : ""}
+          setSelectedCriterionId={(id) => {
+            setWhatIfCriterionId(id);
+            setSelectedCriterionId(id);
+          }}
           setWhatIfLevel={setWhatIfLevel}
+          currentCriterionLevel={whatIfCriterion?.mucDat ?? 0}
           whatIfLevel={whatIfLevel}
           whatIfResult={whatIfResult}
           wholeSchoolResult={xacDinhMucToanTruongTuKetQua(
@@ -381,6 +390,8 @@ export function AssessmentWorkspace() {
 function GapBoard(props: {
   ketQuaTieuChi: KetQuaTieuChi[];
   selectedCriterionId: string;
+  whatIfCriterionId: string;
+  whatIfLevel: 0 | 1 | 2;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -390,19 +401,22 @@ function GapBoard(props: {
       </div>
       <div className="grid auto-rows-fr gap-2.5 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {props.ketQuaTieuChi.map((item) => {
-          const rangBuoc = kiemTraRangBuocCapNhat(item);
-          const dangThieu = item.laBatBuoc && item.mucDat < 1;
+          const isWhatIf = item.id === props.whatIfCriterionId;
+          const displayLevel = isWhatIf ? props.whatIfLevel : item.mucDat;
+          const displayItem = isWhatIf ? { ...item, mucDat: props.whatIfLevel } : item;
+          const rangBuoc = kiemTraRangBuocCapNhat(displayItem);
+          const dangThieu = item.laBatBuoc && displayLevel < 1;
           const tone = dangThieu
             ? "border-[var(--color-danger)] bg-[var(--color-danger-soft)]"
-            : item.mucDat === 2
+            : displayLevel === 2
               ? "border-[var(--color-success)] bg-[var(--color-success-soft)]"
-              : item.mucDat === 1
+              : displayLevel === 1
                 ? "border-[var(--color-warning)] bg-[var(--color-warning-soft)]"
                 : "border-[var(--color-border)] bg-white";
-          const statusText = item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`;
-          const statusTone = item.mucDat === 0
+          const statusText = displayLevel === 0 ? "Chưa đạt" : `Mức ${displayLevel}`;
+          const statusTone = displayLevel === 0
             ? "bg-white/85 text-[var(--color-danger)]"
-            : item.mucDat === 2
+            : displayLevel === 2
               ? "bg-white/85 text-[var(--color-success)]"
               : "bg-white/85 text-[var(--color-warning)]";
 
@@ -418,11 +432,18 @@ function GapBoard(props: {
             >
               <span className="flex min-h-6 items-start justify-between gap-2">
                 <span className="font-semibold tabular-nums leading-6 text-[var(--color-ink-navy)]">{item.ma}</span>
-                {item.laBatBuoc ? (
-                  <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
-                    Bắt buộc
-                  </span>
-                ) : null}
+                <span className="flex items-center gap-1">
+                  {isWhatIf ? (
+                    <span className="rounded-full bg-[var(--color-electric-cobalt)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-white">
+                      Giả định
+                    </span>
+                  ) : null}
+                  {item.laBatBuoc ? (
+                    <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
+                      Bắt buộc
+                    </span>
+                  ) : null}
+                </span>
               </span>
               <span className="mt-1.5 block line-clamp-4 font-semibold leading-5 text-[var(--color-ink-navy)]">
                 {item.ten}
@@ -674,13 +695,20 @@ function CriterionAssessmentForm(props: {
 function WhatIfPanel(props: {
   capHocList: CapHoc[];
   criteria: Criterion[];
+  currentResult: ReturnType<typeof xacDinhMucTuKetQua>;
   selectedCriterionId: string;
+  selectedCriterionName: string;
   setSelectedCriterionId: (id: string) => void;
+  currentCriterionLevel: 0 | 1 | 2;
   whatIfLevel: 0 | 1 | 2;
   setWhatIfLevel: (level: 0 | 1 | 2) => void;
   whatIfResult: ReturnType<typeof xacDinhMucTuKetQua>;
   wholeSchoolResult: ReturnType<typeof xacDinhMucToanTruongTuKetQua>;
 }) {
+  const criterionChanged = props.currentCriterionLevel !== props.whatIfLevel;
+  const resultChanged = props.currentResult.mucDat !== props.whatIfResult.mucDat;
+  const levelLabel = (level: 0 | 1 | 2) => (level === 0 ? "Chưa đạt" : `Mức ${level}`);
+
   return (
     <aside className="surface-card grid content-start gap-4 p-5">
       <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">What-if</h2>
@@ -710,6 +738,27 @@ function WhatIfPanel(props: {
           <option value={2}>Mức 2</option>
         </select>
       </label>
+      <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-lavender-mist)]/45 p-3">
+        <p className="text-xs font-semibold uppercase tracking-normal text-[var(--color-graphite)]/70">
+          Xem trước, không lưu
+        </p>
+        <p className="mt-2 text-sm font-semibold leading-5 text-[var(--color-ink-navy)]">
+          {props.selectedCriterionName || "Chưa chọn tiêu chí"}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/80">
+          Tiêu chí: {levelLabel(props.currentCriterionLevel)} → {levelLabel(props.whatIfLevel)}
+        </p>
+        <p className="text-sm leading-6 text-[var(--color-graphite)]/80">
+          Kết quả cấp học: {props.currentResult.mucDat} → {props.whatIfResult.mucDat}
+        </p>
+        <p className="mt-2 text-sm font-medium text-[var(--color-ink-navy)]">
+          {criterionChanged
+            ? resultChanged
+              ? "Giả định này làm thay đổi mức đánh giá."
+              : "Tiêu chí đã đổi, nhưng mức chung chưa thay đổi."
+            : "Chọn một mức khác để xem tác động."}
+        </p>
+      </div>
       <div className="surface-card p-3">
         <p className="text-sm text-[var(--color-graphite)]/70">Cấp học đang xem</p>
         <p className="mt-1 font-semibold text-[var(--color-ink-navy)]">{props.whatIfResult.mucDat}</p>

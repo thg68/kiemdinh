@@ -183,7 +183,6 @@ export async function collectReportData(
   const [
     { data: schoolData, error: schoolError },
     { data: yearData, error: yearError },
-    { data: standardData, error: standardError },
     { data: criterionData, error: criterionError },
     { data: levelData, error: levelError },
     { data: assessmentData, error: assessmentError },
@@ -203,7 +202,6 @@ export async function collectReportData(
       .eq("id", namHocId)
       .eq("co_so_id", profile.co_so_id)
       .maybeSingle(),
-    supabase.from("tieu_chuan").select("id, so_thu_tu, ten").order("so_thu_tu"),
     supabase
       .from("tieu_chi")
       .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
@@ -245,7 +243,6 @@ export async function collectReportData(
   const firstError =
     schoolError ??
     yearError ??
-    standardError ??
     criterionError ??
     levelError ??
     assessmentError ??
@@ -289,6 +286,13 @@ export async function collectReportData(
         muc_2: levels.muc_2,
       };
     });
+  const standardsById = new Map<string, ReportStandard>();
+
+  for (const criterion of criteria) {
+    if (criterion.tieu_chuan) {
+      standardsById.set(criterion.tieu_chuan.id, criterion.tieu_chuan);
+    }
+  }
 
   const evidence = ((evidenceData ?? []) as (Omit<ReportEvidence, "tieuChiIds"> & {
     minh_chung_tieu_chi?: { tieu_chi_id: string }[];
@@ -335,7 +339,7 @@ export async function collectReportData(
     school: schoolData as ReportSchool,
     year: yearData as ReportSchoolYear,
     capHoc,
-    standards: (standardData ?? []) as ReportStandard[],
+    standards: [...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu),
     criteria,
     assessments,
     evidence,

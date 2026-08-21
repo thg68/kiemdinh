@@ -40,6 +40,13 @@ type Criterion = {
   ten: string;
   la_bat_buoc: boolean;
   loai_hinh_ap_dung: string;
+  muc_tieu_chi?: {
+    muc: 1 | 2;
+    noi_dung_yeu_cau: string;
+  }[];
+  minh_chung_goi_y?: {
+    mo_ta: string;
+  }[];
 };
 
 type AssessmentRow = {
@@ -180,7 +187,7 @@ export function AssessmentWorkspace() {
           .order("ngay_bat_dau", { ascending: false }),
         supabase
           .from("tieu_chi")
-          .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung")
+          .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, muc_tieu_chi(muc, noi_dung_yeu_cau), minh_chung_goi_y(mo_ta)")
           .order("ma", { ascending: true }),
       ]);
 
@@ -407,6 +414,11 @@ function CriterionAssessmentForm(props: {
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
   onDone: (message: string) => Promise<void>;
 }) {
+  const muc1Requirement =
+    props.criterion.muc_tieu_chi?.find((level) => level.muc === 1)?.noi_dung_yeu_cau ?? "";
+  const muc2Requirement =
+    props.criterion.muc_tieu_chi?.find((level) => level.muc === 2)?.noi_dung_yeu_cau ?? "";
+  const evidenceSuggestion = props.criterion.minh_chung_goi_y?.[0]?.mo_ta ?? "";
   const [moTaMuc1, setMoTaMuc1] = useState("");
   const [moTaMuc2, setMoTaMuc2] = useState("");
   const [mucDat, setMucDat] = useState<0 | 1 | 2>(0);
@@ -552,6 +564,11 @@ function CriterionAssessmentForm(props: {
 
       <label className="text-sm font-medium">
         Mô tả hiện trạng Mức 1
+        {muc1Requirement ? (
+          <span className="mt-2 block rounded-[var(--radius-card)] bg-[var(--color-lavender-mist)] p-3 text-sm font-normal leading-6 text-[var(--color-ink-navy)]">
+            {muc1Requirement}
+          </span>
+        ) : null}
         <textarea
           className="form-control mt-2 min-h-28"
           value={moTaMuc1}
@@ -561,6 +578,11 @@ function CriterionAssessmentForm(props: {
 
       <label className="text-sm font-medium">
         Mô tả hiện trạng Mức 2
+        {muc2Requirement ? (
+          <span className="mt-2 block rounded-[var(--radius-card)] bg-[var(--color-lavender-mist)] p-3 text-sm font-normal leading-6 text-[var(--color-ink-navy)]">
+            {muc2Requirement}
+          </span>
+        ) : null}
         <textarea
           className="form-control mt-2 min-h-28"
           value={moTaMuc2}
@@ -570,6 +592,11 @@ function CriterionAssessmentForm(props: {
 
       <fieldset className="grid gap-2 text-sm font-medium">
         <legend>Mã minh chứng đính kèm</legend>
+        {evidenceSuggestion ? (
+          <p className="rounded-[var(--radius-card)] bg-[var(--color-warning-soft)] p-3 text-sm font-normal leading-6 text-[var(--color-warning)]">
+            Gợi ý minh chứng: {evidenceSuggestion}
+          </p>
+        ) : null}
         <div className="grid max-h-64 gap-2 overflow-auto rounded-[var(--radius-card)] border border-[var(--color-border)] p-3">
           {props.evidence.length === 0 ? (
             <p className="text-sm text-[var(--color-graphite)]/70">Chưa có minh chứng trong năm học này.</p>

@@ -1,12 +1,12 @@
-# Nhập Nội Dung Phụ Lục TT57
+# Dữ Liệu Phụ Lục TT57
 
-Từ Sprint 6, cơ sở dữ liệu đã có đủ khung 4 tiêu chuẩn, 15 tiêu chí và 2 mức cho cả 3 loại hình:
+Từ migration `011_seed_tt57_reference_data.sql`, cơ sở dữ liệu đã có dữ liệu thật cho Phụ lục I, II, III:
 
 - `mam_non`
 - `pho_thong`
 - `gdtx`
 
-Các bản ghi này chỉ là khung dữ liệu versioned. Nội dung pháp lý chính thức của từng phụ lục phải được nhập từ văn bản người dùng cung cấp, không tự sinh bằng AI.
+Nguồn dữ liệu nằm trong `data/tt57/*.json`. Không hardcode nội dung phụ lục trong mã nguồn TypeScript.
 
 ## Nguyên tắc nhập
 
@@ -16,7 +16,7 @@ Các bản ghi này chỉ là khung dữ liệu versioned. Nội dung pháp lý 
 - Không hardcode nội dung phụ lục trong mã nguồn.
 - Khi chưa có nội dung chính thức, báo cáo phải cảnh báo thiếu dữ liệu.
 
-## Cấu trúc JSON đề xuất
+## Cấu trúc JSON đang dùng
 
 ```json
 {
@@ -35,13 +35,14 @@ Các bản ghi này chỉ là khung dữ liệu versioned. Nội dung pháp lý 
 
 ## Trạng thái hiện tại
 
-- Schema đã sẵn sàng cho cả 3 phụ lục.
-- Khung dữ liệu đã có đủ số lượng bản ghi cần thiết.
-- Nội dung chính thức vẫn cần được nhập từ phụ lục TT57 do người dùng cung cấp.
+- `data/tt57/tt57-all.json` gộp cả 3 loại hình.
+- `data/tt57/validation.json` ghi số lượng kiểm tra.
+- Unit test `data/tt57/tt57-reference-data.test.ts` xác nhận đủ 4-15-8, 90 bản ghi mức và 102 chỉ số định lượng.
+- Nếu TT57 được đính chính/sửa đổi, tạo version dữ liệu mới thay vì sửa lịch sử migration cũ.
 
 ## Cách kiểm tra nhanh
 
-Sau khi nhập dữ liệu, kiểm tra:
+Sau khi cập nhật dữ liệu hoặc tạo version mới, kiểm tra:
 
 - Mỗi loại hình có 4 tiêu chuẩn.
 - Mỗi loại hình có 15 tiêu chí.

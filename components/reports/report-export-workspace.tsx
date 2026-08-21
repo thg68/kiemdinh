@@ -17,6 +17,7 @@ type Profile = {
 type School = {
   id: string;
   ten: string;
+  loai_hinh: string;
   cap_hoc: CapHoc[];
 };
 
@@ -30,6 +31,11 @@ type Standard = {
   id: string;
   so_thu_tu: number;
   ten: string;
+};
+
+type CriterionWithStandard = {
+  loai_hinh_ap_dung: string;
+  tieu_chuan?: Standard | Standard[] | null;
 };
 
 type StandardNote = {
@@ -111,10 +117,10 @@ export function ReportExportWorkspace() {
 
     setProfile(profileData as Profile);
 
-    const [{ data: schoolData }, { data: yearData }, { data: standardData }] = await Promise.all([
+    const [{ data: schoolData }, { data: yearData }, { data: criterionData }] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
-        .select("id, ten, cap_hoc")
+        .select("id, ten, loai_hinh, cap_hoc")
         .eq("id", profileData.co_so_id)
         .maybeSingle(),
       supabase
@@ -122,16 +128,34 @@ export function ReportExportWorkspace() {
         .select("id, ten, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
-      supabase.from("tieu_chuan").select("id, so_thu_tu, ten").order("so_thu_tu"),
+      supabase
+        .from("tieu_chi")
+        .select("loai_hinh_ap_dung, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
+        .order("ma", { ascending: true }),
     ]);
 
     const loadedSchool = schoolData as School | null;
     const loadedYears = (yearData ?? []) as SchoolYear[];
     const activeYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
+    const standardsById = new Map<string, Standard>();
+
+    for (const criterion of (criterionData ?? []) as CriterionWithStandard[]) {
+      if (criterion.loai_hinh_ap_dung !== (loadedSchool?.loai_hinh ?? "mam_non")) {
+        continue;
+      }
+
+      const standard = Array.isArray(criterion.tieu_chuan)
+        ? criterion.tieu_chuan[0]
+        : criterion.tieu_chuan;
+
+      if (standard) {
+        standardsById.set(standard.id, standard);
+      }
+    }
 
     setSchool(loadedSchool);
     setYears(loadedYears);
-    setStandards((standardData ?? []) as Standard[]);
+    setStandards([...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu));
     setSelectedYearId((current) => current || activeYear?.id || "");
 
     if (loadedSchool?.cap_hoc?.[0]) {

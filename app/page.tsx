@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LandingLenis } from "@/components/landing/landing-lenis";
 
 const features = [
   {
@@ -39,6 +40,7 @@ const roleViews = [
 export default function Home() {
   return (
     <div className="landing-shell">
+      <LandingLenis />
       <header className="landing-nav">
         <div className="content-wrap flex min-h-[72px] items-center justify-between gap-4 px-5">
           <Link className="text-lg font-bold text-[var(--color-ink-navy)]" href="/">

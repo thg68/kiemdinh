@@ -117,7 +117,7 @@ export function AssessmentWorkspace() {
   const [selectedCapHoc, setSelectedCapHoc] = useState<CapHoc>("mam_non");
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [whatIfCriterionId, setWhatIfCriterionId] = useState("");
-  const [whatIfLevel, setWhatIfLevel] = useState<0 | 1 | 2>(2);
+  const [whatIfLevel, setWhatIfLevel] = useState<0 | 1 | 2 | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -130,7 +130,7 @@ export function AssessmentWorkspace() {
   const whatIfCriterion = ketQuaTieuChi.find((item) => item.id === whatIfCriterionId);
 
   const whatIfKetQua = ketQuaTieuChi.map((item) => {
-    if (item.id !== whatIfCriterionId) {
+    if (whatIfLevel === null || item.id !== whatIfCriterionId) {
       return item;
     }
 
@@ -378,7 +378,7 @@ export function AssessmentWorkspace() {
           wholeSchoolResult={xacDinhMucToanTruongTuKetQua(
             capHocList.map((capHoc) => ({
               capHoc,
-              ketQuaTieuChi: capHoc === selectedCapHoc ? whatIfKetQua : ketQuaTieuChi,
+              ketQuaTieuChi: capHoc === selectedCapHoc && whatIfLevel !== null ? whatIfKetQua : ketQuaTieuChi,
             })),
           )}
         />
@@ -391,7 +391,7 @@ function GapBoard(props: {
   ketQuaTieuChi: KetQuaTieuChi[];
   selectedCriterionId: string;
   whatIfCriterionId: string;
-  whatIfLevel: 0 | 1 | 2;
+  whatIfLevel: 0 | 1 | 2 | null;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -401,9 +401,9 @@ function GapBoard(props: {
       </div>
       <div className="grid auto-rows-fr gap-2.5 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {props.ketQuaTieuChi.map((item) => {
-          const isWhatIf = item.id === props.whatIfCriterionId;
-          const displayLevel = isWhatIf ? props.whatIfLevel : item.mucDat;
-          const displayItem = isWhatIf ? { ...item, mucDat: props.whatIfLevel } : item;
+          const isWhatIf = props.whatIfLevel !== null && item.id === props.whatIfCriterionId;
+          const displayLevel = isWhatIf ? props.whatIfLevel ?? item.mucDat : item.mucDat;
+          const displayItem = isWhatIf ? { ...item, mucDat: displayLevel } : item;
           const rangBuoc = kiemTraRangBuocCapNhat(displayItem);
           const dangThieu = item.laBatBuoc && displayLevel < 1;
           const tone = dangThieu
@@ -700,13 +700,14 @@ function WhatIfPanel(props: {
   selectedCriterionName: string;
   setSelectedCriterionId: (id: string) => void;
   currentCriterionLevel: 0 | 1 | 2;
-  whatIfLevel: 0 | 1 | 2;
-  setWhatIfLevel: (level: 0 | 1 | 2) => void;
+  whatIfLevel: 0 | 1 | 2 | null;
+  setWhatIfLevel: (level: 0 | 1 | 2 | null) => void;
   whatIfResult: ReturnType<typeof xacDinhMucTuKetQua>;
   wholeSchoolResult: ReturnType<typeof xacDinhMucToanTruongTuKetQua>;
 }) {
-  const criterionChanged = props.currentCriterionLevel !== props.whatIfLevel;
-  const resultChanged = props.currentResult.mucDat !== props.whatIfResult.mucDat;
+  const hasWhatIf = props.whatIfLevel !== null;
+  const criterionChanged = hasWhatIf && props.currentCriterionLevel !== props.whatIfLevel;
+  const resultChanged = hasWhatIf && props.currentResult.mucDat !== props.whatIfResult.mucDat;
   const levelLabel = (level: 0 | 1 | 2) => (level === 0 ? "Chưa đạt" : `Mức ${level}`);
 
   return (
@@ -730,9 +731,14 @@ function WhatIfPanel(props: {
         Mức giả định
         <select
           className="form-control mt-2"
-          value={props.whatIfLevel}
-          onChange={(event) => props.setWhatIfLevel(Number(event.target.value) as 0 | 1 | 2)}
+          value={props.whatIfLevel ?? ""}
+          onChange={(event) =>
+            props.setWhatIfLevel(
+              event.target.value === "" ? null : (Number(event.target.value) as 0 | 1 | 2),
+            )
+          }
         >
+          <option value="">Không giả định</option>
           <option value={0}>Chưa đạt</option>
           <option value={1}>Mức 1</option>
           <option value={2}>Mức 2</option>
@@ -746,13 +752,15 @@ function WhatIfPanel(props: {
           {props.selectedCriterionName || "Chưa chọn tiêu chí"}
         </p>
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/80">
-          Tiêu chí: {levelLabel(props.currentCriterionLevel)} → {levelLabel(props.whatIfLevel)}
+          Tiêu chí: {hasWhatIf ? `${levelLabel(props.currentCriterionLevel)} → ${levelLabel(props.whatIfLevel ?? 0)}` : "Không giả định"}
         </p>
         <p className="text-sm leading-6 text-[var(--color-graphite)]/80">
-          Kết quả cấp học: {props.currentResult.mucDat} → {props.whatIfResult.mucDat}
+          Kết quả cấp học: {hasWhatIf ? `${props.currentResult.mucDat} → ${props.whatIfResult.mucDat}` : props.currentResult.mucDat}
         </p>
         <p className="mt-2 text-sm font-medium text-[var(--color-ink-navy)]">
-          {criterionChanged
+          {!hasWhatIf
+            ? "Chọn một mức để xem thử tác động, hoặc giữ Không giả định để xem dữ liệu thật."
+            : criterionChanged
             ? resultChanged
               ? "Giả định này làm thay đổi mức đánh giá."
               : "Tiêu chí đã đổi, nhưng mức chung chưa thay đổi."

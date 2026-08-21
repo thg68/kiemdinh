@@ -388,7 +388,7 @@ function GapBoard(props: {
       <div className="border-b border-[var(--color-border)] px-5 py-4">
         <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Gap Board</h2>
       </div>
-      <div className="grid auto-rows-fr gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid auto-rows-fr gap-2.5 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {props.ketQuaTieuChi.map((item) => {
           const rangBuoc = kiemTraRangBuocCapNhat(item);
           const dangThieu = item.laBatBuoc && item.mucDat < 1;
@@ -408,7 +408,7 @@ function GapBoard(props: {
 
           return (
             <button
-              className={`grid min-h-40 grid-rows-[auto_auto_1fr_auto] rounded-[var(--radius-card)] border p-3 text-left text-sm transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
+              className={`grid min-h-32 grid-rows-[auto_1fr_auto] rounded-[var(--radius-card)] border p-2.5 text-left text-[13px] transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
                 props.selectedCriterionId === item.id ? "outline outline-2 outline-[var(--color-electric-cobalt)]" : ""
               }`}
               key={item.id}
@@ -419,19 +419,21 @@ function GapBoard(props: {
               <span className="flex min-h-6 items-start justify-between gap-2">
                 <span className="font-semibold tabular-nums leading-6 text-[var(--color-ink-navy)]">{item.ma}</span>
                 {item.laBatBuoc ? (
-                  <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
+                  <span className="rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
                     Bắt buộc
                   </span>
                 ) : null}
               </span>
-              <span className="mt-2 block line-clamp-3 font-semibold leading-5 text-[var(--color-ink-navy)]">
+              <span className="mt-1.5 block line-clamp-4 font-semibold leading-5 text-[var(--color-ink-navy)]">
                 {item.ten}
               </span>
-              <span className="mt-2 min-h-7 text-xs leading-5 text-[var(--color-warning)]">
-                {!rangBuoc.hopLe ? rangBuoc.loi[0] : ""}
-              </span>
-              <span className={`mt-2 w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone}`}>
-                {statusText}
+              <span className="mt-2 flex min-h-6 items-end justify-between gap-2">
+                <span className="line-clamp-1 text-[11px] leading-5 text-[var(--color-warning)]">
+                  {!rangBuoc.hopLe ? rangBuoc.loi[0] : ""}
+                </span>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusTone}`}>
+                  {statusText}
+                </span>
               </span>
             </button>
           );

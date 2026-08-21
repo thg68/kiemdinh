@@ -24,14 +24,6 @@ const workingAreas = [
   },
 ];
 
-const notYet = [
-  "Công việc",
-  "Cải tiến chất lượng",
-  "Chỉ số chất lượng",
-  "Hội đồng & phân công",
-  "Trợ lý AI",
-];
-
 export default function DashboardPage() {
   return (
     <ApplicationShell
@@ -72,17 +64,6 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="surface-card surface-card-pad">
-        <h2 className="section-title text-xl">Các khu vực sẽ mở rộng sau bản đầu tiên</h2>
-        <p className="muted mt-3 text-sm leading-7">
-          Các mục dưới đây chỉ hiển thị định hướng sản phẩm, chưa tạo dữ liệu hoặc quyền mới.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {notYet.map((item) => (
-            <span className="mini-badge" key={item}>{item}</span>
-          ))}
-        </div>
-      </section>
     </ApplicationShell>
   );
 }

@@ -1,18 +1,8 @@
 import Link from "next/link";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 type ApplicationShellProps = {
-  active:
-    | "dashboard"
-    | "standards"
-    | "evidence"
-    | "assessment"
-    | "reports"
-    | "settings"
-    | "work"
-    | "improvement"
-    | "indicators"
-    | "council"
-    | "ai";
+  active: "dashboard" | "standards" | "evidence" | "assessment" | "reports" | "settings";
   children: React.ReactNode;
   description?: string;
   title: string;
@@ -25,14 +15,6 @@ const primaryNav = [
   { key: "assessment", label: "Tự đánh giá", href: "/tu-danh-gia" },
   { key: "reports", label: "Báo cáo", href: "/bao-cao" },
   { key: "settings", label: "Cài đặt", href: "/thiet-lap" },
-] as const;
-
-const roadmapNav = [
-  { key: "work", label: "Công việc", href: "/cong-viec" },
-  { key: "improvement", label: "Cải tiến chất lượng", href: "/cai-tien-chat-luong" },
-  { key: "indicators", label: "Chỉ số chất lượng", href: "/chi-so-chat-luong" },
-  { key: "council", label: "Hội đồng & phân công", href: "/hoi-dong" },
-  { key: "ai", label: "Trợ lý AI", href: "/tro-ly-ai" },
 ] as const;
 
 export function ApplicationShell({
@@ -64,22 +46,6 @@ export function ApplicationShell({
             ))}
           </nav>
 
-          <div className="mt-8 border-t border-[var(--color-border)] pt-6">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-graphite)]/50">
-              Mở rộng sau bản đầu tiên
-            </p>
-            <div className="grid gap-1">
-              {roadmapNav.map((item) => (
-                <Link
-                  className={`app-nav-muted ${active === item.key ? "app-nav-link-active" : ""}`}
-                  href={item.href}
-                  key={item.key}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
         </aside>
 
         <main className="app-main">
@@ -92,10 +58,11 @@ export function ApplicationShell({
                 Năm học và đơn vị được tải từ dữ liệu thật trong từng màn hình.
               </p>
             </div>
-            <div className="hidden items-center gap-2 text-xs text-[var(--color-graphite)]/65 sm:flex">
-              <span className="mini-badge">RLS</span>
-              <span className="mini-badge">Signed URL</span>
-              <span className="mini-badge">Nhật ký</span>
+            <div className="flex flex-wrap items-center justify-end gap-2 text-xs text-[var(--color-graphite)]/65">
+              <span className="mini-badge hidden sm:inline-flex">RLS</span>
+              <span className="mini-badge hidden sm:inline-flex">Signed URL</span>
+              <span className="mini-badge hidden lg:inline-flex">Nhật ký</span>
+              <LogoutButton />
             </div>
           </div>
 

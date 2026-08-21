@@ -42,8 +42,6 @@ Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
 
-Các trang `/cong-viec`, `/cai-tien-chat-luong`, `/chi-so-chat-luong`, `/hoi-dong`, `/tro-ly-ai` hiện là trang thông báo lộ trình, chưa ghi dữ liệu nghiệp vụ.
-
 Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 
 ## Tài Liệu Sprint 6

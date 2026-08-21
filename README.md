@@ -42,6 +42,15 @@ Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để
 
 Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 
+## Tài Liệu Sprint 6
+
+- `docs/huong-dan-hieu-truong.md`: hướng dẫn sử dụng cho Hiệu trưởng.
+- `docs/huong-dan-thu-ky-hoi-dong.md`: hướng dẫn sử dụng cho Thư ký hội đồng.
+- `docs/huong-dan-giao-vien.md`: hướng dẫn sử dụng cho Giáo viên.
+- `docs/kich-ban-video-demo-10-phut.md`: kịch bản quay video demo 10 phút.
+- `docs/definition-of-done-m0-m4.md`: kiểm tra Định nghĩa Hoàn thành cho M0-M4.
+- `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
+
 ## Cấu Trúc Thư Mục
 
 - `app/`: giao diện Next.js App Router.

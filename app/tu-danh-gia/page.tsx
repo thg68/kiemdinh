@@ -3,22 +3,23 @@ import { AssessmentWorkspace } from "@/components/assessment/assessment-workspac
 
 export default function SelfAssessmentPage() {
   return (
-    <main className="min-h-screen bg-[#f7f7f2] px-6 py-8 text-[#1f2933]">
-      <div className="mx-auto grid w-full max-w-7xl gap-6">
-        <header className="grid gap-3 border-b border-[#d8d6c9] pb-5 sm:grid-cols-[1fr_auto]">
+    <main className="app-shell">
+      <div className="content-wrap grid gap-8">
+        <header className="page-header-row">
           <div>
-            <p className="text-sm font-medium uppercase tracking-[0.08em] text-[#6f5f36]">
-              Sprint 3
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-[#17324d]">
+            <h1 className="page-title">
               Tự đánh giá
             </h1>
+            <p className="page-copy mt-5">
+              Nhập hiện trạng theo tiêu chí, gắn mã minh chứng có thật và xem ngay
+              khoảng cách để đạt mức tiếp theo.
+            </p>
           </div>
           <nav className="flex flex-wrap items-start gap-2">
-            <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/">
+            <Link className="button-secondary" href="/">
               Trang chính
             </Link>
-            <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/minh-chung">
+            <Link className="button-secondary" href="/minh-chung">
               Kho minh chứng
             </Link>
           </nav>

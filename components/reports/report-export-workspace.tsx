@@ -305,30 +305,30 @@ export function ReportExportWorkspace() {
     setSelectedYearId(String(data?.nam_hoc_id ?? selectedYearId));
     setSelectedCapHoc((data?.cap_hoc ?? selectedCapHoc) as CapHoc);
     setMessage(
-      `Đã tạo dữ liệu DEMO cho Sprint 4: ${data?.so_tu_danh_gia ?? 0} tự đánh giá, ${data?.so_minh_chung_moi ?? 0} minh chứng mới.`,
+      `Đã tạo dữ liệu DEMO: ${data?.so_tu_danh_gia ?? 0} tự đánh giá, ${data?.so_minh_chung_moi ?? 0} minh chứng mới.`,
     );
     await loadStandardNotes();
   }
 
   if (loading) {
-    return <p className="text-sm text-[#52606d]">Đang tải dữ liệu xuất báo cáo...</p>;
+    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải dữ liệu xuất báo cáo...</p>;
   }
 
   if (!profile || years.length === 0) {
     return (
-      <div className="border border-[#d8d6c9] bg-white p-5">
-        <p className="text-sm text-[#52606d]">Chưa có đơn vị hoặc năm học để xuất báo cáo.</p>
+      <div className="surface-card surface-card-pad">
+        <p className="text-sm text-[var(--color-graphite)]/70">Chưa có đơn vị hoặc năm học để xuất báo cáo.</p>
       </div>
     );
   }
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 border border-[#d8d6c9] bg-white p-5 lg:grid-cols-2">
+      <section className="surface-card grid gap-4 p-5 lg:grid-cols-2">
         <label className="text-sm font-medium">
           Năm học
           <select
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={selectedYearId}
             onChange={(event) => setSelectedYearId(event.target.value)}
           >
@@ -343,7 +343,7 @@ export function ReportExportWorkspace() {
         <label className="text-sm font-medium">
           Cấp học
           <select
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={selectedCapHoc}
             onChange={(event) => setSelectedCapHoc(event.target.value as CapHoc)}
           >
@@ -358,18 +358,18 @@ export function ReportExportWorkspace() {
 
       {message ? <Message text={message} /> : null}
 
-      <section className="border border-[#d8d6c9] bg-white p-5">
-        <h2 className="text-lg font-semibold text-[#17324d]">Dữ liệu demo</h2>
-        <p className="mt-1 text-sm leading-6 text-[#52606d]">
+      <section className="surface-card surface-card-pad">
+        <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Dữ liệu demo</h2>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
           Tạo dữ liệu có nhãn [DEMO] cho đơn vị hiện tại để thử xuất file. Dữ liệu này không thay thế minh chứng thật của nhà trường.
         </p>
         <button
-          className="mt-4 border border-[#7a3f18] px-4 py-2.5 text-sm font-semibold text-[#7a3f18] disabled:border-[#c9c6b8] disabled:text-[#8da0b2]"
+          className="button-secondary button-warning mt-4 disabled:text-[var(--color-stone)]"
           disabled={creatingDemo}
           type="button"
           onClick={createDemoData}
         >
-          {creatingDemo ? "Đang tạo dữ liệu demo..." : "Tạo dữ liệu demo Sprint 4"}
+          {creatingDemo ? "Đang tạo dữ liệu demo..." : "Tạo dữ liệu demo"}
         </button>
       </section>
 
@@ -380,17 +380,17 @@ export function ReportExportWorkspace() {
         standards={standards}
       />
 
-      <section className="border border-[#d8d6c9] bg-white">
-        <div className="border-b border-[#d8d6c9] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[#17324d]">Xuất dữ liệu</h2>
-          <p className="mt-1 text-sm leading-6 text-[#52606d]">
-            Mẫu 1 là checkpoint Sprint 4: báo cáo chỉ hoàn chỉnh khi dữ liệu thật đã đủ mô tả hiện trạng và mã minh chứng.
+      <section className="surface-card overflow-hidden">
+        <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Xuất dữ liệu</h2>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+            Mẫu 1 chỉ hoàn chỉnh khi dữ liệu thật đã đủ mô tả hiện trạng và mã minh chứng.
           </p>
         </div>
         <div className="grid gap-3 p-5 sm:grid-cols-2">
           {exports.map((item) => (
             <button
-              className="border border-[#17324d] px-4 py-3 text-left text-sm font-semibold text-[#17324d] disabled:border-[#8da0b2] disabled:text-[#8da0b2]"
+              className="surface-card px-4 py-4 text-left text-sm font-semibold text-[var(--color-ink-navy)] hover:border-[var(--color-electric-cobalt)] hover:bg-[var(--color-lavender-mist)]/45 disabled:text-[var(--color-stone)]"
               disabled={Boolean(downloading)}
               key={item.endpoint}
               type="button"
@@ -420,10 +420,10 @@ function StandardNotesForm(props: {
   }
 
   return (
-    <section className="border border-[#d8d6c9] bg-white">
-      <div className="border-b border-[#d8d6c9] px-5 py-4">
-        <h2 className="text-lg font-semibold text-[#17324d]">Nhận xét theo tiêu chuẩn cho Mẫu 1</h2>
-        <p className="mt-1 text-sm leading-6 text-[#52606d]">
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Nhận xét theo tiêu chuẩn cho Mẫu 1</h2>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
           Các ô này đi thẳng vào phần Điểm mạnh, Hạn chế và Định hướng cải tiến. Để trống thì file Mẫu 1 sẽ cảnh báo đỏ.
         </p>
       </div>
@@ -432,14 +432,14 @@ function StandardNotesForm(props: {
           const note = props.notes.find((item) => item.tieu_chuan_id === standard.id);
 
           return (
-            <fieldset className="grid gap-3 border border-[#e4e1d5] p-4" key={standard.id}>
-              <legend className="px-2 text-sm font-semibold text-[#17324d]">
+            <fieldset className="surface-card grid gap-3 p-4" key={standard.id}>
+              <legend className="px-2 text-sm font-semibold text-[var(--color-ink-navy)]">
                 Tiêu chuẩn {standard.so_thu_tu}: {standard.ten}
               </legend>
               <label className="text-sm font-medium">
                 Điểm mạnh nổi bật
                 <textarea
-                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  className="form-control mt-2 min-h-20"
                   value={note?.diem_manh_noi_bat ?? ""}
                   onChange={(event) => props.onUpdate(standard.id, "diem_manh_noi_bat", event.target.value)}
                 />
@@ -447,7 +447,7 @@ function StandardNotesForm(props: {
               <label className="text-sm font-medium">
                 Điểm hạn chế trọng tâm và nguyên nhân cốt lõi
                 <textarea
-                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  className="form-control mt-2 min-h-20"
                   value={note?.han_che_trong_tam ?? ""}
                   onChange={(event) => props.onUpdate(standard.id, "han_che_trong_tam", event.target.value)}
                 />
@@ -455,7 +455,7 @@ function StandardNotesForm(props: {
               <label className="text-sm font-medium">
                 Định hướng cải tiến chất lượng
                 <textarea
-                  className="mt-2 min-h-20 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                  className="form-control mt-2 min-h-20"
                   value={note?.dinh_huong_cai_tien ?? ""}
                   onChange={(event) => props.onUpdate(standard.id, "dinh_huong_cai_tien", event.target.value)}
                 />
@@ -464,8 +464,8 @@ function StandardNotesForm(props: {
           );
         })}
       </div>
-      <div className="border-t border-[#d8d6c9] px-5 py-4">
-        <button className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white" type="button" onClick={props.onSave}>
+      <div className="border-t border-[var(--color-border)] px-5 py-4">
+        <button className="button-primary" type="button" onClick={props.onSave}>
           Lưu nhận xét Mẫu 1
         </button>
       </div>
@@ -475,7 +475,7 @@ function StandardNotesForm(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+    <p className="status-message text-sm">
       {text}
     </p>
   );

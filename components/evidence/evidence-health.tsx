@@ -147,13 +147,13 @@ export function EvidenceHealth() {
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
-        <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/minh-chung">
+        <Link className="button-secondary" href="/minh-chung">
           Quay lại kho
         </Link>
       </div>
 
       {message ? (
-        <p className="border border-[#d8d6c9] bg-white px-4 py-3 text-sm text-[#52606d]">{message}</p>
+        <p className="status-message text-sm">{message}</p>
       ) : null}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -169,12 +169,12 @@ export function EvidenceHealth() {
 
       <HealthPanel title="Minh chứng trùng lặp theo SHA-256">
         {duplicateGroups.length === 0 ? (
-          <p className="text-sm text-[#52606d]">Không phát hiện nhóm trùng hash.</p>
+          <p className="text-sm text-[var(--color-graphite)]/70">Không phát hiện nhóm trùng hash.</p>
         ) : (
           <div className="grid gap-4">
             {duplicateGroups.map((group) => (
-              <div className="border border-[#e4e1d5] p-3" key={group[0].hash_tep ?? group[0].id}>
-                <p className="break-all text-xs text-[#52606d]">{group[0].hash_tep}</p>
+              <div className="surface-card p-3" key={group[0].hash_tep ?? group[0].id}>
+                <p className="break-all text-xs text-[var(--color-graphite)]/70">{group[0].hash_tep}</p>
                 <EvidenceList items={group} />
               </div>
             ))}
@@ -188,13 +188,13 @@ export function EvidenceHealth() {
 
       <HealthPanel title="Tiêu chí chưa có minh chứng">
         {emptyCriteria.length === 0 ? (
-          <p className="text-sm text-[#52606d]">Tất cả tiêu chí đã có minh chứng.</p>
+          <p className="text-sm text-[var(--color-graphite)]/70">Tất cả tiêu chí đã có minh chứng.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {emptyCriteria.map((criterion) => (
-              <div className="border border-[#e4e1d5] p-3 text-sm" key={criterion.id}>
-                <strong className="text-[#17324d]">{criterion.ma}</strong>{" "}
-                <span className="text-[#52606d]">{criterion.ten}</span>
+              <div className="surface-card p-3 text-sm" key={criterion.id}>
+                <strong className="text-[var(--color-ink-navy)]">{criterion.ma}</strong>{" "}
+                <span className="text-[var(--color-graphite)]/70">{criterion.ten}</span>
               </div>
             ))}
           </div>
@@ -206,9 +206,9 @@ export function EvidenceHealth() {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border border-[#d8d6c9] bg-white p-5">
-      <p className="text-sm text-[#52606d]">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-[#17324d]">{value}</p>
+    <div className="surface-card p-5">
+      <p className="text-sm text-[var(--color-graphite)]/70">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-[var(--color-ink-navy)]">{value}</p>
     </div>
   );
 }
@@ -221,8 +221,8 @@ function HealthPanel({
   title: string;
 }) {
   return (
-    <section className="border border-[#d8d6c9] bg-white p-5">
-      <h2 className="text-lg font-semibold text-[#17324d]">{title}</h2>
+    <section className="surface-card surface-card-pad">
+      <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -230,14 +230,14 @@ function HealthPanel({
 
 function EvidenceList({ items, empty }: { items: Evidence[]; empty?: string }) {
   if (items.length === 0) {
-    return <p className="text-sm text-[#52606d]">{empty ?? "Không có dữ liệu."}</p>;
+    return <p className="text-sm text-[var(--color-graphite)]/70">{empty ?? "Không có dữ liệu."}</p>;
   }
 
   return (
     <div className="grid gap-2">
       {items.map((item) => (
         <Link
-          className="border border-[#e4e1d5] p-3 text-sm text-[#17324d] hover:bg-[#f7f7f2]"
+          className="surface-card p-3 text-sm text-[var(--color-ink-navy)] hover:border-[var(--color-electric-cobalt)] hover:bg-[var(--color-lavender-mist)]/45"
           href={`/minh-chung/${item.id}`}
           key={item.id}
         >

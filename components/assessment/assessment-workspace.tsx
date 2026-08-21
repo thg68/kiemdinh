@@ -262,14 +262,14 @@ export function AssessmentWorkspace() {
   }, [loadAssessmentData]);
 
   if (loading) {
-    return <p className="text-sm text-[#52606d]">Đang tải tự đánh giá...</p>;
+    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải tự đánh giá...</p>;
   }
 
   if (!profile || !activeYear) {
     return (
-      <div className="border border-[#d8d6c9] bg-white p-5">
-        <p className="text-sm text-[#52606d]">Chưa có đơn vị hoặc năm học đang hoạt động.</p>
-        <Link className="mt-3 inline-block bg-[#17324d] px-4 py-2 text-sm font-semibold text-white" href="/thiet-lap">
+      <div className="surface-card surface-card-pad">
+        <p className="text-sm text-[var(--color-graphite)]/70">Chưa có đơn vị hoặc năm học đang hoạt động.</p>
+        <Link className="button-primary mt-3" href="/thiet-lap">
           Thiết lập ngay
         </Link>
       </div>
@@ -278,18 +278,18 @@ export function AssessmentWorkspace() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 border border-[#d8d6c9] bg-white p-5 lg:grid-cols-[1fr_auto]">
+      <section className="featured-card grid gap-4 lg:grid-cols-[1fr_auto]">
         <div>
-          <p className="text-sm text-[#52606d]">{activeYear.ten}</p>
-          <h2 className="mt-1 text-2xl font-semibold text-[#17324d]">{giaiTrinh.mucDat}</h2>
-          <p className="mt-2 text-sm leading-6 text-[#52606d]">{giaiTrinh.lyDo}</p>
-          <p className="mt-1 text-sm font-medium text-[#7a3f18]">{giaiTrinh.khoangCach}</p>
+          <p className="text-sm text-white/70">{activeYear.ten}</p>
+          <h2 className="mt-1 text-2xl font-semibold text-white">{giaiTrinh.mucDat}</h2>
+          <p className="mt-2 text-sm leading-6 text-white/78">{giaiTrinh.lyDo}</p>
+          <p className="mt-1 text-sm font-medium text-white">{giaiTrinh.khoangCach}</p>
         </div>
 
-        <label className="text-sm font-medium">
+        <label className="text-sm font-medium text-white">
           Cấp học
           <select
-            className="mt-2 w-full min-w-48 border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2 min-w-48"
             value={selectedCapHoc}
             onChange={(event) => setSelectedCapHoc(event.target.value as CapHoc)}
           >
@@ -326,7 +326,7 @@ export function AssessmentWorkspace() {
             }}
           />
         ) : (
-          <p className="border border-[#d8d6c9] bg-white p-5 text-sm text-[#52606d]">
+          <p className="surface-card surface-card-pad text-sm text-[var(--color-graphite)]/70">
             Chưa có tiêu chí trong bộ tiêu chuẩn.
           </p>
         )}
@@ -357,37 +357,37 @@ function GapBoard(props: {
   onSelect: (id: string) => void;
 }) {
   return (
-    <section className="border border-[#d8d6c9] bg-white">
-      <div className="border-b border-[#d8d6c9] px-5 py-4">
-        <h2 className="text-lg font-semibold text-[#17324d]">Gap Board</h2>
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Gap Board</h2>
       </div>
       <div className="grid gap-2 p-4 sm:grid-cols-2 lg:grid-cols-5">
         {props.ketQuaTieuChi.map((item) => {
           const rangBuoc = kiemTraRangBuocCapNhat(item);
           const dangThieu = item.laBatBuoc && item.mucDat < 1;
           const tone = dangThieu
-            ? "border-[#ba1a1a] bg-[#fff3f1]"
+            ? "border-[var(--color-danger)] bg-[var(--color-danger-soft)]"
             : item.mucDat === 2
-              ? "border-[#2f7d32] bg-[#f1f8f1]"
+              ? "border-[var(--color-success)] bg-[var(--color-success-soft)]"
               : item.mucDat === 1
-                ? "border-[#b7791f] bg-[#fff8e8]"
-                : "border-[#d8d6c9] bg-white";
+                ? "border-[var(--color-warning)] bg-[var(--color-warning-soft)]"
+                : "border-[var(--color-border)] bg-white";
 
           return (
             <button
-              className={`min-h-28 border p-3 text-left text-sm ${tone} ${
-                props.selectedCriterionId === item.id ? "outline outline-2 outline-[#17324d]" : ""
+              className={`min-h-28 rounded-[var(--radius-card)] border p-3 text-left text-sm ${tone} ${
+                props.selectedCriterionId === item.id ? "outline outline-2 outline-[var(--color-electric-cobalt)]" : ""
               }`}
               key={item.id}
               type="button"
               onClick={() => item.id && props.onSelect(item.id)}
             >
-              <span className="block font-semibold text-[#17324d]">
+              <span className="block font-semibold text-[var(--color-ink-navy)]">
                 {item.ma} {item.laBatBuoc ? "bắt buộc" : ""}
               </span>
-              <span className="mt-2 block text-[#52606d]">{item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`}</span>
+              <span className="mt-2 block text-[var(--color-graphite)]/70">{item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`}</span>
               {!rangBuoc.hopLe ? (
-                <span className="mt-2 block text-xs leading-5 text-[#8a2a0a]">{rangBuoc.loi[0]}</span>
+                <span className="mt-2 block text-xs leading-5 text-[var(--color-warning)]">{rangBuoc.loi[0]}</span>
               ) : null}
             </button>
           );
@@ -520,12 +520,12 @@ function CriterionAssessmentForm(props: {
   }
 
   return (
-    <form className="grid gap-4 border border-[#d8d6c9] bg-white p-5" onSubmit={handleSubmit}>
+    <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>
       <div>
-        <p className="text-sm font-semibold text-[#7a3f18]">
+        <p className="text-sm font-semibold text-[var(--color-warning)]">
           {props.criterion.ma} {props.criterion.la_bat_buoc ? "bắt buộc" : ""}
         </p>
-        <h2 className="mt-1 text-xl font-semibold text-[#17324d]">{props.criterion.ten}</h2>
+        <h2 className="mt-1 text-xl font-semibold text-[var(--color-ink-navy)]">{props.criterion.ten}</h2>
       </div>
 
       <fieldset className="grid gap-2 text-sm font-medium">
@@ -536,7 +536,7 @@ function CriterionAssessmentForm(props: {
             { value: 1, label: "Mức 1" },
             { value: 2, label: "Mức 2" },
           ].map((option) => (
-            <label className="border border-[#d8d6c9] px-3 py-2" key={option.value}>
+            <label className="surface-card px-3 py-3" key={option.value}>
               <input
                 checked={mucDat === option.value}
                 className="mr-2"
@@ -553,7 +553,7 @@ function CriterionAssessmentForm(props: {
       <label className="text-sm font-medium">
         Mô tả hiện trạng Mức 1
         <textarea
-          className="mt-2 min-h-28 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2 min-h-28"
           value={moTaMuc1}
           onChange={(event) => setMoTaMuc1(event.target.value)}
         />
@@ -562,7 +562,7 @@ function CriterionAssessmentForm(props: {
       <label className="text-sm font-medium">
         Mô tả hiện trạng Mức 2
         <textarea
-          className="mt-2 min-h-28 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2 min-h-28"
           value={moTaMuc2}
           onChange={(event) => setMoTaMuc2(event.target.value)}
         />
@@ -570,19 +570,19 @@ function CriterionAssessmentForm(props: {
 
       <fieldset className="grid gap-2 text-sm font-medium">
         <legend>Mã minh chứng đính kèm</legend>
-        <div className="grid max-h-64 gap-2 overflow-auto border border-[#d8d6c9] p-3">
+        <div className="grid max-h-64 gap-2 overflow-auto rounded-[var(--radius-card)] border border-[var(--color-border)] p-3">
           {props.evidence.length === 0 ? (
-            <p className="text-sm text-[#52606d]">Chưa có minh chứng trong năm học này.</p>
+            <p className="text-sm text-[var(--color-graphite)]/70">Chưa có minh chứng trong năm học này.</p>
           ) : (
             props.evidence.map((item) => (
-              <label className="flex items-start gap-2 border border-[#e4e1d5] p-2" key={item.id}>
+              <label className="surface-card flex items-start gap-2 p-3" key={item.id}>
                 <input
                   checked={selectedEvidenceIds.includes(item.id)}
                   type="checkbox"
                   onChange={() => toggleEvidence(item.id)}
                 />
                 <span>
-                  <strong className="text-[#17324d]">{item.ma}</strong> {item.ten}
+                  <strong className="text-[var(--color-ink-navy)]">{item.ma}</strong> {item.ten}
                 </span>
               </label>
             ))
@@ -591,7 +591,7 @@ function CriterionAssessmentForm(props: {
       </fieldset>
 
       <button
-        className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white disabled:bg-[#8da0b2]"
+        className="button-primary"
         disabled={saving}
       >
         {saving ? "Đang lưu..." : "Lưu tự đánh giá"}
@@ -611,12 +611,12 @@ function WhatIfPanel(props: {
   wholeSchoolResult: ReturnType<typeof xacDinhMucToanTruongTuKetQua>;
 }) {
   return (
-    <aside className="grid content-start gap-4 border border-[#d8d6c9] bg-white p-5">
-      <h2 className="text-lg font-semibold text-[#17324d]">What-if</h2>
+    <aside className="surface-card grid content-start gap-4 p-5">
+      <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">What-if</h2>
       <label className="text-sm font-medium">
         Tiêu chí giả định
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.selectedCriterionId}
           onChange={(event) => props.setSelectedCriterionId(event.target.value)}
         >
@@ -630,7 +630,7 @@ function WhatIfPanel(props: {
       <label className="text-sm font-medium">
         Mức giả định
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.whatIfLevel}
           onChange={(event) => props.setWhatIfLevel(Number(event.target.value) as 0 | 1 | 2)}
         >
@@ -639,14 +639,14 @@ function WhatIfPanel(props: {
           <option value={2}>Mức 2</option>
         </select>
       </label>
-      <div className="border border-[#d8d6c9] p-3">
-        <p className="text-sm text-[#52606d]">Cấp học đang xem</p>
-        <p className="mt-1 font-semibold text-[#17324d]">{props.whatIfResult.mucDat}</p>
+      <div className="surface-card p-3">
+        <p className="text-sm text-[var(--color-graphite)]/70">Cấp học đang xem</p>
+        <p className="mt-1 font-semibold text-[var(--color-ink-navy)]">{props.whatIfResult.mucDat}</p>
       </div>
-      <div className="border border-[#d8d6c9] p-3">
-        <p className="text-sm text-[#52606d]">Toàn trường</p>
-        <p className="mt-1 font-semibold text-[#17324d]">{props.wholeSchoolResult.mucDat}</p>
-        <p className="mt-2 text-xs leading-5 text-[#52606d]">{props.wholeSchoolResult.lyDo}</p>
+      <div className="surface-card p-3">
+        <p className="text-sm text-[var(--color-graphite)]/70">Toàn trường</p>
+        <p className="mt-1 font-semibold text-[var(--color-ink-navy)]">{props.wholeSchoolResult.mucDat}</p>
+        <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">{props.wholeSchoolResult.lyDo}</p>
       </div>
     </aside>
   );
@@ -654,7 +654,7 @@ function WhatIfPanel(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+    <p className="status-message text-sm">
       {text}
     </p>
   );

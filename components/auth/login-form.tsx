@@ -66,18 +66,18 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md border border-[#d8d6c9] bg-white p-6">
-      <div className="grid grid-cols-2 border border-[#d8d6c9] text-sm font-medium">
+    <div className="surface-card w-full max-w-md p-6">
+      <div className="segmented-control grid-cols-2 text-sm font-medium">
         <button
           type="button"
-          className={`px-3 py-2 ${mode === "dang_nhap" ? "bg-[#17324d] text-white" : "bg-white text-[#17324d]"}`}
+          className={`segmented-option ${mode === "dang_nhap" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_nhap")}
         >
           Đăng nhập
         </button>
         <button
           type="button"
-          className={`px-3 py-2 ${mode === "dang_ky" ? "bg-[#17324d] text-white" : "bg-white text-[#17324d]"}`}
+          className={`segmented-option ${mode === "dang_ky" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_ky")}
         >
           Tạo tài khoản
@@ -86,10 +86,10 @@ export function LoginForm() {
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         {mode === "dang_ky" ? (
-          <label className="block text-sm font-medium text-[#1f2933]">
+          <label className="block text-sm font-medium text-[var(--color-charcoal)]">
             Họ và tên
             <input
-              className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+              className="form-control mt-2"
               value={hoTen}
               onChange={(event) => setHoTen(event.target.value)}
               required
@@ -97,10 +97,10 @@ export function LoginForm() {
           </label>
         ) : null}
 
-        <label className="block text-sm font-medium text-[#1f2933]">
+        <label className="block text-sm font-medium text-[var(--color-charcoal)]">
           Email
           <input
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -108,10 +108,10 @@ export function LoginForm() {
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1f2933]">
+        <label className="block text-sm font-medium text-[var(--color-charcoal)]">
           Mật khẩu
           <input
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -122,7 +122,7 @@ export function LoginForm() {
 
         <button
           type="submit"
-          className="w-full bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-[#8da0b2]"
+          className="button-primary w-full disabled:cursor-not-allowed"
           disabled={isSubmitting}
         >
           {isSubmitting
@@ -134,7 +134,7 @@ export function LoginForm() {
       </form>
 
       {message ? (
-        <p className="mt-4 border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+        <p className="status-message mt-4 text-sm">
           {message}
         </p>
       ) : null}

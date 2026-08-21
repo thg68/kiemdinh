@@ -209,16 +209,16 @@ export function EvidenceWorkspace() {
   }, [loadEvidence]);
 
   if (loading) {
-    return <p className="text-sm text-[#52606d]">Đang tải kho minh chứng...</p>;
+    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải kho minh chứng...</p>;
   }
 
   return (
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
-        <Link className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white" href="/minh-chung/suc-khoe">
+        <Link className="button-primary" href="/minh-chung/suc-khoe">
           Kiểm tra sức khỏe
         </Link>
-        <Link className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]" href="/thiet-lap">
+        <Link className="button-secondary" href="/thiet-lap">
           Năm học
         </Link>
       </div>
@@ -244,31 +244,31 @@ export function EvidenceWorkspace() {
         years={years}
       />
 
-      <section className="overflow-hidden border border-[#d8d6c9] bg-white">
-        <div className="border-b border-[#d8d6c9] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[#17324d]">Danh sách minh chứng</h2>
-          <p className="mt-1 text-sm text-[#52606d]">
+      <section className="surface-card overflow-hidden">
+        <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Danh sách minh chứng</h2>
+          <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
             Mỗi dòng là một mã minh chứng duy nhất, có thể phục vụ nhiều tiêu chí.
           </p>
         </div>
 
-        <div className="divide-y divide-[#e4e1d5]">
+        <div className="divide-y divide-[var(--color-border)]">
           {evidence.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-[#52606d]">Chưa có minh chứng phù hợp.</p>
+            <p className="px-5 py-6 text-sm text-[var(--color-graphite)]/70">Chưa có minh chứng phù hợp.</p>
           ) : (
             evidence.map((item) => (
-              <article className="grid gap-3 px-5 py-4 lg:grid-cols-[1fr_220px]" key={item.id}>
+              <article className="grid gap-3 px-5 py-4 hover:bg-[var(--color-lavender-mist)]/45 lg:grid-cols-[1fr_220px]" key={item.id}>
                 <div>
-                  <Link className="font-semibold text-[#17324d] hover:underline" href={`/minh-chung/${item.id}`}>
+                  <Link className="font-semibold text-[var(--color-ink-navy)] hover:underline" href={`/minh-chung/${item.id}`}>
                     {item.ma} - {item.ten}
                   </Link>
-                  <p className="mt-2 text-sm text-[#52606d]">
+                  <p className="mt-2 text-sm text-[var(--color-graphite)]/70">
                     {item.criteria.length > 0
                       ? item.criteria.map((criterion) => criterion.ma).join(", ")
                       : "Chưa gắn tiêu chí"}
                   </p>
                 </div>
-                <div className="text-sm text-[#52606d]">
+                <div className="text-sm text-[var(--color-graphite)]/70">
                   <p>{formatEvidenceStatus(item.trang_thai_xac_minh)}</p>
                   <p>{item.ngay_ban_hanh ? `Ban hành: ${item.ngay_ban_hanh}` : "Chưa có ngày ban hành"}</p>
                   <p>{item.ngay_het_gia_tri ? `Hết giá trị: ${item.ngay_het_gia_tri}` : "Không ghi hạn"}</p>
@@ -410,24 +410,24 @@ function EvidenceCreateForm(props: {
   }
 
   return (
-    <section className="border border-[#d8d6c9] bg-white p-5">
-      <div className="grid gap-3 border-b border-[#d8d6c9] pb-4 sm:grid-cols-[1fr_auto]">
+    <section className="surface-card surface-card-pad">
+      <div className="grid gap-3 border-b border-[var(--color-border)] pb-4 sm:grid-cols-[1fr_auto]">
         <div>
-          <h2 className="text-lg font-semibold text-[#17324d]">Thêm minh chứng</h2>
-          <p className="mt-1 text-sm text-[#52606d]">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Thêm minh chứng</h2>
+          <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
             Tạo mã mới từ tiêu chí gốc hoặc dùng lại mã minh chứng đã có.
           </p>
         </div>
-        <div className="grid grid-cols-2 border border-[#d8d6c9] text-sm font-medium">
+        <div className="segmented-control grid-cols-2 text-sm font-medium">
           <button
-            className={`px-3 py-2 ${mode === "new" ? "bg-[#17324d] text-white" : "text-[#17324d]"}`}
+            className={`segmented-option ${mode === "new" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
             type="button"
             onClick={() => setMode("new")}
           >
             Mới
           </button>
           <button
-            className={`px-3 py-2 ${mode === "reuse" ? "bg-[#17324d] text-white" : "text-[#17324d]"}`}
+            className={`segmented-option ${mode === "reuse" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
             type="button"
             onClick={() => setMode("reuse")}
           >
@@ -441,7 +441,7 @@ function EvidenceCreateForm(props: {
           <label className="text-sm font-medium">
             Minh chứng có sẵn
             <select
-              className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+              className="form-control mt-2"
               value={selectedEvidenceId}
               onChange={(event) => setSelectedEvidenceId(event.target.value)}
               required
@@ -459,7 +459,7 @@ function EvidenceCreateForm(props: {
             <label className="text-sm font-medium">
               Tên minh chứng
               <input
-                className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                className="form-control mt-2"
                 value={ten}
                 onChange={(event) => setTen(event.target.value)}
                 required
@@ -468,7 +468,7 @@ function EvidenceCreateForm(props: {
             <label className="text-sm font-medium">
               Tệp minh chứng
               <input
-                className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 text-sm"
+                className="form-control mt-2 text-sm"
                 type="file"
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
               />
@@ -476,7 +476,7 @@ function EvidenceCreateForm(props: {
             <label className="text-sm font-medium lg:col-span-2">
               Hoặc liên kết điện tử
               <input
-                className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                className="form-control mt-2"
                 type="url"
                 value={hyperlink}
                 onChange={(event) => setHyperlink(event.target.value)}
@@ -485,7 +485,7 @@ function EvidenceCreateForm(props: {
             <label className="text-sm font-medium">
               Ngày ban hành
               <input
-                className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                className="form-control mt-2"
                 type="date"
                 value={ngayBanHanh}
                 onChange={(event) => setNgayBanHanh(event.target.value)}
@@ -494,7 +494,7 @@ function EvidenceCreateForm(props: {
             <label className="text-sm font-medium">
               Ngày hết giá trị
               <input
-                className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+                className="form-control mt-2"
                 type="date"
                 value={ngayHetGiaTri}
                 onChange={(event) => setNgayHetGiaTri(event.target.value)}
@@ -513,7 +513,7 @@ function EvidenceCreateForm(props: {
         />
 
         <button
-          className="w-full bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white disabled:bg-[#8da0b2]"
+          className="button-primary w-full"
           disabled={submitting}
         >
           {submitting ? "Đang lưu..." : mode === "new" ? "Tải lên và gắn tiêu chí" : "Gắn tiêu chí cho mã có sẵn"}
@@ -533,10 +533,10 @@ function CriterionPicker(props: {
 }) {
   return (
     <fieldset className="grid gap-3">
-      <legend className="text-sm font-semibold text-[#17324d]">Tiêu chí sử dụng minh chứng</legend>
-      <div className="grid max-h-72 gap-2 overflow-auto border border-[#d8d6c9] p-3 sm:grid-cols-2 lg:grid-cols-3">
+      <legend className="text-sm font-semibold text-[var(--color-ink-navy)]">Tiêu chí sử dụng minh chứng</legend>
+      <div className="grid max-h-72 gap-2 overflow-auto rounded-[var(--radius-card)] border border-[var(--color-border)] p-3 sm:grid-cols-2 lg:grid-cols-3">
         {props.criteria.map((criterion) => (
-          <label className="grid gap-2 border border-[#e4e1d5] p-3 text-sm" key={criterion.id}>
+          <label className="surface-card grid gap-2 p-3 text-sm hover:border-[var(--color-electric-cobalt)]" key={criterion.id}>
             <span className="flex items-start gap-2">
               <input
                 checked={props.selectedCriterionIds.includes(criterion.id)}
@@ -544,11 +544,11 @@ function CriterionPicker(props: {
                 type="checkbox"
               />
               <span>
-                <strong className="text-[#17324d]">{criterion.ma}</strong> {criterion.ten}
+                <strong className="text-[var(--color-ink-navy)]">{criterion.ma}</strong> {criterion.ten}
               </span>
             </span>
             {props.showRoot && props.selectedCriterionIds.includes(criterion.id) ? (
-              <span className="flex items-center gap-2 text-[#52606d]">
+              <span className="flex items-center gap-2 text-[var(--color-graphite)]/70">
                 <input
                   checked={props.rootCriterionId === criterion.id}
                   name="rootCriterion"
@@ -572,11 +572,11 @@ function EvidenceFilters(props: {
   years: SchoolYear[];
 }) {
   return (
-    <section className="grid gap-3 border border-[#d8d6c9] bg-white p-5 lg:grid-cols-5">
+    <section className="surface-card grid gap-3 p-5 lg:grid-cols-5">
       <label className="text-sm font-medium lg:col-span-2">
         Tìm mã hoặc tên
         <input
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.filters.keyword}
           onChange={(event) => props.setFilters({ ...props.filters, keyword: event.target.value })}
         />
@@ -584,7 +584,7 @@ function EvidenceFilters(props: {
       <label className="text-sm font-medium">
         Năm học
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.filters.namHocId}
           onChange={(event) => props.setFilters({ ...props.filters, namHocId: event.target.value })}
         >
@@ -599,7 +599,7 @@ function EvidenceFilters(props: {
       <label className="text-sm font-medium">
         Tiêu chuẩn
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.filters.tieuChuan}
           onChange={(event) => props.setFilters({ ...props.filters, tieuChuan: event.target.value })}
         >
@@ -614,7 +614,7 @@ function EvidenceFilters(props: {
       <label className="text-sm font-medium">
         Trạng thái
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.filters.trangThai}
           onChange={(event) => props.setFilters({ ...props.filters, trangThai: event.target.value })}
         >
@@ -628,7 +628,7 @@ function EvidenceFilters(props: {
       <label className="text-sm font-medium lg:col-span-5">
         Tiêu chí
         <select
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.filters.tieuChiId}
           onChange={(event) => props.setFilters({ ...props.filters, tieuChiId: event.target.value })}
         >
@@ -646,7 +646,7 @@ function EvidenceFilters(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+    <p className="status-message text-sm">
       {text}
     </p>
   );

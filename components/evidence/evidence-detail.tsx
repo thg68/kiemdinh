@@ -120,7 +120,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
 
   if (!evidence) {
     return (
-      <p className="text-sm text-[#52606d]">
+      <p className="text-sm text-[var(--color-graphite)]/70">
         {message || "Đang tải minh chứng..."}
       </p>
     );
@@ -130,14 +130,14 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
     <div className="grid gap-6">
       <div className="flex flex-wrap gap-3">
         <Link
-          className="border border-[#17324d] px-4 py-2 text-sm font-semibold text-[#17324d]"
+          className="button-secondary"
           href="/minh-chung"
         >
           Quay lại kho
         </Link>
         {evidence.storage_path ? (
           <button
-            className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white"
+            className="button-primary"
             onClick={openFile}
           >
             Xem tệp 10 phút
@@ -145,7 +145,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
         ) : null}
         {evidence.duong_dan ? (
           <a
-            className="bg-[#17324d] px-4 py-2 text-sm font-semibold text-white"
+            className="button-primary"
             href={evidence.duong_dan}
             rel="noreferrer"
             target="_blank"
@@ -157,11 +157,11 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
 
       {message ? <Message text={message} /> : null}
 
-      <section className="border border-[#d8d6c9] bg-white p-6">
-        <p className="text-sm font-medium uppercase tracking-[0.08em] text-[#6f5f36]">
+      <section className="featured-card">
+        <p className="text-sm font-medium text-white/70">
           {evidence.ma}
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-[#17324d]">
+        <h1 className="mt-2 font-serif text-4xl font-medium leading-tight text-white">
           {evidence.ten}
         </h1>
         <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
@@ -178,28 +178,28 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
         </dl>
       </section>
 
-      <section className="border border-[#d8d6c9] bg-white">
-        <div className="border-b border-[#d8d6c9] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[#17324d]">
+      <section className="surface-card overflow-hidden">
+        <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">
             Tiêu chí đang sử dụng minh chứng này
           </h2>
         </div>
-        <div className="divide-y divide-[#e4e1d5]">
+        <div className="divide-y divide-[var(--color-border)]">
           {links.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-[#52606d]">
+            <p className="px-5 py-6 text-sm text-[var(--color-graphite)]/70">
               Minh chứng này chưa được gắn với tiêu chí nào.
             </p>
           ) : (
             links.map((link) => (
               <div
-                className="grid gap-2 px-5 py-4 sm:grid-cols-[140px_1fr]"
+                className="grid gap-2 px-5 py-4 hover:bg-[var(--color-lavender-mist)]/45 sm:grid-cols-[140px_1fr]"
                 key={link.tieu_chi_id}
               >
-                <p className="font-semibold text-[#17324d]">
+                <p className="font-semibold text-[var(--color-ink-navy)]">
                   {link.tieu_chi?.ma}
                   {link.la_tieu_chi_goc ? " - gốc" : ""}
                 </p>
-                <p className="text-sm text-[#52606d]">{link.tieu_chi?.ten}</p>
+                <p className="text-sm text-[var(--color-graphite)]/70">{link.tieu_chi?.ten}</p>
               </div>
             ))
           )}
@@ -212,15 +212,15 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[#52606d]">{label}</dt>
-      <dd className="mt-1 break-words font-medium text-[#17324d]">{value}</dd>
+      <dt className="text-white/70">{label}</dt>
+      <dd className="mt-1 break-words font-medium text-white">{value}</dd>
     </div>
   );
 }
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+    <p className="status-message text-sm">
       {text}
     </p>
   );

@@ -220,23 +220,23 @@ export function SchoolYearSetup() {
   }
 
   if (loading) {
-    return <p className="text-sm text-[#52606d]">Đang tải dữ liệu...</p>;
+    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải dữ liệu...</p>;
   }
 
   if (!profile) {
     return (
       <form
-        className="grid gap-4 border border-[#d8d6c9] bg-white p-6"
+        className="surface-card grid gap-5 p-6"
         onSubmit={handleCreateSchool}
       >
-        <h2 className="text-xl font-semibold text-[#17324d]">
+        <h2 className="section-title text-xl">
           Thiết lập cơ sở giáo dục
         </h2>
 
         <label className="text-sm font-medium">
           Tên cơ sở giáo dục
           <input
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={tenCoSo}
             onChange={(event) => setTenCoSo(event.target.value)}
             required
@@ -246,7 +246,7 @@ export function SchoolYearSetup() {
         <label className="text-sm font-medium">
           Mã trường
           <input
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={maTruong}
             onChange={(event) => setMaTruong(event.target.value)}
           />
@@ -255,7 +255,7 @@ export function SchoolYearSetup() {
         <label className="text-sm font-medium">
           Loại hình
           <select
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={loaiHinh}
             onChange={(event) => setLoaiHinh(event.target.value)}
           >
@@ -270,7 +270,7 @@ export function SchoolYearSetup() {
           <div className="grid gap-2 sm:grid-cols-2">
             {capHocOptions.map((option) => (
               <label
-                className="flex items-center gap-2 border border-[#d8d6c9] px-3 py-2"
+                className="surface-card flex items-center gap-2 px-3 py-3"
                 key={option.value}
               >
                 <input
@@ -287,7 +287,7 @@ export function SchoolYearSetup() {
         <label className="text-sm font-medium">
           Họ tên người phụ trách
           <input
-            className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+            className="form-control mt-2"
             value={hoTen}
             onChange={(event) => setHoTen(event.target.value)}
             required
@@ -303,7 +303,7 @@ export function SchoolYearSetup() {
           setNgayKetThuc={setNgayKetThuc}
         />
 
-        <button className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white">
+        <button className="button-primary">
           Tạo đơn vị và năm học
         </button>
 
@@ -314,35 +314,35 @@ export function SchoolYearSetup() {
 
   return (
     <div className="grid gap-6">
-      <section className="border border-[#d8d6c9] bg-white p-6">
-        <p className="text-sm text-[#52606d]">Cơ sở giáo dục</p>
-        <h2 className="mt-1 text-xl font-semibold text-[#17324d]">
+      <section className="featured-card">
+        <p className="text-sm text-white/70">Cơ sở giáo dục</p>
+        <h2 className="mt-1 text-2xl font-semibold text-white">
           {school?.ten ?? "Chưa tải được tên đơn vị"}
         </h2>
-        <p className="mt-2 text-sm text-[#52606d]">
+        <p className="mt-2 text-sm text-white/70">
           Người dùng: {profile.ho_ten}
         </p>
       </section>
 
-      <section className="border border-[#d8d6c9] bg-white p-6">
-        <h2 className="text-xl font-semibold text-[#17324d]">Năm học</h2>
+      <section className="surface-card surface-card-pad">
+        <h2 className="section-title text-xl">Năm học</h2>
         <div className="mt-4 grid gap-3">
           {years.length === 0 ? (
-            <p className="text-sm text-[#52606d]">Chưa có năm học.</p>
+            <p className="text-sm text-[var(--color-graphite)]/70">Chưa có năm học.</p>
           ) : (
             years.map((year) => (
               <div
-                className="grid gap-3 border border-[#d8d6c9] p-3 sm:grid-cols-[1fr_auto]"
+                className="surface-card grid gap-3 p-4 sm:grid-cols-[1fr_auto]"
                 key={year.id}
               >
                 <div>
-                  <p className="font-medium text-[#17324d]">{year.ten}</p>
-                  <p className="text-sm text-[#52606d]">
+                  <p className="font-medium text-[var(--color-ink-navy)]">{year.ten}</p>
+                  <p className="text-sm text-[var(--color-graphite)]/70">
                     {year.ngay_bat_dau} đến {year.ngay_ket_thuc}
                   </p>
                 </div>
                 <button
-                  className="border border-[#17324d] px-3 py-2 text-sm font-semibold text-[#17324d] disabled:border-[#c9c6b8] disabled:text-[#8da0b2]"
+                  className="button-secondary disabled:text-[var(--color-stone)]"
                   disabled={year.trang_thai === "dang_hoat_dong"}
                   onClick={() => activateYear(year.id)}
                 >
@@ -357,10 +357,10 @@ export function SchoolYearSetup() {
       </section>
 
       <form
-        className="grid gap-4 border border-[#d8d6c9] bg-white p-6"
+        className="surface-card grid gap-5 p-6"
         onSubmit={handleCreateYear}
       >
-        <h2 className="text-xl font-semibold text-[#17324d]">
+        <h2 className="section-title text-xl">
           Tạo năm học mới
         </h2>
         <YearFields
@@ -371,7 +371,7 @@ export function SchoolYearSetup() {
           setNgayBatDau={setNgayBatDau}
           setNgayKetThuc={setNgayKetThuc}
         />
-        <button className="bg-[#17324d] px-4 py-2.5 text-sm font-semibold text-white">
+        <button className="button-primary">
           Tạo và chọn năm học
         </button>
       </form>
@@ -394,7 +394,7 @@ function YearFields(props: {
       <label className="text-sm font-medium">
         Năm học
         <input
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           value={props.tenNamHoc}
           onChange={(event) => props.setTenNamHoc(event.target.value)}
           required
@@ -403,7 +403,7 @@ function YearFields(props: {
       <label className="text-sm font-medium">
         Ngày bắt đầu
         <input
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           type="date"
           value={props.ngayBatDau}
           onChange={(event) => props.setNgayBatDau(event.target.value)}
@@ -413,7 +413,7 @@ function YearFields(props: {
       <label className="text-sm font-medium">
         Ngày kết thúc
         <input
-          className="mt-2 w-full border border-[#c9c6b8] px-3 py-2 outline-none focus:border-[#17324d]"
+          className="form-control mt-2"
           type="date"
           value={props.ngayKetThuc}
           onChange={(event) => props.setNgayKetThuc(event.target.value)}
@@ -426,7 +426,7 @@ function YearFields(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="border border-[#d8d6c9] bg-[#f7f7f2] px-3 py-2 text-sm text-[#52606d]">
+    <p className="status-message text-sm">
       {text}
     </p>
   );

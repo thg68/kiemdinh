@@ -41,7 +41,7 @@ export default function DashboardPage() {
     >
       <section className="featured-card grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="text-sm text-white/70">MVP hiện tại</p>
+          <p className="text-sm text-white/70">Bản đầu tiên</p>
           <h2 className="mt-2 font-serif text-4xl font-medium text-white">
             Minh chứng, tự đánh giá và báo cáo đã sẵn sàng để dùng với dữ liệu thật.
           </h2>
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       </section>
 
       <section className="surface-card surface-card-pad">
-        <h2 className="section-title text-xl">Các khu vực sẽ mở rộng sau MVP</h2>
+        <h2 className="section-title text-xl">Các khu vực sẽ mở rộng sau bản đầu tiên</h2>
         <p className="muted mt-3 text-sm leading-7">
           Các mục dưới đây chỉ hiển thị định hướng sản phẩm, chưa tạo dữ liệu hoặc quyền mới.
         </p>

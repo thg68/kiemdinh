@@ -9,6 +9,8 @@ Trang này dành cho người chịu trách nhiệm theo dõi chung, xem khoản
 3. Nhập email và mật khẩu của nhà trường.
 4. Vào **Thiết lập** để kiểm tra tên trường và năm học đang hoạt động.
 
+Nếu quên mật khẩu, chọn **Quên mật khẩu?** trên màn hình đăng nhập để nhận liên kết đặt lại qua email.
+
 [CHÈN ẢNH: Màn hình đăng nhập]
 
 [CHÈN ẢNH: Màn hình thiết lập đơn vị và năm học]

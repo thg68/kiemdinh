@@ -1,7 +1,18 @@
 import Link from "next/link";
 
 type ApplicationShellProps = {
-  active: "dashboard" | "standards" | "evidence" | "assessment" | "reports" | "settings";
+  active:
+    | "dashboard"
+    | "standards"
+    | "evidence"
+    | "assessment"
+    | "reports"
+    | "settings"
+    | "work"
+    | "improvement"
+    | "indicators"
+    | "council"
+    | "ai";
   children: React.ReactNode;
   description?: string;
   title: string;
@@ -17,12 +28,12 @@ const primaryNav = [
 ] as const;
 
 const roadmapNav = [
-  "Công việc",
-  "Cải tiến chất lượng",
-  "Chỉ số chất lượng",
-  "Hội đồng & phân công",
-  "Trợ lý AI",
-];
+  { key: "work", label: "Công việc", href: "/cong-viec" },
+  { key: "improvement", label: "Cải tiến chất lượng", href: "/cai-tien-chat-luong" },
+  { key: "indicators", label: "Chỉ số chất lượng", href: "/chi-so-chat-luong" },
+  { key: "council", label: "Hội đồng & phân công", href: "/hoi-dong" },
+  { key: "ai", label: "Trợ lý AI", href: "/tro-ly-ai" },
+] as const;
 
 export function ApplicationShell({
   active,
@@ -55,13 +66,17 @@ export function ApplicationShell({
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-graphite)]/50">
-              Mở rộng sau MVP
+              Mở rộng sau bản đầu tiên
             </p>
             <div className="grid gap-1">
               {roadmapNav.map((item) => (
-                <span className="app-nav-muted" key={item}>
-                  {item}
-                </span>
+                <Link
+                  className={`app-nav-muted ${active === item.key ? "app-nav-link-active" : ""}`}
+                  href={item.href}
+                  key={item.key}
+                >
+                  {item.label}
+                </Link>
               ))}
             </div>
           </div>

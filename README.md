@@ -34,11 +34,15 @@ npm run import:school-year -- --manifest=data/import-manifest.example.csv --dry-
 
 Đăng nhập tại `/login`, vào `/thiet-lap` để tạo cơ sở giáo dục và chọn hoặc tạo năm học đang hoạt động.
 
+Nếu quên mật khẩu, vào `/quen-mat-khau` để gửi email đặt lại mật khẩu qua Supabase Auth.
+
 Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng tại `/minh-chung/suc-khoe`.
 
 Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
+
+Các trang `/cong-viec`, `/cai-tien-chat-luong`, `/chi-so-chat-luong`, `/hoi-dong`, `/tro-ly-ai` hiện là trang thông báo lộ trình, chưa ghi dữ liệu nghiệp vụ.
 
 Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 

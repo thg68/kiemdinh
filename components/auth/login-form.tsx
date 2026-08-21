@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createBrowserSupabaseClient,
@@ -116,7 +117,15 @@ export function LoginForm() {
         </label>
 
         <label className="block text-sm font-medium text-[var(--color-charcoal)]">
-          Mật khẩu
+          <span className="flex items-center justify-between gap-4">
+            <span>Mật khẩu</span>
+            <Link
+              className="text-xs font-semibold text-[var(--color-electric-cobalt)]"
+              href="/quen-mat-khau"
+            >
+              Quên mật khẩu?
+            </Link>
+          </span>
           <input
             className="form-control mt-2"
             type="password"

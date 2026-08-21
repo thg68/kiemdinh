@@ -388,7 +388,7 @@ function GapBoard(props: {
       <div className="border-b border-[var(--color-border)] px-5 py-4">
         <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Gap Board</h2>
       </div>
-      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid auto-rows-fr gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {props.ketQuaTieuChi.map((item) => {
           const rangBuoc = kiemTraRangBuocCapNhat(item);
           const dangThieu = item.laBatBuoc && item.mucDat < 1;
@@ -402,7 +402,7 @@ function GapBoard(props: {
 
           return (
             <button
-              className={`min-h-40 rounded-[var(--radius-card)] border p-3 text-left text-sm transition hover:-translate-y-0.5 hover:shadow-sm ${tone} ${
+              className={`relative grid min-h-36 grid-rows-[auto_1fr_auto] rounded-[var(--radius-card)] border p-3 text-left text-sm transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
                 props.selectedCriterionId === item.id ? "outline outline-2 outline-[var(--color-electric-cobalt)]" : ""
               }`}
               key={item.id}
@@ -410,16 +410,14 @@ function GapBoard(props: {
               title={`${item.ma} - ${item.ten}`}
               onClick={() => item.id && props.onSelect(item.id)}
             >
-              <span className="flex flex-wrap items-center gap-2 font-semibold text-[var(--color-ink-navy)]">
-                <span>{item.ma}</span>
-                {item.laBatBuoc ? (
-                  <span className="rounded-full bg-white/70 px-2 py-0.5 text-[11px] uppercase tracking-normal text-[var(--color-warning)]">
-                    Bắt buộc
-                  </span>
-                ) : null}
-              </span>
-              <span className="mt-2 block line-clamp-3 font-medium leading-5 text-[var(--color-ink-navy)]">
-                {item.ten}
+              {item.laBatBuoc ? (
+                <span className="absolute right-3 top-3 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
+                  Bắt buộc
+                </span>
+              ) : null}
+              <span className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2 pr-16 font-semibold leading-5 text-[var(--color-ink-navy)]">
+                <span className="tabular-nums">{item.ma}</span>
+                <span className="line-clamp-3">{item.ten}</span>
               </span>
               <span className="mt-2 block text-[var(--color-graphite)]/70">
                 {item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`}

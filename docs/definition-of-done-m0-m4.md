@@ -12,7 +12,7 @@ Tài liệu này ghi lại trạng thái kiểm tra đến Sprint 6.
 
 ## M1 - Bộ tiêu chuẩn
 
-- Chạy với dữ liệu thật: Chưa hoàn tất. Schema đã sẵn sàng, nhưng mới có khung/placeholder cho phụ lục mẫu; cần nhập nội dung chính thức đủ 3 loại hình.
+- Chạy với dữ liệu thật: Đạt về cấu trúc dữ liệu. Từ migration `009`, hệ thống có đủ khung 4 tiêu chuẩn, 15 tiêu chí và 2 mức cho cả `mam_non`, `pho_thong`, `gdtx`. Nội dung pháp lý chính thức vẫn phải nhập từ phụ lục TT57 do người dùng cung cấp.
 - Phân quyền ở tầng CSDL: Đạt. Bảng tham chiếu đọc cho người đã đăng nhập, ghi cho quản trị hệ thống.
 - Xử lý rỗng/lỗi: Đạt cơ bản. Khi thiếu nội dung mức, báo cáo cảnh báo thay vì tự bịa.
 - Commit Git: Đạt.
@@ -44,7 +44,7 @@ Tài liệu này ghi lại trạng thái kiểm tra đến Sprint 6.
 
 ## Điểm Cần Theo Dõi Sau Sprint 6
 
-- Nhập đầy đủ nội dung phụ lục TT57 cho `mam_non`, `pho_thong`, `gdtx`.
-- Bổ sung quy trình tạo năm học mới có kế thừa tự đánh giá sang trạng thái `ke_thua_cho_cap_nhat`.
+- Nhập đầy đủ nội dung phụ lục TT57 cho `mam_non`, `pho_thong`, `gdtx` theo `docs/nhap-noi-dung-phu-luc-tt57.md`.
+- Kiểm thử quy trình tạo năm học mới có kế thừa tự đánh giá sang trạng thái `ke_thua_cho_cap_nhat` bằng dữ liệu trường thật.
 - Kiểm thử bằng dữ liệu thật của trường thí điểm, không dùng dữ liệu `[DEMO]` để kết luận hoàn thành nghiệp vụ.
 - Bổ sung ảnh chụp màn hình vào các tài liệu hướng dẫn.

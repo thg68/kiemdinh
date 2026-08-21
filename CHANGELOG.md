@@ -59,4 +59,5 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Viết kịch bản video demo 10 phút theo luồng vận hành thật.
 - Ghi lại trạng thái Definition of Done cho M0-M4.
 - Rà soát lint, test, build và dependency audit.
-- Ghi rõ các điểm còn theo dõi: nhập đủ phụ lục TT57, kế thừa năm học mới, kiểm thử bằng dữ liệu trường thật.
+- Bổ sung migration `009` để có đủ khung tiêu chuẩn cho 3 loại hình và RPC tạo năm học mới có kế thừa tự đánh giá.
+- Ghi rõ điểm còn theo dõi: nhập nội dung phụ lục TT57 chính thức và kiểm thử bằng dữ liệu trường thật.

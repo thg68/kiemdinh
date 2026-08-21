@@ -191,18 +191,12 @@ export function SchoolYearSetup() {
 
     setMessage("");
 
-    await supabase
-      .from("nam_hoc")
-      .update({ trang_thai: "chuan_bi" })
-      .eq("co_so_id", profile.co_so_id)
-      .eq("trang_thai", "dang_hoat_dong");
-
-    const { error } = await supabase.from("nam_hoc").insert({
-      co_so_id: profile.co_so_id,
-      ten: tenNamHoc,
-      ngay_bat_dau: ngayBatDau,
-      ngay_ket_thuc: ngayKetThuc,
-      trang_thai: "dang_hoat_dong",
+    const { data, error } = await supabase.rpc("fn_tao_nam_hoc_ke_thua", {
+      p_ten: tenNamHoc,
+      p_ngay_bat_dau: ngayBatDau,
+      p_ngay_ket_thuc: ngayKetThuc,
+      p_ke_thua_tu_nam_hoc_id: null,
+      p_dat_lam_dang_hoat_dong: true,
     });
 
     if (error) {
@@ -210,6 +204,10 @@ export function SchoolYearSetup() {
       return;
     }
 
+    const inheritedCount = data?.[0]?.so_tu_danh_gia_ke_thua ?? 0;
+    setMessage(
+      `Đã tạo năm học mới và kế thừa ${inheritedCount} bản ghi tự đánh giá ở trạng thái chờ cập nhật.`,
+    );
     await loadData();
   }
 

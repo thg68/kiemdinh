@@ -399,6 +399,12 @@ function GapBoard(props: {
               : item.mucDat === 1
                 ? "border-[var(--color-warning)] bg-[var(--color-warning-soft)]"
                 : "border-[var(--color-border)] bg-white";
+          const statusText = item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`;
+          const statusTone = item.mucDat === 0
+            ? "bg-white/85 text-[var(--color-danger)]"
+            : item.mucDat === 2
+              ? "bg-white/85 text-[var(--color-success)]"
+              : "bg-white/85 text-[var(--color-warning)]";
 
           return (
             <button
@@ -411,20 +417,20 @@ function GapBoard(props: {
               onClick={() => item.id && props.onSelect(item.id)}
             >
               {item.laBatBuoc ? (
-                <span className="absolute right-3 top-3 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
+                <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-normal text-[var(--color-warning)]">
                   Bắt buộc
                 </span>
               ) : null}
-              <span className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2 pr-16 font-semibold leading-5 text-[var(--color-ink-navy)]">
+              <span className="grid grid-cols-[2.75rem_minmax(0,1fr)] gap-2 pr-20 font-semibold leading-5 text-[var(--color-ink-navy)]">
                 <span className="tabular-nums">{item.ma}</span>
                 <span className="line-clamp-3">{item.ten}</span>
               </span>
-              <span className="mt-2 block text-[var(--color-graphite)]/70">
-                {item.mucDat === 0 ? "Chưa đạt" : `Mức ${item.mucDat}`}
+              <span className="mt-2 min-h-7 text-xs leading-5 text-[var(--color-warning)]">
+                {!rangBuoc.hopLe ? rangBuoc.loi[0] : ""}
               </span>
-              {!rangBuoc.hopLe ? (
-                <span className="mt-2 block text-xs leading-5 text-[var(--color-warning)]">{rangBuoc.loi[0]}</span>
-              ) : null}
+              <span className={`mt-2 w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone}`}>
+                {statusText}
+              </span>
             </button>
           );
         })}

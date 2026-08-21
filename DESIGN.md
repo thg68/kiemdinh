@@ -12,11 +12,13 @@
 - Card/input: radius `16px`
 - Button: radius pill `999px`
 - Container desktop: tối đa `1200px`
+- Font chính: `Be Vietnam Pro` với subset `vietnamese`
+- Font tiêu đề lớn: `Noto Serif` với subset `vietnamese`
 
 ## Components
 
 - Page dùng `.app-shell` và `.content-wrap`.
-- Header dùng `.page-title` với serif nhẹ, không dùng eyebrow/module label.
+- Header dùng `.page-title` với `Noto Serif`, không dùng eyebrow/module label.
 - Card thường dùng `.surface-card`; nội dung quan trọng dùng `.featured-card`.
 - Button chính dùng `.button-primary`; thao tác phụ dùng `.button-secondary`.
 - Input/select/textarea dùng `.form-control`.

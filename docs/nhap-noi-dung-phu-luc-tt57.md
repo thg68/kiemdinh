@@ -6,7 +6,7 @@ Từ migration `011_seed_tt57_reference_data.sql`, cơ sở dữ liệu đã có
 - `pho_thong`
 - `gdtx`
 
-Nguồn dữ liệu nằm trong `data/tt57/*.json`. Không hardcode nội dung phụ lục trong mã nguồn TypeScript.
+Nguồn dữ liệu thật do người dùng cung cấp nằm trong `tt57_seed/`. Bản dữ liệu app sử dụng nằm trong `data/tt57/*.json` và phải được đối chiếu không lệch với `tt57_seed/`. Không hardcode nội dung phụ lục trong mã nguồn TypeScript.
 
 ## Nguyên tắc nhập
 
@@ -35,9 +35,10 @@ Nguồn dữ liệu nằm trong `data/tt57/*.json`. Không hardcode nội dung p
 
 ## Trạng thái hiện tại
 
-- `data/tt57/tt57-all.json` gộp cả 3 loại hình.
+- `tt57_seed/` là gói dữ liệu thật của Phụ lục I, II, III.
+- `data/tt57/tt57-all.json` gộp cả 3 loại hình cho app/migration.
 - `data/tt57/validation.json` ghi số lượng kiểm tra.
-- Unit test `data/tt57/tt57-reference-data.test.ts` xác nhận đủ 4-15-8, 90 bản ghi mức và 102 chỉ số định lượng.
+- Unit test `data/tt57/tt57-reference-data.test.ts` xác nhận đủ 4-15-8, 90 bản ghi mức, 102 chỉ số định lượng và bản `data/tt57` không lệch với `tt57_seed`.
 - Nếu TT57 được đính chính/sửa đổi, tạo version dữ liệu mới thay vì sửa lịch sử migration cũ.
 
 ## Cách kiểm tra nhanh

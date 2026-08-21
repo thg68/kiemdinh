@@ -1,0 +1,77 @@
+{
+  "mam_non": {
+    "standards": 4,
+    "criteria": 15,
+    "mandatory": 8,
+    "levels": 30,
+    "evidence_rows": 15,
+    "quantitative_indicators": 31,
+    "criterion_codes": [
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "2.1",
+      "2.2",
+      "2.3",
+      "3.1",
+      "3.2",
+      "3.3",
+      "3.4",
+      "3.5",
+      "4.1",
+      "4.2",
+      "4.3"
+    ]
+  },
+  "pho_thong": {
+    "standards": 4,
+    "criteria": 15,
+    "mandatory": 8,
+    "levels": 30,
+    "evidence_rows": 15,
+    "quantitative_indicators": 37,
+    "criterion_codes": [
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "2.1",
+      "2.2",
+      "2.3",
+      "3.1",
+      "3.2",
+      "3.3",
+      "3.4",
+      "3.5",
+      "4.1",
+      "4.2",
+      "4.3"
+    ]
+  },
+  "gdtx": {
+    "standards": 4,
+    "criteria": 15,
+    "mandatory": 8,
+    "levels": 30,
+    "evidence_rows": 15,
+    "quantitative_indicators": 34,
+    "criterion_codes": [
+      "1.1",
+      "1.2",
+      "1.3",
+      "1.4",
+      "2.1",
+      "2.2",
+      "2.3",
+      "3.1",
+      "3.2",
+      "3.3",
+      "3.4",
+      "3.5",
+      "4.1",
+      "4.2",
+      "4.3"
+    ]
+  }
+}

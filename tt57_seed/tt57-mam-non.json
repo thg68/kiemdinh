@@ -1,0 +1,413 @@
+{
+  "metadata": {
+    "ma_van_ban": "57/2026/TT-BGDĐT",
+    "ngay_ban_hanh": "2026-07-07",
+    "ngay_hieu_luc": "2026-07-07",
+    "phu_luc": "I",
+    "loai_hinh": "mam_non",
+    "ten": "Hướng dẫn nội dung, mức độ đáp ứng và thông tin minh chứng các tiêu chí bảo đảm chất lượng đối với cơ sở giáo dục mầm non",
+    "nguon_chinh_thuc": "https://vanban.chinhphu.vn/?classid=1&docid=218991&pageid=27160&typegroupid=6",
+    "nguon_trich_xuat_html": "https://thuvienphapluat.vn/van-ban/Giao-duc/Thong-tu-57-2026-TT-BGDDT-bao-dam-chat-luong-giao-duc-co-so-giao-duc-mam-non-716471.aspx",
+    "ghi_chu": "Dữ liệu được cấu trúc hóa từ nội dung Phụ lục I."
+  },
+  "ghi_chu_phu_luc": "Trong Phụ lục này, “trẻ” được hiểu là trẻ em trong cơ sở giáo dục mầm non; “hoạt động giáo dục” bao gồm hoạt động nuôi dưỡng, chăm sóc và giáo dục trẻ; “kết quả phát triển và sự tiến bộ của trẻ” được hiểu là kết quả phát triển của trẻ theo mục tiêu Chương trình giáo dục mầm non và đặc điểm độ tuổi; “nhân sự hỗ trợ giáo dục” được hiểu là nhân viên hoặc cá nhân được phân công thực hiện nhiệm vụ hỗ trợ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ và các nhiệm vụ hỗ trợ khác theo quy định.",
+  "tieu_chuan": [
+    {
+      "so_thu_tu": 1,
+      "ten": "Quản trị nhà trường và bảo đảm chất lượng",
+      "tieu_chi": [
+        {
+          "ma": "1.1",
+          "ten": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường xác định mục tiêu, chỉ tiêu và kế hoạch năm học hoặc kế hoạch phát triển phù hợp với nhiệm vụ nuôi dưỡng, chăm sóc, giáo dục trẻ; quy mô, loại hình, điều kiện thực tế của nhà trường, địa phương, đặc điểm trẻ và Chương trình giáo dục mầm non."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát kết quả thực hiện kế hoạch để điều chỉnh mục tiêu, nhiệm vụ, nguồn lực và tổ chức hoạt động trong chu kỳ tiếp theo. Việc điều chỉnh có căn cứ từ kết quả thực hiện, dữ liệu quản lý, phản hồi phù hợp và được công khai theo quy định."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+            "minh_chung_goi_y": "Kế hoạch năm học; kế hoạch giáo dục nhà trường; mục tiêu, chỉ tiêu, nhiệm vụ và kế hoạch phát triển của nhà trường; báo cáo thực hiện kế hoạch; minh chứng rà soát, điều chỉnh mục tiêu, nhiệm vụ hoặc kế hoạch phát triển; minh chứng công khai kế hoạch và kết quả thực hiện theo quy định.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.2",
+          "ten": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có cơ cấu tổ chức, phân công nhiệm vụ và bố trí người phụ trách các hoạt động theo quy định, phù hợp với quy mô, loại hình, số nhóm/lớp và điều kiện thực tế. Nhiệm vụ của cán bộ quản lý cơ sở giáo dục, giáo viên, nhân viên và các bộ phận liên quan được phân công rõ ràng, bảo đảm phối hợp trong hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ và bảo đảm an toàn."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát hiệu quả cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ; kịp thời điều chỉnh các nhiệm vụ chồng chéo, bỏ sót hoặc quá tải. Các nhiệm vụ thiết yếu có người phụ trách, có cơ chế phối hợp hoặc thay thế khi có thay đổi nhân sự."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+            "minh_chung_goi_y": "Sơ đồ tổ chức; quyết định thành lập hoặc kiện toàn hội đồng, tổ chuyên môn, tổ văn phòng hoặc bộ phận liên quan; quy chế làm việc; bảng phân công nhiệm vụ; biên bản họp; hồ sơ điều chỉnh phân công khi có thay đổi.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.3",
+          "ten": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có hồ sơ, thông tin và dữ liệu thiết yếu về kế hoạch, tài chính, trẻ, đội ngũ, nhóm/lớp, chương trình, cơ sở vật chất, sức khỏe, dinh dưỡng, chuyên cần, an toàn và phát triển của trẻ. Hồ sơ, thông tin và dữ liệu được cập nhật, lưu trữ, quản lý, sử dụng theo quy định, bảo đảm đầy đủ, đúng thời hạn, an toàn và bảo mật thông tin."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát, đối chiếu, tổng hợp và sử dụng dữ liệu để xác định vấn đề, ưu tiên nguồn lực, điều chỉnh kế hoạch, hỗ trợ trẻ và cải thiện điều kiện nuôi dưỡng, chăm sóc, giáo dục. Các sai lệch dữ liệu ảnh hưởng đến quản lý, theo dõi chất lượng được phát hiện và khắc phục theo thời hạn quy định."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+            "minh_chung_goi_y": "Hồ sơ quản lý kế hoạch, tài chính, nhân lực; sổ theo dõi trẻ; hồ sơ nhóm/lớp; hồ sơ sức khỏe, dinh dưỡng, chuyên cần và an toàn của trẻ; hồ sơ cơ sở vật chất; báo cáo tổng hợp hoặc rà soát dữ liệu phục vụ quản lý.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ dữ liệu được cập nhật đầy đủ, đúng thời hạn; số sai lệch dữ liệu được phát hiện và xử lý.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ dữ liệu được cập nhật đầy đủ, đúng thời hạn",
+              "số sai lệch dữ liệu được phát hiện và xử lý"
+            ]
+          }
+        },
+        {
+          "ma": "1.4",
+          "ten": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường thực hiện tự kiểm tra hoặc tự đánh giá để xác định điểm mạnh, hạn chế, nguyên nhân và nội dung cần cải tiến. Kết quả tự kiểm tra, tự đánh giá được sử dụng để xây dựng hoặc cập nhật kế hoạch cải tiến chất lượng với nhiệm vụ, người phụ trách, thời hạn thực hiện và kết quả dự kiến."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường triển khai kế hoạch cải tiến dựa trên dữ liệu, phản hồi và kết quả tự đánh giá; kết quả cải tiến được theo dõi, kiểm chứng bằng minh chứng phù hợp. Chu trình tự đánh giá, cải tiến, công khai và giải trình được thực hiện hằng năm; kết quả cải tiến được sử dụng để điều chỉnh hoạt động quản lý, nuôi dưỡng, chăm sóc, giáo dục trẻ trong chu kỳ tiếp theo."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+            "minh_chung_goi_y": "Báo cáo tự đánh giá hoặc tự kiểm tra; kế hoạch cải tiến chất lượng; phân công thực hiện cải tiến; hồ sơ theo dõi thực hiện cải tiến; hồ sơ công khai, giải trình, tiếp nhận và xử lý phản hồi; minh chứng kết quả cải tiến.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ nhiệm vụ cải tiến hoàn thành theo kế hoạch; số phản hồi được tiếp nhận, xử lý.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ nhiệm vụ cải tiến hoàn thành theo kế hoạch",
+              "số phản hồi được tiếp nhận, xử lý"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 2,
+      "ten": "Phát triển đội ngũ",
+      "tieu_chi": [
+        {
+          "ma": "2.1",
+          "ten": "Cán bộ quản lý cơ sở giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có hiệu trưởng, phó hiệu trưởng theo quy định; cán bộ quản lý cơ sở giáo dục được bổ nhiệm, phân công nhiệm vụ phù hợp và đáp ứng tiêu chuẩn chức danh. Cán bộ quản lý cơ sở giáo dục thực hiện nhiệm vụ chỉ đạo, điều hành đối với kế hoạch giáo dục, đội ngũ, trẻ, tài chính, tài sản, an toàn, hồ sơ, dữ liệu và phối hợp với cha mẹ trẻ."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Cán bộ quản lý cơ sở giáo dục sử dụng dữ liệu, kết quả tự đánh giá, kiểm tra nội bộ và phản hồi phù hợp để điều chỉnh kế hoạch, phân công nhiệm vụ, phát triển đội ngũ và cải tiến chất lượng. Kết quả điều chỉnh, cải tiến được theo dõi, kiểm chứng và sử dụng trong quản lý nhà trường."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cán bộ quản lý cơ sở giáo dục",
+            "minh_chung_goi_y": "Quyết định bổ nhiệm; hồ sơ phân công nhiệm vụ; hồ sơ đánh giá, bồi dưỡng; kế hoạch chỉ đạo, điều hành; hồ sơ kiểm tra nội bộ, tự đánh giá và cải tiến hoạt động quản lý.",
+            "du_lieu_dinh_luong_goc": "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định; tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định",
+              "tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh"
+            ]
+          }
+        },
+        {
+          "ma": "2.2",
+          "ten": "Giáo viên",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có đội ngũ giáo viên đáp ứng yêu cầu thực hiện Chương trình giáo dục mầm non về số lượng, cơ cấu nhóm/lớp, trình độ đào tạo, phẩm chất, đạo đức nghề nghiệp và chuẩn nghề nghiệp hoặc tiêu chuẩn chức danh theo quy định. Giáo viên được phân công phù hợp với chuyên môn, năng lực và điều kiện thực tế; thực hiện nhiệm vụ nuôi dưỡng, chăm sóc, giáo dục trẻ; tham gia sinh hoạt chuyên môn, bồi dưỡng và theo dõi, đánh giá sự phát triển của trẻ."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường theo dõi, rà soát tình hình đội ngũ giáo viên để điều chỉnh phân công, bồi dưỡng và hỗ trợ chuyên môn. Giáo viên sử dụng kết quả theo dõi sự phát triển của trẻ, sinh hoạt chuyên môn, bồi dưỡng và phản hồi phù hợp để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục và thực hiện biện pháp hỗ trợ trẻ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Giáo viên",
+            "minh_chung_goi_y": "Hồ sơ giáo viên; phân công nhóm/lớp; kế hoạch giáo dục; hồ sơ bồi dưỡng; biên bản sinh hoạt chuyên môn; hồ sơ theo dõi sự phát triển của trẻ; minh chứng điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ.",
+            "du_lieu_dinh_luong_goc": "Số lượng giáo viên hiện có so với định mức; số giáo viên thiếu hoặc thừa theo nhóm/lớp; tỷ lệ giáo viên đạt chuẩn trình độ đào tạo; tỷ lệ giáo viên được phân công phù hợp nhóm/lớp.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số lượng giáo viên hiện có so với định mức",
+              "số giáo viên thiếu hoặc thừa theo nhóm/lớp",
+              "tỷ lệ giáo viên đạt chuẩn trình độ đào tạo",
+              "tỷ lệ giáo viên được phân công phù hợp nhóm/lớp"
+            ]
+          }
+        },
+        {
+          "ma": "2.3",
+          "ten": "Nhân sự hỗ trợ giáo dục",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường bố trí nhân sự hỗ trợ hoặc có phương án phân công, kiêm nhiệm, hợp đồng, phối hợp để thực hiện các nhiệm vụ thiết yếu về y tế, dinh dưỡng, an toàn, thiết bị, hành chính, tài chính, bảo vệ và hỗ trợ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ theo quy định và điều kiện thực tế. Nhiệm vụ của từng vị trí hoặc bộ phận hỗ trợ được phân công cụ thể."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát mức độ đáp ứng của nhân sự hỗ trợ; kịp thời điều chỉnh phân công hoặc đề xuất bổ sung khi cần. Các nhiệm vụ thiết yếu về an toàn, y tế, dinh dưỡng, nuôi dưỡng, bảo vệ và hỗ trợ hoạt động của nhà trường được duy trì ổn định, không bị bỏ trống."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Nhân viên (thuộc nhóm nhân sự hỗ trợ hoạt động giáo dục)",
+            "minh_chung_goi_y": "Danh sách nhân sự hỗ trợ; phân công nhiệm vụ; hồ sơ thực hiện nhiệm vụ về y tế, dinh dưỡng, thiết bị, hành chính, tài chính, bảo vệ và các nhiệm vụ hỗ trợ khác; hồ sơ rà soát, điều chỉnh khi có thay đổi.",
+            "du_lieu_dinh_luong_goc": "Số vị trí nhân sự hỗ trợ hiện có so với số vị trí theo yêu cầu; tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số vị trí nhân sự hỗ trợ hiện có so với số vị trí theo yêu cầu",
+              "tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 3,
+      "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em",
+      "tieu_chi": [
+        {
+          "ma": "3.1",
+          "ten": "Tổ chức thực hiện chương trình giáo dục mầm non",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường xây dựng kế hoạch giáo dục và tổ chức thực hiện Chương trình giáo dục mầm non phù hợp với độ tuổi, nhóm trẻ, lớp mẫu giáo, điều kiện thực tế của nhà trường và địa phương. Các hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ được thực hiện theo kế hoạch, bảo đảm an toàn, phù hợp với đặc điểm phát triển của trẻ."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng kết quả theo dõi tiến độ thực hiện kế hoạch, chuyên cần, sức khỏe, dinh dưỡng, sự phát triển của trẻ và điều kiện thực tế để rà soát, điều chỉnh kế hoạch giáo dục. Việc thực hiện chương trình được duy trì ổn định; kế hoạch giáo dục được điều chỉnh, cải tiến phù hợp với nhu cầu của trẻ và điều kiện của nhà trường."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức thực hiện chương trình giáo dục mầm non",
+            "minh_chung_goi_y": "Kế hoạch giáo dục; lịch hoạt động; hồ sơ nhóm/lớp; báo cáo thực hiện chương trình; biên bản sinh hoạt chuyên môn; minh chứng theo dõi, điều chỉnh kế hoạch giáo dục.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ thực hiện kế hoạch giáo dục; tỷ lệ chuyên cần của trẻ.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ thực hiện kế hoạch giáo dục",
+              "tỷ lệ chuyên cần của trẻ"
+            ]
+          }
+        },
+        {
+          "ma": "3.2",
+          "ten": "Đổi mới phương pháp chăm sóc, giáo dục và theo dõi, đánh giá sự phát triển, tiến bộ của trẻ em",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Giáo viên áp dụng phương pháp nuôi dưỡng, chăm sóc, giáo dục phù hợp với độ tuổi, đặc điểm phát triển và nhu cầu của trẻ; thực hiện quan sát, theo dõi, đánh giá sự phát triển của trẻ theo quy định hoặc kế hoạch của nhà trường. Kết quả quan sát, theo dõi, đánh giá được sử dụng để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường tổ chức sinh hoạt chuyên môn để phân tích phương pháp nuôi dưỡng, chăm sóc, giáo dục, kết quả theo dõi trẻ và hỗ trợ giáo viên điều chỉnh hoạt động. Phương pháp nuôi dưỡng, chăm sóc, giáo dục được cải tiến; trẻ được tham gia hoạt động tích cực, phù hợp, an toàn và có tiến bộ được ghi nhận."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Đổi mới phương pháp giáo dục/chăm sóc và theo dõi, đánh giá sự phát triển, tiến bộ của trẻ em",
+            "minh_chung_goi_y": "Kế hoạch hoạt động; hồ sơ quan sát, theo dõi, đánh giá sự phát triển của trẻ; hình ảnh, sản phẩm hoạt động của trẻ; biên bản sinh hoạt chuyên môn; minh chứng dự giờ, góp ý chuyên môn; minh chứng điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ.",
+            "du_lieu_dinh_luong_goc": "Số trẻ được quan sát, theo dõi theo kế hoạch; số trẻ cần hỗ trợ được phát hiện qua quan sát, theo dõi.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số trẻ được quan sát, theo dõi theo kế hoạch",
+              "số trẻ cần hỗ trợ được phát hiện qua quan sát, theo dõi"
+            ]
+          }
+        },
+        {
+          "ma": "3.3",
+          "ten": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường tổ chức các hoạt động vui chơi, trải nghiệm, vận động, nghệ thuật, ngôn ngữ, khám phá, tự phục vụ và các hoạt động phù hợp khác theo độ tuổi. Trẻ được tham gia các hoạt động phát triển thể chất, nhận thức, ngôn ngữ, tình cảm - kỹ năng xã hội và thẩm mỹ theo Chương trình giáo dục mầm non."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường theo dõi sự tham gia, nhu cầu, khả năng và tiến bộ của trẻ để điều chỉnh nội dung, hình thức tổ chức hoạt động giáo dục. Hoạt động phát triển toàn diện được duy trì, đa dạng, an toàn, phù hợp bối cảnh và hỗ trợ sự tiến bộ của trẻ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+            "minh_chung_goi_y": "Kế hoạch hoạt động; hồ sơ nhóm/lớp; hồ sơ hoặc tổng hợp hoạt động vui chơi, trải nghiệm, vận động, nghệ thuật, ngôn ngữ, khám phá và tự phục vụ; hình ảnh, sản phẩm hoạt động của trẻ; minh chứng điều chỉnh, cải tiến hoạt động.",
+            "du_lieu_dinh_luong_goc": "Số hoạt động giáo dục được tổ chức trong năm; tỷ lệ trẻ tham gia hoạt động giáo dục theo kế hoạch.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số hoạt động giáo dục được tổ chức trong năm",
+              "tỷ lệ trẻ tham gia hoạt động giáo dục theo kế hoạch"
+            ]
+          }
+        },
+        {
+          "ma": "3.4",
+          "ten": "Quản lý, theo dõi, hỗ trợ trẻ em và giáo dục hòa nhập",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có hồ sơ quản lý trẻ; theo dõi chuyên cần, sức khỏe, dinh dưỡng, an toàn, sự phát triển và nhu cầu hỗ trợ của trẻ. Trẻ cần hỗ trợ, trẻ có nhu cầu đặc thù hoặc trẻ thuộc diện giáo dục hòa nhập được nhận diện, lập kế hoạch hỗ trợ, phân công người phụ trách và phối hợp với cha mẹ trẻ khi cần."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Kết quả hỗ trợ trẻ được theo dõi, đánh giá và điều chỉnh khi cần thiết. Nhà trường duy trì việc phát hiện sớm, hỗ trợ trẻ và phối hợp với cha mẹ trẻ, chuyên gia, cơ quan hoặc tổ chức liên quan khi phù hợp; bảo đảm trẻ được tôn trọng, an toàn, hòa nhập và có cơ hội phát triển."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý, theo dõi, hỗ trợ trẻ và giáo dục hòa nhập",
+            "minh_chung_goi_y": "Hồ sơ trẻ; dữ liệu chuyên cần, sức khỏe, dinh dưỡng; danh sách trẻ cần hỗ trợ; kế hoạch và hồ sơ hỗ trợ cá nhân hoặc nhóm; minh chứng trao đổi với cha mẹ trẻ; biên bản phối hợp; hồ sơ tư vấn, y tế nếu có; báo cáo rà soát định kỳ.",
+            "du_lieu_dinh_luong_goc": "Số trẻ cần hỗ trợ được lập kế hoạch hỗ trợ; số trẻ được theo dõi, hỗ trợ theo kế hoạch.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số trẻ cần hỗ trợ được lập kế hoạch hỗ trợ",
+              "số trẻ được theo dõi, hỗ trợ theo kế hoạch"
+            ]
+          }
+        },
+        {
+          "ma": "3.5",
+          "ten": "Kết quả phát triển và sự tiến bộ của trẻ",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Trẻ được theo dõi sự phát triển theo mục tiêu Chương trình giáo dục mầm non và đặc điểm độ tuổi. Nhà trường tổng hợp kết quả phát triển, chuyên cần, sức khỏe, dinh dưỡng và sự tiến bộ của trẻ để xác định nhóm trẻ cần hỗ trợ."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường phân tích kết quả phát triển và sự tiến bộ của trẻ để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục và hỗ trợ trẻ. Kết quả theo dõi cho thấy sự tiến bộ của trẻ, đặc biệt đối với trẻ cần hỗ trợ hoặc trẻ 5 tuổi chuẩn bị vào lớp Một; việc xem xét kết quả chú trọng sự tiến bộ của trẻ, không áp dụng máy móc yêu cầu so sánh giữa các cơ sở giáo dục."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Kết quả phát triển và sự tiến bộ của trẻ",
+            "minh_chung_goi_y": "Hồ sơ theo dõi trẻ; kết quả đánh giá sự phát triển của trẻ theo độ tuổi/giai đoạn; sản phẩm hoạt động của trẻ; báo cáo tổng hợp kết quả phát triển, chuyên cần, sức khỏe, dinh dưỡng và sự tiến bộ của trẻ; danh sách trẻ cần hỗ trợ; thông tin, minh chứng về chuẩn bị cho trẻ 5 tuổi vào lớp Một; phản hồi của cha mẹ trẻ khi có.",
+            "du_lieu_dinh_luong_goc": "Số trẻ được theo dõi sự phát triển theo quy định; số trẻ có nội dung phát triển cần được theo dõi, hỗ trợ; số trẻ 5 tuổi được theo dõi, hỗ trợ chuẩn bị vào lớp Một.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số trẻ được theo dõi sự phát triển theo quy định",
+              "số trẻ có nội dung phát triển cần được theo dõi, hỗ trợ",
+              "số trẻ 5 tuổi được theo dõi, hỗ trợ chuẩn bị vào lớp Một"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 4,
+      "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội",
+      "tieu_chi": [
+        {
+          "ma": "4.1",
+          "ten": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có phòng học, khu chức năng, sân chơi, khu vệ sinh, nước sạch, thiết bị, đồ dùng, đồ chơi, học liệu, bếp ăn (nếu có) và các điều kiện vật chất cần thiết phục vụ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ theo quy định, phù hợp với quy mô, độ tuổi và điều kiện thực tế. Các điều kiện này được quản lý, sử dụng, bảo trì, bảo quản và rà soát định kỳ; hạng mục thiếu, xuống cấp hoặc chưa bảo đảm an toàn có phương án khắc phục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng dữ liệu về tình trạng cơ sở vật chất, thiết bị, đồ dùng, đồ chơi, học liệu và nhu cầu nuôi dưỡng, chăm sóc, giáo dục trẻ để lập kế hoạch sửa chữa, bảo trì, bổ sung, sắp xếp hoặc khai thác hiệu quả hơn. Việc cải thiện cơ sở vật chất, thiết bị, học liệu và điều kiện vật chất góp phần tạo môi trường nuôi dưỡng, chăm sóc, giáo dục an toàn, thân thiện, phù hợp với đặc điểm phát triển của trẻ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động nuôi dưỡng chăm sóc giáo dục trẻ",
+            "minh_chung_goi_y": "Hồ sơ tài sản; hồ sơ kiểm kê thiết bị, đồ dùng, đồ chơi, học liệu; bảng kiểm phòng học, khu vệ sinh, sân chơi, bếp ăn nếu có; kế hoạch bảo trì, sửa chữa, bổ sung; biên bản kiểm tra; minh chứng khắc phục hạng mục thiếu, xuống cấp hoặc chưa bảo đảm an toàn; minh chứng sử dụng cơ sở vật chất, thiết bị, học liệu phục vụ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ.",
+            "du_lieu_dinh_luong_goc": "Số phòng học đạt yêu cầu so với tổng số phòng học; số khu vệ sinh đạt yêu cầu; số bếp ăn đạt yêu cầu khi áp dụng; tỷ lệ thiết bị, đồ dùng, đồ chơi, học liệu sử dụng được.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số phòng học đạt yêu cầu so với tổng số phòng học",
+              "số khu vệ sinh đạt yêu cầu",
+              "số bếp ăn đạt yêu cầu khi áp dụng",
+              "tỷ lệ thiết bị, đồ dùng, đồ chơi, học liệu sử dụng được"
+            ]
+          }
+        },
+        {
+          "ma": "4.2",
+          "ten": "Môi trường giáo dục an toàn, sức khỏe và hạnh phúc",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có biện pháp bảo đảm an toàn thể chất, sức khỏe, vệ sinh, dinh dưỡng, phòng chống tai nạn, bạo lực, xâm hại và các rủi ro trong hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ. Nhà trường thực hiện quy trình đón, trả trẻ; kiểm soát người ra vào; bảo đảm an toàn bữa ăn, giấc ngủ, hoạt động ngoài trời, đồ chơi, thiết bị và khu vệ sinh; có kênh tiếp nhận phản ánh, quy trình xử lý sự cố, tai nạn, nghi ngờ bạo hành hoặc xâm hại trẻ. Các nguy cơ mất an toàn được phát hiện, ghi nhận, xử lý và theo dõi kết quả khắc phục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường phân tích dữ liệu sự cố, nguy cơ mất an toàn, phản hồi của cha mẹ trẻ và kết quả kiểm tra để phòng ngừa rủi ro tái diễn, cải thiện môi trường nuôi dưỡng, chăm sóc, giáo dục an toàn, lành mạnh, tích cực. Trẻ được tôn trọng, bảo vệ, hỗ trợ phù hợp; kết quả kiểm tra và phản hồi được sử dụng để điều chỉnh biện pháp phòng ngừa, xử lý và hỗ trợ trẻ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Môi trường giáo dục an toàn, sức khỏe và hạnh phúc",
+            "minh_chung_goi_y": "Bảng kiểm an toàn; hồ sơ sức khỏe; hồ sơ dinh dưỡng; biên bản kiểm tra; hồ sơ xử lý sự cố nếu có; danh sách nguy cơ mất an toàn; biên bản xử lý, minh chứng khắc phục; hồ sơ thông tin, trao đổi với cha mẹ trẻ khi cần; kế hoạch phòng ngừa; báo cáo hoặc minh chứng cải thiện môi trường giáo dục.",
+            "du_lieu_dinh_luong_goc": "Số sự cố an toàn trong năm; số sự cố đã xử lý; số nguy cơ mất an toàn được phát hiện và khắc phục; tỷ lệ trẻ được theo dõi sức khỏe định kỳ.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số sự cố an toàn trong năm",
+              "số sự cố đã xử lý",
+              "số nguy cơ mất an toàn được phát hiện và khắc phục",
+              "tỷ lệ trẻ được theo dõi sức khỏe định kỳ"
+            ]
+          }
+        },
+        {
+          "ma": "4.3",
+          "ten": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có kênh phối hợp với cha mẹ trẻ, cộng đồng và tổ chức liên quan trong nuôi dưỡng, chăm sóc, giáo dục, bảo đảm an toàn và hỗ trợ trẻ. Hoạt động phối hợp được thực hiện định kỳ hoặc khi cần thiết, có ghi nhận nội dung trao đổi, phản hồi và kết quả xử lý."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng phản hồi và kết quả phối hợp để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục, bảo đảm an toàn và hỗ trợ trẻ. Cơ chế phối hợp hai chiều được duy trì ổn định, minh bạch; nguồn lực huy động hợp pháp và có tác động tích cực đến môi trường nuôi dưỡng, chăm sóc, giáo dục, an toàn hoặc hỗ trợ trẻ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+            "minh_chung_goi_y": "Kế hoạch phối hợp; sổ liên lạc hoặc kênh thông tin; biên bản họp cha mẹ trẻ; hồ sơ phối hợp với y tế, chính quyền, tổ chức liên quan; hồ sơ phản hồi; minh chứng xử lý kiến nghị hoặc phối hợp hỗ trợ trẻ; hồ sơ huy động, tiếp nhận, sử dụng nguồn lực theo quy định.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        }
+      ]
+    }
+  ]
+}

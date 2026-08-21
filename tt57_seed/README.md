@@ -6,11 +6,8 @@
 - `tt57-pho-thong.json` - Phụ lục II, cơ sở giáo dục phổ thông.
 - `tt57-gdtx.json` - Phụ lục III, cơ sở giáo dục thường xuyên.
 - `tt57-all.json` - Gộp cả 3 loại hình.
+- `002_tt57_reference_data.sql` - Seed PostgreSQL/Supabase theo schema trong kế hoạch dự án.
 - `validation.json` - Kết quả kiểm tra số lượng bản ghi.
-
-Gói nguồn thật nằm trong `tt57_seed/`. Thư mục `data/tt57/` là bản dữ liệu app dùng trực tiếp và phải giữ đồng bộ byte-for-byte với các file JSON tương ứng trong `tt57_seed/`.
-
-Migration dùng trong project này: `supabase/migrations/011_seed_tt57_reference_data.sql`.
 
 ## Kiểm tra cấu trúc
 
@@ -37,9 +34,9 @@ Tổng cộng: **45 tiêu chí, 90 bản ghi mức, 45 nhóm minh chứng, 102 c
 6. Không tự suy diễn `don_vi` hoặc `cong_thuc`; SQL để hai trường này `NULL`.
 7. Với Phụ lục III, nguồn HTML hiển thị `TC1.1`; dữ liệu seed chuẩn hóa thành `1.1`.
 
-## Lưu ý trước khi chạy migration
+## Lưu ý trước khi chạy SQL
 
-Migration `011_seed_tt57_reference_data.sql` bám theo các bảng/cột đang có trong project:
+SQL bám theo các bảng/cột đã nêu trong kế hoạch:
 
 - `bo_tieu_chuan`
 - `tieu_chuan`
@@ -48,8 +45,10 @@ Migration `011_seed_tt57_reference_data.sql` bám theo các bảng/cột đang c
 - `minh_chung_goi_y`
 - `chi_so_dinh_luong`
 
-Migration cập nhật các bản ghi khung đã có theo khóa nghiệp vụ, không tạo trùng bộ tiêu chí và không đổi ID của tiêu chí đã được các bảng nghiệp vụ tham chiếu.
+File SQL giả định các cột `id` chấp nhận UUID. UUID được sinh deterministic UUIDv5 để chạy seed ổn định.
+
+Nếu schema thực tế dùng `BIGINT`, `SERIAL`, hoặc tên cột khác, hãy chỉnh phần khóa chính/tên cột trước khi chạy. Nội dung nghiệp vụ trong JSON không phụ thuộc kiểu khóa chính.
 
 ## Khuyến nghị
 
-Dùng 3 file JSON làm source-of-truth trong repository và coi migration SQL là artifact nạp DB. Khi văn bản được đính chính/sửa đổi, tạo version seed mới thay vì sửa lịch sử dữ liệu cũ.
+Dùng 3 file JSON làm source-of-truth trong repository và coi SQL là artifact nạp DB. Khi văn bản được đính chính/sửa đổi, tạo version seed mới thay vì sửa lịch sử dữ liệu cũ.

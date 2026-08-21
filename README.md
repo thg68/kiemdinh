@@ -62,13 +62,14 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `lib/`: mã dùng chung, Supabase client và engine tính mức.
 - `supabase/migrations/`: migration PostgreSQL/RLS cho Supabase.
 - `public/`: tài nguyên tĩnh.
-- `data/tt57/`: dữ liệu thật Phụ lục I, II, III của TT57 dạng JSON.
+- `tt57_seed/`: gói dữ liệu thật Phụ lục I, II, III của TT57 do người dùng cung cấp.
+- `data/tt57/`: bản JSON đã đưa vào app/test, được đối chiếu không lệch với `tt57_seed/`.
 
 ## Ghi Chú Sprint 1
 
 Migration `001_init.sql` tạo schema nền, RLS theo `co_so_id`, bảng nối nhiều-nhiều `minh_chung_tieu_chi` và khung TT57 ban đầu.
 
-Migration `011_seed_tt57_reference_data.sql` nạp dữ liệu thật Phụ lục I, II, III từ `data/tt57/*.json`, cập nhật khung cũ thành bộ tiêu chuẩn đang áp dụng cho `mam_non`, `pho_thong`, `gdtx`.
+Migration `011_seed_tt57_reference_data.sql` nạp dữ liệu thật Phụ lục I, II, III dựa trên gói nguồn `tt57_seed/`, cập nhật khung cũ thành bộ tiêu chuẩn đang áp dụng cho `mam_non`, `pho_thong`, `gdtx`.
 
 ## Ghi Chú Sprint 2
 

@@ -1,0 +1,417 @@
+{
+  "metadata": {
+    "ma_van_ban": "57/2026/TT-BGDĐT",
+    "ngay_ban_hanh": "2026-07-07",
+    "ngay_hieu_luc": "2026-07-07",
+    "phu_luc": "II",
+    "loai_hinh": "pho_thong",
+    "ten": "Hướng dẫn nội dung, mức độ đáp ứng và thông tin minh chứng các tiêu chí bảo đảm chất lượng đối với cơ sở giáo dục phổ thông",
+    "nguon_chinh_thuc": "https://vanban.chinhphu.vn/?classid=1&docid=218991&pageid=27160&typegroupid=6",
+    "nguon_trich_xuat_html": "https://thuvienphapluat.vn/van-ban/Giao-duc/Thong-tu-57-2026-TT-BGDDT-bao-dam-chat-luong-giao-duc-co-so-giao-duc-mam-non-716471.aspx",
+    "ghi_chu": "Dữ liệu được cấu trúc hóa từ nội dung Phụ lục II."
+  },
+  "tieu_chuan": [
+    {
+      "so_thu_tu": 1,
+      "ten": "Quản trị nhà trường và bảo đảm chất lượng",
+      "tieu_chi": [
+        {
+          "ma": "1.1",
+          "ten": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường xác định mục tiêu, định hướng phát triển và xây dựng kế hoạch năm học/kế hoạch phát triển phù hợp với cấp học, Chương trình giáo dục phổ thông, quy mô học sinh, điều kiện thực tế của nhà trường và địa phương. Kế hoạch xác định rõ nhiệm vụ trọng tâm, chỉ tiêu chủ yếu, thời hạn thực hiện, phân công trách nhiệm và nguồn lực cần thiết."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát, điều chỉnh kế hoạch trên cơ sở kết quả thực hiện, dữ liệu về học sinh, đội ngũ, điều kiện bảo đảm, an toàn trường học và kết quả giáo dục. Việc điều chỉnh có tham khảo ý kiến phù hợp của đội ngũ, học sinh, cha mẹ học sinh và các bên liên quan; có minh chứng về chuyển biến trong thực hiện nhiệm vụ trọng tâm hoặc cải thiện điều kiện bảo đảm chất lượng giáo dục."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+            "minh_chung_goi_y": "Kế hoạch năm học, kế hoạch giáo dục hoặc kế hoạch phát triển của nhà trường; mục tiêu, nhiệm vụ trọng tâm và phân công thực hiện; báo cáo rà soát, đánh giá và điều chỉnh kế hoạch.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.2",
+          "ten": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có cơ cấu tổ chức, các tổ chuyên môn, tổ văn phòng/bộ phận hỗ trợ và các hội đồng theo quy định, phù hợp với cấp học, quy mô và điều kiện thực tế. Nhiệm vụ của cán bộ quản lý cơ sở giáo dục, giáo viên, giáo viên chủ nhiệm, nhân viên và các bộ phận liên quan được phân công rõ người, rõ việc, rõ trách nhiệm và có cơ chế phối hợp trong thực hiện nhiệm vụ giáo dục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường định kỳ rà soát cơ cấu tổ chức, phân công nhiệm vụ và hiệu quả phối hợp nội bộ; kịp thời điều chỉnh những nội dung chồng chéo, bỏ sót hoặc chưa phù hợp. Việc điều chỉnh góp phần nâng cao hiệu quả quản trị, thực hiện chương trình giáo dục, hỗ trợ học sinh và bảo đảm an toàn trường học."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+            "minh_chung_goi_y": "Sơ đồ tổ chức; quyết định thành lập hoặc kiện toàn các tổ chức theo quy định; quy chế làm việc hoặc bảng phân công nhiệm vụ; hồ sơ rà soát, điều chỉnh phân công khi có phát sinh.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.3",
+          "ten": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có hồ sơ, thông tin và dữ liệu thiết yếu phục vụ quản lý hoạt động giáo dục, bao gồm dữ liệu về học sinh, đội ngũ, lớp học, khối lớp, chương trình giáo dục, cơ sở vật chất, thiết bị dạy học, tài chính, chuyên cần, an toàn và kết quả giáo dục. Hồ sơ, thông tin và dữ liệu được cập nhật, lưu trữ, quản lý, đối chiếu và sử dụng theo quy định, bảo đảm đầy đủ, đúng thời hạn, an toàn, bảo mật và phục vụ công tác điều hành của nhà trường."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường rà soát, đối chiếu, tổng hợp và phân tích dữ liệu để đánh giá thực trạng, dự báo nhu cầu, điều chỉnh kế hoạch, phân bổ nguồn lực, tổ chức lớp học, bồi dưỡng đội ngũ, hỗ trợ học sinh và cải thiện điều kiện giáo dục. Dữ liệu được theo dõi, so sánh theo chu kỳ phù hợp; được sử dụng làm căn cứ cho các quyết định quản lý, tự đánh giá, cải tiến chất lượng và công khai theo quy định."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+            "minh_chung_goi_y": "Hồ sơ, dữ liệu về học sinh, đội ngũ, lớp học, chương trình giáo dục, cơ sở vật chất, thiết bị, tài chính và kết quả giáo dục; minh chứng cập nhật, quản lý, sử dụng, phân quyền và bảo mật dữ liệu; báo cáo hoặc tài liệu sử dụng dữ liệu phục vụ công tác quản lý, điều hành.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ hồ sơ, dữ liệu quản lý được cập nhật đầy đủ, đúng hạn; số sai lệch dữ liệu được phát hiện và xử lý; số nội dung quản lý, điều hành được điều chỉnh trên cơ sở dữ liệu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ hồ sơ, dữ liệu quản lý được cập nhật đầy đủ, đúng hạn",
+              "số sai lệch dữ liệu được phát hiện và xử lý",
+              "số nội dung quản lý, điều hành được điều chỉnh trên cơ sở dữ liệu"
+            ]
+          }
+        },
+        {
+          "ma": "1.4",
+          "ten": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường thực hiện tự kiểm tra, tự đánh giá theo quy định hoặc theo kế hoạch của nhà trường để xác định điểm mạnh, hạn chế, nguyên nhân và nội dung cần cải tiến. Kết quả tự kiểm tra, tự đánh giá được sử dụng để xây dựng hoặc cập nhật kế hoạch cải tiến; thực hiện công khai thông tin và tiếp nhận, xử lý phản hồi theo quy định."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường triển khai kế hoạch cải tiến với nhiệm vụ, người phụ trách, thời hạn, nguồn lực và sản phẩm cụ thể; ưu tiên các nội dung cần khắc phục về chương trình giáo dục, đội ngũ, an toàn, hỗ trợ học sinh, dữ liệu và điều kiện bảo đảm chất lượng. Kết quả cải tiến được theo dõi, kiểm chứng bằng minh chứng hoặc dữ liệu phù hợp; được sử dụng để điều chỉnh hoạt động quản lý, dạy học, giáo dục, hỗ trợ học sinh và điều kiện bảo đảm chất lượng trong chu kỳ tiếp theo."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+            "minh_chung_goi_y": "Báo cáo tự đánh giá hoặc tự kiểm tra; kế hoạch cải tiến chất lượng; hồ sơ theo dõi thực hiện cải tiến; hồ sơ công khai, giải trình, tiếp nhận và xử lý phản hồi; minh chứng kết quả cải tiến.",
+            "du_lieu_dinh_luong_goc": "Số nhiệm vụ cải tiến hoàn thành/tổng số nhiệm vụ cải tiến theo kế hoạch; số phản hồi được tiếp nhận, xử lý.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số nhiệm vụ cải tiến hoàn thành/tổng số nhiệm vụ cải tiến theo kế hoạch",
+              "số phản hồi được tiếp nhận, xử lý"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 2,
+      "ten": "Phát triển đội ngũ",
+      "tieu_chi": [
+        {
+          "ma": "2.1",
+          "ten": "Cán bộ quản lý cơ sở giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có cán bộ quản lý cơ sở giáo dục theo quy định; cán bộ quản lý cơ sở giáo dục được bổ nhiệm, phân công nhiệm vụ phù hợp với vị trí việc làm và đáp ứng tiêu chuẩn chức danh. Cán bộ quản lý cơ sở giáo dục thực hiện nhiệm vụ chỉ đạo, điều hành đối với chương trình giáo dục, đội ngũ, học sinh, tài chính, tài sản, an toàn trường học, quản lý hồ sơ, dữ liệu và bảo đảm chất lượng giáo dục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Cán bộ quản lý cơ sở giáo dục sử dụng dữ liệu, kết quả tự đánh giá, kiểm tra nội bộ và phản hồi phù hợp của đội ngũ, học sinh, cha mẹ học sinh để điều chỉnh kế hoạch, phân công nhiệm vụ và cải tiến hoạt động của nhà trường. Công tác quản trị, chỉ đạo, điều hành có chuyển biến tích cực; các hạn chế, tồn tại được phát hiện và có biện pháp khắc phục, góp phần nâng cao hiệu quả thực hiện chương trình giáo dục, phát triển đội ngũ, hỗ trợ học sinh và bảo đảm an toàn trường học."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cán bộ quản lý cơ sở giáo dục",
+            "minh_chung_goi_y": "Hồ sơ bổ nhiệm, phân công nhiệm vụ cán bộ quản lý cơ sở giáo dục; hồ sơ tiêu chuẩn chức danh, đánh giá, bồi dưỡng; kế hoạch chỉ đạo, điều hành; hồ sơ kiểm tra nội bộ, tự đánh giá và cải tiến hoạt động quản lý.",
+            "du_lieu_dinh_luong_goc": "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định; tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh; tỷ lệ cán bộ quản lý cơ sở giáo dục hoàn thành nhiệm vụ trở lên; số nội dung quản lý được cải tiến trên cơ sở kết quả kiểm tra, tự đánh giá.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định",
+              "tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh",
+              "tỷ lệ cán bộ quản lý cơ sở giáo dục hoàn thành nhiệm vụ trở lên",
+              "số nội dung quản lý được cải tiến trên cơ sở kết quả kiểm tra, tự đánh giá"
+            ]
+          }
+        },
+        {
+          "ma": "2.2",
+          "ten": "Giáo viên",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có đội ngũ giáo viên đáp ứng yêu cầu thực hiện Chương trình giáo dục phổ thông về số lượng, cơ cấu môn học và hoạt động giáo dục, trình độ đào tạo, phẩm chất, đạo đức nghề nghiệp và chuẩn nghề nghiệp hoặc tiêu chuẩn chức danh theo quy định. Giáo viên được phân công nhiệm vụ phù hợp với chuyên môn, năng lực và điều kiện thực tế; thực hiện kế hoạch giáo dục, kế hoạch bài dạy, đánh giá học sinh, sinh hoạt chuyên môn và bồi dưỡng theo quy định hoặc kế hoạch của nhà trường."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường theo dõi, rà soát tình hình đội ngũ giáo viên để điều chỉnh phân công, bồi dưỡng, hỗ trợ chuyên môn; duy trì hoặc nâng cao mức độ đáp ứng về số lượng, cơ cấu, trình độ đào tạo và chuẩn nghề nghiệp của giáo viên. Giáo viên vận dụng kết quả bồi dưỡng, sinh hoạt chuyên môn, kết quả đánh giá học sinh, sản phẩm học tập và phản hồi phù hợp để điều chỉnh phương pháp dạy học, giáo dục, hỗ trợ học sinh và nâng cao hiệu quả thực hiện Chương trình giáo dục phổ thông."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Giáo viên",
+            "minh_chung_goi_y": "Danh sách giáo viên; hồ sơ trình độ đào tạo, chuẩn nghề nghiệp hoặc tiêu chuẩn chức danh; bảng phân công chuyên môn; hồ sơ sinh hoạt chuyên môn, bồi dưỡng; hồ sơ đánh giá, cải tiến hoạt động dạy học và hỗ trợ học sinh.",
+            "du_lieu_dinh_luong_goc": "Số giáo viên hiện có so với định mức; số giáo viên thiếu hoặc thừa theo môn học/hoạt động giáo dục; tỷ lệ giáo viên đạt chuẩn trình độ đào tạo; tỷ lệ giáo viên được phân công phù hợp chuyên môn.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số giáo viên hiện có so với định mức",
+              "số giáo viên thiếu hoặc thừa theo môn học/hoạt động giáo dục",
+              "tỷ lệ giáo viên đạt chuẩn trình độ đào tạo",
+              "tỷ lệ giáo viên được phân công phù hợp chuyên môn"
+            ]
+          }
+        },
+        {
+          "ma": "2.3",
+          "ten": "Nhân sự hỗ trợ giáo dục",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường bố trí nhân sự hỗ trợ giáo dục theo quy định hoặc có phương án phân công, kiêm nhiệm, hợp đồng, phối hợp để thực hiện các nhiệm vụ thiết yếu về y tế, thư viện, thiết bị, công nghệ thông tin, hành chính, tài chính, bảo vệ, tư vấn và hỗ trợ học sinh. Việc bố trí nhân sự hỗ trợ phù hợp với cấp học, quy mô, điều kiện thực tế của nhà trường; nhiệm vụ của từng vị trí hoặc bộ phận hỗ trợ được phân công cụ thể."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường theo dõi, rà soát chất lượng hoạt động hỗ trợ giáo dục; kịp thời phát hiện khó khăn, hạn chế hoặc rủi ro về sức khỏe, an toàn, thiết bị, học liệu, công nghệ thông tin, hành chính, tài chính, tư vấn và hỗ trợ học sinh để có biện pháp điều chỉnh. Hoạt động hỗ trợ giáo dục được cải thiện, góp phần phục vụ tốt hơn hoạt động dạy học, giáo dục, chăm sóc sức khỏe, bảo đảm an toàn và hỗ trợ học sinh."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Nhân viên (nhân sự hỗ trợ hoạt động giáo dục)",
+            "minh_chung_goi_y": "Danh sách nhân sự hỗ trợ; phân công nhiệm vụ; hồ sơ thực hiện nhiệm vụ về y tế, thư viện, thiết bị, công nghệ thông tin, hành chính, tài chính, bảo vệ, tư vấn và hỗ trợ học sinh; hồ sơ rà soát, điều chỉnh hoạt động hỗ trợ khi có sự thay đổi.",
+            "du_lieu_dinh_luong_goc": "Số vị trí nhân sự hỗ trợ hiện có so với tổng số vị trí theo quy định; tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số vị trí nhân sự hỗ trợ hiện có so với tổng số vị trí theo quy định",
+              "tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 3,
+      "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển học sinh",
+      "tieu_chi": [
+        {
+          "ma": "3.1",
+          "ten": "Tổ chức thực hiện chương trình giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường xây dựng và thực hiện kế hoạch giáo dục theo Chương trình giáo dục phổ thông theo năm học, học kỳ, tháng/tuần; phù hợp với cấp học, đối tượng học sinh, điều kiện thực tế của nhà trường và địa phương. Việc tổ chức dạy học, giáo dục, hoạt động trải nghiệm, hướng nghiệp nếu có, kiểm tra và đánh giá học sinh được thực hiện đầy đủ, đúng quy định; có theo dõi tiến độ thực hiện chương trình, bảo đảm nội dung, thời lượng, môn học và hoạt động giáo dục theo kế hoạch."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng kết quả theo dõi tiến độ chương trình, dữ liệu chuyên cần, kết quả đánh giá học sinh, sinh hoạt chuyên môn và phản hồi phù hợp của học sinh, cha mẹ học sinh để rà soát, điều chỉnh kế hoạch giáo dục, tổ chức dạy học, giáo dục và hỗ trợ học sinh. Việc thực hiện chương trình giáo dục được điều chỉnh kịp thời, linh hoạt, phù hợp hơn với bối cảnh địa phương, điều kiện nhà trường và nhu cầu học sinh; có minh chứng về kết quả cải tiến trong tổ chức thực hiện chương trình, học tập, rèn luyện hoặc phát triển của học sinh."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức thực hiện chương trình giáo dục",
+            "minh_chung_goi_y": "Kế hoạch giáo dục nhà trường; kế hoạch dạy học môn học/hoạt động giáo dục; thời khóa biểu, sổ đầu bài hoặc hồ sơ chuyên môn; hồ sơ kiểm tra, đánh giá; minh chứng theo dõi, điều chỉnh tiến độ thực hiện chương trình.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ lớp thực hiện đúng tiến độ chương trình; tỷ lệ môn học/hoạt động giáo dục hoàn thành theo kế hoạch; tỷ lệ chuyên cần của học sinh; số buổi dạy bù, học bù hoặc điều chỉnh kế hoạch.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ lớp thực hiện đúng tiến độ chương trình",
+              "tỷ lệ môn học/hoạt động giáo dục hoàn thành theo kế hoạch",
+              "tỷ lệ chuyên cần của học sinh",
+              "số buổi dạy bù, học bù hoặc điều chỉnh kế hoạch"
+            ]
+          }
+        },
+        {
+          "ma": "3.2",
+          "ten": "Đổi mới phương pháp giáo dục và theo dõi, đánh giá sự phát triển, tiến bộ của học sinh",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường tổ chức dạy học, giáo dục và đánh giá học sinh phù hợp với mục tiêu Chương trình giáo dục phổ thông, cấp học, đối tượng học sinh và điều kiện thực tế. Giáo viên xây dựng kế hoạch bài dạy; lựa chọn phương pháp dạy học, giáo dục và hình thức kiểm tra, đánh giá phù hợp; theo dõi sự phát triển, tiến bộ của học sinh; tham gia sinh hoạt chuyên môn, dự giờ và bồi dưỡng chuyên môn theo quy định hoặc kế hoạch của nhà trường."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng kết quả đánh giá học sinh, sản phẩm học tập, kết quả sinh hoạt chuyên môn, phản hồi phù hợp của học sinh, cha mẹ học sinh và sự tiến bộ của học sinh để điều chỉnh phương pháp dạy học, giáo dục và biện pháp hỗ trợ học sinh. Giáo viên thực hiện các phương pháp dạy học phát triển phẩm chất, năng lực; hỗ trợ phù hợp với nhu cầu của học sinh, tôn trọng sự khác biệt và bảo đảm môi trường học tập an toàn, tích cực. Các giải pháp đổi mới được theo dõi, đánh giá, rút kinh nghiệm, duy trì hoặc chia sẻ phù hợp; có minh chứng về kết quả hoặc tác động tích cực đối với sự phát triển và tiến bộ của học sinh."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Đổi mới phương pháp giáo dục và theo dõi, đánh giá sự phát triển, tiến bộ của học sinh",
+            "minh_chung_goi_y": "Kế hoạch bài dạy; hồ sơ chuyên môn; hồ sơ đánh giá học sinh; biên bản sinh hoạt chuyên môn, dự giờ; sản phẩm học tập; minh chứng điều chỉnh phương pháp dạy học, giáo dục và hỗ trợ học sinh.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ học sinh đạt yêu cầu đánh giá theo quy định; số học sinh có tiến bộ qua từng giai đoạn; số học sinh cần hỗ trợ được theo dõi, hỗ trợ; số chuyên đề sinh hoạt chuyên môn gắn với đổi mới phương pháp, đánh giá học sinh.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ học sinh đạt yêu cầu đánh giá theo quy định",
+              "số học sinh có tiến bộ qua từng giai đoạn",
+              "số học sinh cần hỗ trợ được theo dõi, hỗ trợ",
+              "số chuyên đề sinh hoạt chuyên môn gắn với đổi mới phương pháp, đánh giá học sinh"
+            ]
+          }
+        },
+        {
+          "ma": "3.3",
+          "ten": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường xây dựng và tổ chức các hoạt động giáo dục phát triển toàn diện học sinh phù hợp với Chương trình giáo dục phổ thông, cấp học, điều kiện thực tế và nhu cầu của học sinh. Các hoạt động được thực hiện theo kế hoạch, gắn với mục tiêu phát triển phẩm chất, năng lực, kỹ năng sống, hoạt động trải nghiệm, hướng nghiệp nếu có, giáo dục văn hóa, thể chất, thẩm mỹ và các nội dung giáo dục phù hợp khác."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường theo dõi mức độ tham gia, kết quả, sản phẩm và phản hồi để điều chỉnh nội dung, hình thức tổ chức hoạt động giáo dục. Các hoạt động giáo dục được cải thiện theo hướng tăng tính trải nghiệm, sáng tạo, tích hợp, gắn với khoa học, công nghệ, đổi mới sáng tạo và thực tiễn; tăng cường kết nối học tập với gia đình, cộng đồng hoặc các tổ chức liên quan khi phù hợp; có minh chứng về kết quả hoặc tác động tích cực đối với sự phát triển toàn diện của học sinh. Số lượng, tần suất hoặc tỷ lệ tham gia hoạt động được xác định theo kế hoạch giáo dục của nhà trường hoặc hướng dẫn của cơ quan quản lý, phù hợp với loại hình, quy mô và điều kiện thực tế của cơ sở giáo dục."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+            "minh_chung_goi_y": "Kế hoạch hoạt động giáo dục; hoạt động trải nghiệm, hướng nghiệp; hoạt động thể thao, văn nghệ, kỹ năng sống; hoạt động, dự án giáo dục STEM hoặc STEAM; sản phẩm học sinh; minh chứng phối hợp với gia đình, cộng đồng.",
+            "du_lieu_dinh_luong_goc": "Số hoạt động giáo dục được tổ chức trong năm; tỷ lệ học sinh tham gia các hoạt động giáo dục.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số hoạt động giáo dục được tổ chức trong năm",
+              "tỷ lệ học sinh tham gia các hoạt động giáo dục"
+            ]
+          }
+        },
+        {
+          "ma": "3.4",
+          "ten": "Quản lý, theo dõi, hỗ trợ học sinh và giáo dục hòa nhập",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường thực hiện tuyển sinh, tiếp nhận, quản lý hồ sơ học sinh và cập nhật thông tin về chuyên cần, học tập, rèn luyện, sức khỏe, an toàn, chuyển trường, nghỉ học kéo dài và nhu cầu hỗ trợ của học sinh theo quy định, bao gồm nhu cầu tư vấn học đường, hỗ trợ tâm lý hoặc công tác xã hội trường học khi cần. Nhà trường phối hợp với cha mẹ học sinh, giáo viên, nhân sự hỗ trợ, chuyên gia, cơ quan, tổ chức liên quan khi cần để hỗ trợ học sinh khó khăn, học sinh có nhu cầu đặc thù hoặc học sinh có nguy cơ bị bạo lực, bắt nạt, bắt nạt trực tuyến, khủng hoảng tâm lý, nguy cơ bị tổn thương; bảo đảm không phân biệt đối xử, tôn trọng, an toàn và bảo mật thông tin của học sinh."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng dữ liệu về chuyên cần, học tập, rèn luyện, sức khỏe, an toàn, tư vấn học đường, hỗ trợ tâm lý, công tác xã hội trường học, phản ánh, thông tin về sự cố và kết quả hỗ trợ để phát hiện sớm học sinh có nguy cơ hoặc cần hỗ trợ. Các biện pháp hỗ trợ được theo dõi, đánh giá và điều chỉnh phù hợp với nhu cầu của học sinh hoặc nhóm học sinh; có phối hợp với cha mẹ học sinh, chuyên gia, cơ quan, tổ chức liên quan khi cần. Kết quả hỗ trợ được sử dụng để xây dựng môi trường giáo dục hòa nhập, an toàn, tôn trọng sự khác biệt, bảo vệ học sinh và phòng ngừa rủi ro đối với học sinh."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý, theo dõi, hỗ trợ học sinh và giáo dục hòa nhập",
+            "minh_chung_goi_y": "Hồ sơ học sinh; dữ liệu chuyên cần, học tập, rèn luyện, sức khỏe và an toàn; danh sách học sinh cần hỗ trợ; kế hoạch và hồ sơ hỗ trợ cá nhân hoặc nhóm; hồ sơ tư vấn học đường, hỗ trợ tâm lý; minh chứng phối hợp với cha mẹ học sinh và các tổ chức liên quan khi cần thiết.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "3.5",
+          "ten": "Kết quả học tập, phát triển, rèn luyện và sự tiến bộ của học sinh",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường thực hiện đánh giá, ghi nhận và quản lý kết quả học tập, rèn luyện, phẩm chất, năng lực và sự tiến bộ của học sinh theo quy định; theo dõi mức độ đạt yêu cầu về học tập, rèn luyện và phát triển của học sinh theo cấp học. Kết quả được theo dõi theo lớp, khối lớp, môn học/hoạt động giáo dục và nhóm học sinh khi cần; được sử dụng để trao đổi với học sinh, cha mẹ học sinh và điều chỉnh hoạt động dạy học, giáo dục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường phân tích kết quả học tập, rèn luyện, chuyên cần, sự tiến bộ, sản phẩm học tập, phản hồi phù hợp, kết quả hỗ trợ và nhu cầu của học sinh để điều chỉnh kế hoạch giáo dục, phương pháp dạy học, kiểm tra, đánh giá và biện pháp hỗ trợ. Kết quả theo dõi cho thấy sự tiến bộ của học sinh, sự cải thiện về kết quả học tập, rèn luyện hoặc hiệu quả hỗ trợ đối với học sinh cần hỗ trợ. Việc xem xét kết quả chú trọng đánh giá vì sự tiến bộ của học sinh, không yêu cầu mọi trường phải cao hơn mức trung bình của địa phương."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Kết quả học tập, phát triển, rèn luyện và sự tiến bộ của học sinh",
+            "minh_chung_goi_y": "Hồ sơ đánh giá học sinh; bảng tổng hợp kết quả học tập, rèn luyện theo lớp, khối, môn học/hoạt động giáo dục; hồ sơ chuyên cần; danh sách học sinh chưa đạt hoặc cần hỗ trợ; hồ sơ điều chỉnh dạy học và hỗ trợ sau đánh giá.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ học sinh đạt yêu cầu theo quy định; tỷ lệ học sinh hoàn thành chương trình/lớp học/cấp học (khi áp dụng); số học sinh chưa đạt hoặc cần hỗ trợ.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ học sinh đạt yêu cầu theo quy định",
+              "tỷ lệ học sinh hoàn thành chương trình/lớp học/cấp học (khi áp dụng)",
+              "số học sinh chưa đạt hoặc cần hỗ trợ"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 4,
+      "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội",
+      "tieu_chi": [
+        {
+          "ma": "4.1",
+          "ten": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường có cơ sở vật chất, phòng học, phòng chức năng nếu có, thiết bị dạy học, học liệu, thư viện hoặc nguồn học liệu, khu vệ sinh, sân chơi/bãi tập, hạ tầng công nghệ thông tin và kết nối mạng phục vụ hoạt động quản lý, dạy học, giáo dục theo quy định, phù hợp với cấp học, Chương trình giáo dục phổ thông và điều kiện thực tế. Các điều kiện này được quản lý, sử dụng, bảo trì, bảo quản và rà soát định kỳ để bảo đảm an toàn, hiệu quả và đáp ứng yêu cầu tổ chức hoạt động giáo dục."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng dữ liệu về tình trạng cơ sở vật chất, thiết bị dạy học, học liệu, thư viện, hạ tầng công nghệ thông tin, kết nối mạng và nhu cầu dạy học để lập kế hoạch sửa chữa, bảo trì, bổ sung, sắp xếp hoặc khai thác hiệu quả hơn. Nhà trường từng bước phát triển, sử dụng học liệu số, thiết bị công nghệ, công cụ số hoặc nền tảng hỗ trợ dạy học phù hợp với điều kiện thực tế; không áp dụng cứng các mô hình phòng học thông minh, thiết bị thông minh hoặc không gian học tập số như điều kiện tối thiểu đối với mọi trường. Việc cải thiện điều kiện giáo dục góp phần tạo môi trường học tập an toàn, thân thiện, linh hoạt, hòa nhập và hỗ trợ tốt hơn cho hoạt động dạy học, giáo dục."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động giáo dục",
+            "minh_chung_goi_y": "Hồ sơ phòng học, phòng chức năng; danh mục cơ sở vật chất, thiết bị dạy học, học liệu, thư viện; hồ sơ hạ tầng công nghệ thông tin, kết nối mạng; hồ sơ kiểm kê, bảo trì, sửa chữa, bổ sung; minh chứng khai thác thiết bị, học liệu và học liệu số.",
+            "du_lieu_dinh_luong_goc": "Số phòng học đạt yêu cầu so với tổng số phòng học; số phòng chức năng hoặc không gian học tập đáp ứng yêu cầu khi áp dụng; số hạng mục cơ sở vật chất thiếu, xuống cấp hoặc cần sửa chữa; tỷ lệ thiết bị dạy học sử dụng được so với tổng số thiết bị; tỷ lệ lớp học bảo đảm sĩ số theo quy định.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số phòng học đạt yêu cầu so với tổng số phòng học",
+              "số phòng chức năng hoặc không gian học tập đáp ứng yêu cầu khi áp dụng",
+              "số hạng mục cơ sở vật chất thiếu, xuống cấp hoặc cần sửa chữa",
+              "tỷ lệ thiết bị dạy học sử dụng được so với tổng số thiết bị",
+              "tỷ lệ lớp học bảo đảm sĩ số theo quy định"
+            ]
+          }
+        },
+        {
+          "ma": "4.2",
+          "ten": "Môi trường giáo dục an toàn, tích cực, hỗ trợ phát triển học sinh",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường bảo đảm các điều kiện tối thiểu về vệ sinh, nước sạch, khu vệ sinh, ánh sáng, thông gió, sân chơi/bãi tập, an toàn thiết bị, phòng cháy chữa cháy, an toàn thực phẩm nếu có, an toàn số và bảo mật thông tin học sinh. Nhà trường thực hiện chăm sóc sức khỏe, phòng ngừa bạo lực học đường, xâm hại, bắt nạt, bắt nạt trực tuyến, tai nạn thương tích, khủng hoảng tâm lý và các rủi ro ảnh hưởng đến an toàn, sức khỏe, tinh thần của học sinh; có hồ sơ kiểm soát điều kiện an toàn, kiểm tra định kỳ, kênh tiếp nhận phản ánh, quy trình xử lý sự cố, hồ sơ xử lý sự cố và phối hợp với gia đình, cơ quan, tổ chức liên quan khi cần. Việc tiếp nhận, xử lý, hỗ trợ học sinh bảo đảm nguyên tắc bảo mật thông tin, tôn trọng, không kỳ thị và bảo vệ học sinh."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường phân tích dữ liệu về sức khỏe, an toàn, sự cố, phản ánh, khảo sát hoặc phản hồi phù hợp của học sinh, cha mẹ học sinh và đội ngũ để nhận diện nguy cơ, cải thiện môi trường giáo dục và giảm rủi ro. Việc khảo sát phản hồi, an toàn hoặc hài lòng nếu được thực hiện phải phù hợp với lứa tuổi học sinh, bảo đảm khách quan, bảo mật thông tin và không gây áp lực cho người trả lời. Nhà trường xây dựng nền nếp bảo đảm an toàn, chăm sóc sức khỏe, phòng ngừa bạo lực học đường, xâm hại, bắt nạt, bắt nạt trực tuyến, rủi ro trên môi trường số và hỗ trợ sức khỏe tinh thần của học sinh. Học sinh được tôn trọng, lắng nghe, bảo vệ, hỗ trợ phù hợp và tham gia xây dựng môi trường giáo dục an toàn, tích cực, hòa nhập. Nhà trường theo dõi kết quả sau khắc phục, sử dụng dữ liệu và phản hồi để điều chỉnh biện pháp phòng ngừa, xử lý, hỗ trợ và phòng ngừa tái diễn."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Môi trường giáo dục an toàn, tích cực, hỗ trợ phát triển học sinh",
+            "minh_chung_goi_y": "Hồ sơ vệ sinh, an toàn trường học; hồ sơ y tế học đường; bảng kiểm an toàn, phòng cháy chữa cháy, an toàn thực phẩm nếu có; kênh tiếp nhận phản ánh; hồ sơ xử lý sự cố, bạo lực, bắt nạt, an toàn số; hồ sơ hỗ trợ tâm lý, bảo mật thông tin học sinh.",
+            "du_lieu_dinh_luong_goc": "Số sự cố an toàn trường học được ghi nhận; số sự cố được xử lý theo quy trình; số trường hợp bạo lực, bắt nạt, xâm hại hoặc nguy cơ mất an toàn được xử lý; số học sinh được hỗ trợ về sức khỏe, tâm lý hoặc an toàn.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số sự cố an toàn trường học được ghi nhận",
+              "số sự cố được xử lý theo quy trình",
+              "số trường hợp bạo lực, bắt nạt, xâm hại hoặc nguy cơ mất an toàn được xử lý",
+              "số học sinh được hỗ trợ về sức khỏe, tâm lý hoặc an toàn"
+            ]
+          }
+        },
+        {
+          "ma": "4.3",
+          "ten": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhà trường duy trì kênh thông tin hai chiều với cha mẹ học sinh hoặc người giám hộ; thông báo kịp thời về chuyên cần, kết quả học tập, rèn luyện, sự tiến bộ, sức khỏe, an toàn và nhu cầu hỗ trợ của học sinh. Nhà trường tiếp nhận, phân loại, xử lý phản hồi theo phạm vi trách nhiệm; có kế hoạch hoặc chương trình phối hợp với gia đình, chính quyền, y tế, công an, cơ sở giáo dục nghề nghiệp, doanh nghiệp, tổ chức xã hội và các bên liên quan để chăm sóc sức khỏe, bảo đảm an toàn, giáo dục kỹ năng, hướng nghiệp, phân luồng, hỗ trợ học sinh và huy động nguồn lực hợp pháp theo quy định."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Nhà trường sử dụng phản hồi của cha mẹ học sinh, dữ liệu chuyên cần, kết quả học tập, rèn luyện, sức khỏe, an toàn và hồ sơ hỗ trợ học sinh để điều chỉnh hoạt động phối hợp với gia đình, cộng đồng và tổ chức liên quan. Cha mẹ học sinh tham gia phù hợp vào hoạt động giáo dục, bảo vệ an toàn, hướng nghiệp khi phù hợp và hỗ trợ học sinh. Nhà trường đánh giá hiệu quả phối hợp; sử dụng kết quả phối hợp để cải thiện chăm sóc sức khỏe, bảo đảm an toàn, giáo dục kỹ năng, hướng nghiệp, phân luồng, giáo dục hòa nhập, năng lực số, đổi mới sáng tạo khi phù hợp và môi trường giáo dục. Nguồn lực huy động được quản lý, sử dụng minh bạch, hợp pháp và có tác động tích cực đến an toàn, sự tiến bộ và phát triển của học sinh."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+            "minh_chung_goi_y": "Sổ liên lạc hoặc kênh thông tin điện tử; hồ sơ trao đổi hai chiều với cha mẹ học sinh; biên bản họp cha mẹ học sinh; hồ sơ phối hợp với chính quyền, y tế, công an, tổ chức xã hội, cơ sở giáo dục nghề nghiệp, doanh nghiệp khi phù hợp; hồ sơ huy động, quản lý và sử dụng nguồn lực theo quy định.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        }
+      ]
+    }
+  ]
+}

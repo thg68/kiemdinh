@@ -12,7 +12,7 @@ Tài liệu này ghi lại trạng thái kiểm tra đến Sprint 6.
 
 ## M1 - Bộ tiêu chuẩn
 
-- Chạy với dữ liệu thật: Đạt. Migration `011` đã nạp nội dung Phụ lục I, II, III từ `data/tt57/*.json`, đủ 4 tiêu chuẩn, 15 tiêu chí, 8 tiêu chí bắt buộc và 2 mức cho cả `mam_non`, `pho_thong`, `gdtx`.
+- Chạy với dữ liệu thật: Đạt. Migration `011` đã nạp nội dung Phụ lục I, II, III dựa trên gói nguồn `tt57_seed/`, đủ 4 tiêu chuẩn, 15 tiêu chí, 8 tiêu chí bắt buộc và 2 mức cho cả `mam_non`, `pho_thong`, `gdtx`.
 - Phân quyền ở tầng CSDL: Đạt. Bảng tham chiếu đọc cho người đã đăng nhập, ghi cho quản trị hệ thống.
 - Xử lý rỗng/lỗi: Đạt cơ bản. Khi thiếu nội dung mức, báo cáo cảnh báo thay vì tự bịa.
 - Commit Git: Đạt.

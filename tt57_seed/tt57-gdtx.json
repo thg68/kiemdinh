@@ -1,0 +1,417 @@
+{
+  "metadata": {
+    "ma_van_ban": "57/2026/TT-BGDĐT",
+    "ngay_ban_hanh": "2026-07-07",
+    "ngay_hieu_luc": "2026-07-07",
+    "phu_luc": "III",
+    "loai_hinh": "gdtx",
+    "ten": "Hướng dẫn nội dung, mức độ đáp ứng và thông tin minh chứng các tiêu chí bảo đảm chất lượng đối với cơ sở giáo dục thường xuyên",
+    "nguon_chinh_thuc": "https://vanban.chinhphu.vn/?classid=1&docid=218991&pageid=27160&typegroupid=6",
+    "nguon_trich_xuat_html": "https://thuvienphapluat.vn/van-ban/Giao-duc/Thong-tu-57-2026-TT-BGDDT-bao-dam-chat-luong-giao-duc-co-so-giao-duc-mam-non-716471.aspx",
+    "ghi_chu": "Dữ liệu được cấu trúc hóa từ nội dung Phụ lục III. Nguồn HTML hiển thị 'TC1.1' tại tiêu chí đầu tiên; mã được chuẩn hóa thành '1.1'."
+  },
+  "ghi_chu_phu_luc": "Trong Phụ lục này, “nhà trường” được hiểu là trung tâm giáo dục thường xuyên và trung tâm giáo dục nghề nghiệp - giáo dục thường xuyên; “người học” được hiểu là học viên; “hoạt động giáo dục” bao gồm hoạt động dạy học, giáo dục, đào tạo, bồi dưỡng và các hoạt động hỗ trợ người học theo chức năng, nhiệm vụ của trung tâm; “nhân sự hỗ trợ giáo dục” được hiểu là viên chức, nhân viên hoặc người được phân công thực hiện các nhiệm vụ tư vấn, hỗ trợ hoạt động giáo dục, hướng nghiệp, quản lý học viên và vận hành trung tâm theo quy định và điều kiện thực tế.",
+  "tieu_chuan": [
+    {
+      "so_thu_tu": 1,
+      "ten": "Quản trị nhà trường và bảo đảm chất lượng",
+      "tieu_chi": [
+        {
+          "ma": "1.1",
+          "ten": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Xác định mục tiêu, chỉ tiêu, nhiệm vụ và kế hoạch phát triển/kế hoạch năm học phù hợp với nhiệm vụ giáo dục thường xuyên, điều kiện, nhu cầu nhân lực của địa phương, nhu cầu học tập của học viên, người dân và cộng đồng."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1 và có cải tiến thực chất: sử dụng dữ liệu, phản hồi của học viên, đội ngũ, các bên liên quan và kết quả tự đánh giá để rà soát, điều chỉnh mục tiêu, chỉ tiêu, nhiệm vụ, kế hoạch phát triển/năm học; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+            "minh_chung_goi_y": "Kế hoạch năm học; kế hoạch thực hiện từng chương trình giáo dục, khóa học; mục tiêu, chỉ tiêu, nhiệm vụ; quyết định của Giám đốc trung tâm; nghị quyết Hội đồng trường nếu có; biên bản họp lãnh đạo hoặc hội đồng chuyên môn; báo cáo kết quả thực hiện; minh chứng rà soát, điều chỉnh kế hoạch nếu có; minh chứng công khai kế hoạch và kết quả thực hiện.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.2",
+          "ten": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Đáp ứng yêu cầu tối thiểu và vận hành ổn định: Trung tâm có cơ cấu tổ chức, phân công nhiệm vụ và cơ chế phối hợp nội bộ rõ ràng đối với cán bộ quản lý cơ sở giáo dục, giáo viên, nhân sự hỗ trợ giáo dục, tổ/bộ phận và người phụ trách nhiệm vụ trọng tâm; việc phân công phù hợp với quy mô, chương trình, hình thức tổ chức hoạt động giáo dục và điều kiện thực tế."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1 và có cải tiến thực chất: sử dụng dữ liệu, phản hồi của đội ngũ và kết quả tự đánh giá để rà soát, điều chỉnh cơ cấu tổ chức, phân công nhiệm vụ và cơ chế phối hợp nội bộ; các nhiệm vụ trọng tâm được thực hiện ổn định, hạn chế chồng chéo, bỏ sót hoặc quá tải."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+            "minh_chung_goi_y": "Quyết định thành lập, quy chế tổ chức và hoạt động; sơ đồ tổ chức; phân công nhiệm vụ; hồ sơ giao việc; biên bản họp, phối hợp nội bộ; minh chứng điều chỉnh phân công khi có thay đổi.",
+            "du_lieu_dinh_luong_goc": "Không yêu cầu dữ liệu định lượng riêng.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": true,
+            "chi_so_dinh_luong": []
+          }
+        },
+        {
+          "ma": "1.3",
+          "ten": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Quản lý kế hoạch, tài chính, cơ sở vật chất, học liệu, nhân lực, hồ sơ học viên; thông tin về lớp, khóa học, tình trạng tham gia học tập, kết quả học tập, rèn luyện và thông tin về an toàn; thực hiện công khai thông tin theo quy định."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, hồ sơ điện tử, phần mềm hoặc cơ sở dữ liệu ngành nếu có, phản hồi của các bên liên quan và kết quả tự đánh giá để rà soát, điều chỉnh kế hoạch, nguồn lực, thông tin và dữ liệu; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+            "minh_chung_goi_y": "Hồ sơ quản lý học viên; danh sách lớp/khóa học; dữ liệu chuyên cần/tham gia học tập; kết quả học tập, rèn luyện; hồ sơ tài chính, cơ sở vật chất, học liệu và nhân lực; hồ sơ điện tử hoặc phần mềm quản lý nếu có; báo cáo rà soát dữ liệu phục vụ quản lý.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ hồ sơ học viên được cập nhật đầy đủ, đúng thời hạn; tỷ lệ lớp/khóa học có dữ liệu tham gia học tập được cập nhật đầy đủ; số sai lệch dữ liệu được phát hiện và xử lý.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ hồ sơ học viên được cập nhật đầy đủ, đúng thời hạn",
+              "tỷ lệ lớp/khóa học có dữ liệu tham gia học tập được cập nhật đầy đủ",
+              "số sai lệch dữ liệu được phát hiện và xử lý"
+            ]
+          }
+        },
+        {
+          "ma": "1.4",
+          "ten": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Thực hiện tự kiểm tra/tự đánh giá, xác định vấn đề cần cải tiến, lập kế hoạch cải tiến, theo dõi kết quả, công khai thông tin và giải trình với cơ quan quản lý, học viên và các bên liên quan; có kênh tiếp nhận phản hồi phù hợp."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, đội ngũ, các bên liên quan và kết quả tự đánh giá để điều chỉnh hoạt động tự đánh giá, cải tiến, công khai và giải trình; có minh chứng về kết quả cải tiến được theo dõi tối thiểu trong 01 chu kỳ, trong đó ưu tiên các nội dung liên quan đến duy trì học tập, hỗ trợ học viên và nâng cao hiệu quả hoạt động giáo dục qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+            "minh_chung_goi_y": "Báo cáo tự đánh giá hoặc tự kiểm tra; kế hoạch cải tiến; danh mục nhiệm vụ cải tiến, phân công thực hiện, thời hạn và kết quả; hồ sơ công khai, giải trình; phản hồi của học viên, đội ngũ và bên liên quan; minh chứng kết quả cải tiến.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ nhiệm vụ cải tiến hoàn thành theo kế hoạch; số phản hồi được tiếp nhận, xử lý.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ nhiệm vụ cải tiến hoàn thành theo kế hoạch",
+              "số phản hồi được tiếp nhận, xử lý"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 2,
+      "ten": "Phát triển đội ngũ",
+      "tieu_chi": [
+        {
+          "ma": "2.1",
+          "ten": "Cán bộ quản lý cơ sở giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Cán bộ quản lý cơ sở giáo dục có hồ sơ chức danh/phân công, đánh giá hằng năm, bồi dưỡng/tập huấn theo quy định hoặc kế hoạch; tổ chức quản lý, điều hành hoạt động của trung tâm phù hợp với nhiệm vụ giáo dục thường xuyên, chương trình, hình thức tổ chức hoạt động giáo dục và đặc điểm người học. Có hồ sơ, dữ liệu và phân công thực hiện."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, đội ngũ, bên liên quan và kết quả tự đánh giá để điều chỉnh quản lý, phát triển đội ngũ và cải tiến hoạt động của trung tâm; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cán bộ quản lý cơ sở giáo dục",
+            "minh_chung_goi_y": "Hồ sơ giám đốc, phó giám đốc hoặc cán bộ quản lý cơ sở giáo dục; quyết định phân công nhiệm vụ; hồ sơ đánh giá, bồi dưỡng; kế hoạch chỉ đạo, điều hành; hồ sơ kiểm tra nội bộ, tự đánh giá và cải tiến hoạt động quản lý.",
+            "du_lieu_dinh_luong_goc": "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định; tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số cán bộ quản lý cơ sở giáo dục hiện có so với số lượng theo quy định",
+              "tỷ lệ cán bộ quản lý cơ sở giáo dục đáp ứng tiêu chuẩn chức danh"
+            ]
+          }
+        },
+        {
+          "ma": "2.2",
+          "ten": "Giáo viên",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Giáo viên có hồ sơ đáp ứng yêu cầu về trình độ, chuẩn/chức danh, phân công, kế hoạch dạy học, đánh giá học viên, sinh hoạt chuyên môn và bồi dưỡng phù hợp với chương trình giáo dục thường xuyên; giáo viên cơ hữu, hợp đồng, thỉnh giảng có đủ số lượng theo định mức hoặc phương án được phê duyệt; được phân công phù hợp với chương trình, hình thức tổ chức hoạt động giáo dục và điều kiện thực tế."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, kết quả đánh giá và kết quả tự đánh giá để điều chỉnh phương pháp dạy học, kiểm tra, đánh giá, hỗ trợ tự học, học tập linh hoạt và duy trì học tập của học viên; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Giáo viên",
+            "minh_chung_goi_y": "Danh sách giáo viên cơ hữu, giáo viên hợp đồng, giáo viên thỉnh giảng hoặc giáo viên tham gia giảng dạy theo hợp đồng liên kết (nếu có); hồ sơ trình độ đào tạo, tiêu chuẩn chức danh nghề nghiệp; phân công giảng dạy; hồ sơ sinh hoạt chuyên môn, bồi dưỡng; hồ sơ kiểm tra, đánh giá kết quả học tập của học viên; minh chứng điều chỉnh hoạt động dạy học và hỗ trợ học viên.",
+            "du_lieu_dinh_luong_goc": "Số giáo viên hiện có so với nhu cầu; số giáo viên thiếu hoặc thừa theo môn học/chương trình giáo dục; tỷ lệ giáo viên đạt chuẩn trình độ đào tạo hoặc tiêu chuẩn chức danh theo quy định; tỷ lệ giáo viên được phân công phù hợp chuyên môn.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số giáo viên hiện có so với nhu cầu",
+              "số giáo viên thiếu hoặc thừa theo môn học/chương trình giáo dục",
+              "tỷ lệ giáo viên đạt chuẩn trình độ đào tạo hoặc tiêu chuẩn chức danh theo quy định",
+              "tỷ lệ giáo viên được phân công phù hợp chuyên môn"
+            ]
+          }
+        },
+        {
+          "ma": "2.3",
+          "ten": "Nhân sự hỗ trợ giáo dục",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Nhân viên, giáo viên hoặc người được phân công, kiêm nhiệm được bố trí để thực hiện nhiệm vụ tư vấn hỗ trợ học tập, hướng nghiệp, tư vấn y tế, thư viện/học liệu, thiết bị, công nghệ thông tin, hành chính, tài chính, bảo vệ, tư vấn/hỗ trợ học viên nếu có, phù hợp với quy định, quy mô và điều kiện thực tế."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, đội ngũ và kết quả tự đánh giá để rà soát, điều chỉnh phân công, phối hợp và bồi dưỡng nhân sự hỗ trợ giáo dục; các nhiệm vụ hỗ trợ học viên, an toàn và vận hành trung tâm được thực hiện ổn định; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Nhân sự hỗ trợ giáo dục",
+            "minh_chung_goi_y": "Danh sách nhân viên hoặc người được giao kiêm nhiệm thực hiện nhiệm vụ hỗ trợ giáo dục; phân công nhiệm vụ học vụ, thư viện hoặc học liệu, thiết bị, công nghệ thông tin, hành chính, tài chính, bảo vệ, tư vấn, hỗ trợ học viên khi có; hồ sơ tập huấn và kết quả thực hiện nhiệm vụ.",
+            "du_lieu_dinh_luong_goc": "Số vị trí nhân sự hỗ trợ hiện có so với số vị trí theo yêu cầu; tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số vị trí nhân sự hỗ trợ hiện có so với số vị trí theo yêu cầu",
+              "tỷ lệ vị trí hỗ trợ được bố trí đáp ứng yêu cầu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 3,
+      "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển người học",
+      "tieu_chi": [
+        {
+          "ma": "3.1",
+          "ten": "Tổ chức thực hiện chương trình giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Tổ chức thực hiện chương trình/kế hoạch giáo dục theo năm học, học kỳ, tháng/tuần hoặc khóa học; theo dõi tiến độ, tình hình tham gia học tập, kết quả học tập và điều chỉnh khi phát sinh, phù hợp với chương trình, hình thức tổ chức hoạt động giáo dục và điều kiện thực tế. Có hồ sơ, dữ liệu và phân công thực hiện."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu về tiến độ, tình hình tham gia học tập, kết quả học tập, phản hồi của học viên, đội ngũ và kết quả tự đánh giá để điều chỉnh chương trình/kế hoạch giáo dục, thời khóa biểu hoặc hình thức tổ chức hoạt động giáo dục khi phù hợp; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức thực hiện chương trình giáo dục",
+            "minh_chung_goi_y": "Kế hoạch giáo dục theo năm học, học kỳ, tháng/tuần hoặc khóa học; lịch học/thời khóa biểu; hồ sơ lớp/khóa học; báo cáo tiến độ; hồ sơ điều chỉnh, bù đắp nội dung khi phát sinh; minh chứng thực hiện đầy đủ nội dung chương trình.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ hoàn thành chương trình/kế hoạch giáo dục; tỷ lệ duy trì tiến độ đúng kế hoạch.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ hoàn thành chương trình/kế hoạch giáo dục",
+              "tỷ lệ duy trì tiến độ đúng kế hoạch"
+            ]
+          }
+        },
+        {
+          "ma": "3.2",
+          "ten": "Đổi mới phương pháp dạy học và theo dõi, đánh giá sự phát triển, tiến bộ của người học",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Giáo viên áp dụng phương pháp dạy học linh hoạt, phù hợp với đặc điểm người học, điều kiện học tập, chương trình và hình thức tổ chức hoạt động giáo dục; thực hiện kiểm tra, đánh giá kết quả học tập của học viên theo quy định. Kết quả kiểm tra, đánh giá được sử dụng để điều chỉnh dạy học và hỗ trợ học viên duy trì học tập."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, kết quả kiểm tra, đánh giá và kết quả tự đánh giá để điều chỉnh phương pháp dạy học, hình thức kiểm tra, đánh giá và hoạt động hỗ trợ học viên; ứng dụng công nghệ thông tin, công nghệ số hoặc học liệu phù hợp khi có điều kiện; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Đổi mới phương pháp dạy học và kiểm tra, đánh giá người học",
+            "minh_chung_goi_y": "Kế hoạch bài dạy; hồ sơ dự giờ, sinh hoạt chuyên môn; hồ sơ kiểm tra, đánh giá kết quả học tập của học viên; phản hồi của học viên; minh chứng điều chỉnh phương pháp dạy học, kiểm tra, đánh giá, hỗ trợ tự học, học tập linh hoạt, học tập kết hợp và duy trì học tập.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ học viên đạt yêu cầu theo quy định; số chuyên đề sinh hoạt chuyên môn gắn với đổi mới phương pháp dạy học, kiểm tra, đánh giá hoặc hỗ trợ học tập.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ học viên đạt yêu cầu theo quy định",
+              "số chuyên đề sinh hoạt chuyên môn gắn với đổi mới phương pháp dạy học, kiểm tra, đánh giá hoặc hỗ trợ học tập"
+            ]
+          }
+        },
+        {
+          "ma": "3.3",
+          "ten": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Tổ chức hoạt động giáo dục bổ trợ về kỹ năng sống, giáo dục công dân, hướng nghiệp/phân luồng, năng lực số, hoạt động cộng đồng, tác phong học tập, tác phong lao động, an toàn hoặc nội dung phù hợp với chương trình và điều kiện học viên."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, đội ngũ, bên liên quan và kết quả tự đánh giá để điều chỉnh hoạt động giáo dục bổ trợ, hướng nghiệp, phân luồng, năng lực số hoặc hoạt động cộng đồng; phối hợp với tổ chức, cá nhân liên quan khi phù hợp để nâng cao hiệu quả hoạt động; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+            "minh_chung_goi_y": "Kế hoạch và hồ sơ hoạt động trải nghiệm, hướng nghiệp, phân luồng, giáo dục kỹ năng sống, năng lực số, học tập suốt đời, hoạt động cộng đồng hoặc nội dung bổ trợ phù hợp; sản phẩm hoạt động, dữ liệu tham gia, phản hồi của học viên.",
+            "du_lieu_dinh_luong_goc": "Số hoạt động giáo dục bổ trợ được tổ chức trong năm học/khóa học; tỷ lệ học viên tham gia các hoạt động giáo dục bổ trợ.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số hoạt động giáo dục bổ trợ được tổ chức trong năm học/khóa học",
+              "tỷ lệ học viên tham gia các hoạt động giáo dục bổ trợ"
+            ]
+          }
+        },
+        {
+          "ma": "3.4",
+          "ten": "Quản lý, theo dõi, hỗ trợ người học và giáo dục hòa nhập",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Quản lý hồ sơ học viên, theo dõi chuyên cần/tham gia học tập, nhận diện học viên có nguy cơ ngừng học/bỏ học hoặc cần hỗ trợ; thực hiện biện pháp tư vấn, phối hợp hoặc hỗ trợ phù hợp, bảo đảm không phân biệt đối xử."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu chuyên cần/tham gia học tập, kết quả học tập, phản hồi của học viên, đội ngũ, bên liên quan và kết quả tự đánh giá để điều chỉnh biện pháp quản lý, theo dõi, tư vấn, hỗ trợ học viên và giáo dục hòa nhập; có minh chứng kết quả sau hỗ trợ hoặc cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Quản lý, theo dõi, hỗ trợ người học và giáo dục hòa nhập",
+            "minh_chung_goi_y": "Hồ sơ học viên; dữ liệu chuyên cần/tham gia học tập; danh sách học viên cần hỗ trợ, có nguy cơ ngừng học, bỏ học hoặc mất kết nối học tập trực tuyến; kế hoạch hỗ trợ cá nhân/nhóm; hồ sơ tư vấn, phối hợp, kết quả hỗ trợ; hồ sơ bảo mật thông tin.",
+            "du_lieu_dinh_luong_goc": "Số học viên có nguy cơ ngừng học, bỏ học hoặc cần hỗ trợ được theo dõi, hỗ trợ; số lượt tư vấn, hỗ trợ người học theo nhu cầu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số học viên có nguy cơ ngừng học, bỏ học hoặc cần hỗ trợ được theo dõi, hỗ trợ",
+              "số lượt tư vấn, hỗ trợ người học theo nhu cầu"
+            ]
+          }
+        },
+        {
+          "ma": "3.5",
+          "ten": "Kết quả học tập, phát triển, rèn luyện và sự tiến bộ của người học",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Theo dõi kết quả học tập, rèn luyện, hoàn thành chương trình/giai đoạn, sự tiến bộ của học viên, kết quả hỗ trợ, học tiếp, học nghề hoặc việc làm (dữ liệu việc làm thu thập tùy thuộc điều kiện) khi có dữ liệu hợp pháp. Có hồ sơ, dữ liệu và phân công thực hiện."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu kết quả học tập, rèn luyện, hoàn thành chương trình/giai đoạn, kết quả hỗ trợ, học tiếp, học nghề hoặc việc làm khi có dữ liệu hợp pháp, phản hồi của học viên, đội ngũ và kết quả tự đánh giá để điều chỉnh hoạt động dạy học, kiểm tra, đánh giá và hỗ trợ học viên; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Kết quả học tập, phát triển, rèn luyện và sự tiến bộ của người học",
+            "minh_chung_goi_y": "Bảng tổng hợp kết quả học tập, rèn luyện, hoàn thành chương trình/giai đoạn; dữ liệu chuyên cần, duy trì học tập; kết quả hỗ trợ; dữ liệu học tiếp, học nghề hoặc việc làm khi có dữ liệu hợp pháp hoặc phù hợp với chương trình giáo dục; báo cáo phân tích xu hướng và tiến bộ.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ học viên hoàn thành chương trình/giai đoạn/khóa học; số học viên chưa đạt yêu cầu hoặc cần hỗ trợ; xu hướng kết quả theo năm học hoặc khóa học khi có dữ liệu.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ học viên hoàn thành chương trình/giai đoạn/khóa học",
+              "số học viên chưa đạt yêu cầu hoặc cần hỗ trợ",
+              "xu hướng kết quả theo năm học hoặc khóa học khi có dữ liệu"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "so_thu_tu": 4,
+      "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội",
+      "tieu_chi": [
+        {
+          "ma": "4.1",
+          "ten": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động giáo dục",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Có phòng học, thiết bị, học liệu, thư viện/nguồn học liệu, hạ tầng kỹ thuật/số, khu vệ sinh và điều kiện tổ chức dạy học trực tiếp, học trực tuyến hoặc kết hợp khi có điều kiện; quản lý, sử dụng cơ sở vật chất, thiết bị, học liệu phục vụ hoạt động giáo dục theo quy định, bao gồm việc khai thác, sử dụng nguồn lực hợp pháp nếu có."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu kiểm kê, sử dụng cơ sở vật chất, thiết bị, học liệu, phản hồi của học viên, đội ngũ và kết quả tự đánh giá để rà soát, bảo trì, bổ sung, điều chỉnh hoặc đề xuất cải thiện điều kiện giáo dục; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động giáo dục",
+            "minh_chung_goi_y": "Hồ sơ phòng học, phòng chức năng, thiết bị, học liệu, thư viện/nguồn học liệu, hạ tầng kỹ thuật/số, khu vệ sinh; kiểm kê, bảo trì, sửa chữa, bổ sung; minh chứng sử dụng cơ sở vật chất, thiết bị, học liệu phục vụ dạy học; hồ sơ phối hợp, liên kết sử dụng cơ sở vật chất, thiết bị, học liệu hoặc nguồn lực hợp pháp khác nếu có.",
+            "du_lieu_dinh_luong_goc": "Tỷ lệ phòng đạt chuẩn (%); tỷ lệ thiết bị hoạt động tốt (%); Tỷ lệ sử dụng thiết bị (%); số hạng mục sửa chữa/bổ sung/năm.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Tỷ lệ phòng đạt chuẩn (%)",
+              "tỷ lệ thiết bị hoạt động tốt (%)",
+              "Tỷ lệ sử dụng thiết bị (%)",
+              "số hạng mục sửa chữa/bổ sung/năm"
+            ]
+          }
+        },
+        {
+          "ma": "4.2",
+          "ten": "Môi trường giáo dục an toàn, sức khỏe và hạnh phúc",
+          "la_bat_buoc": true,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Kiểm soát điều kiện vệ sinh, nước sạch, ánh sáng, thông gió, an toàn thiết bị, phòng cháy chữa cháy, an toàn số, bảo mật thông tin, sức khỏe, tâm lý, tư vấn/hỗ trợ và xử lý sự cố; bảo đảm an toàn khi tổ chức hoạt động thực hành, thực tập hoặc hoạt động liên kết nếu có. Có hồ sơ, dữ liệu và phân công thực hiện."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu về an toàn, sức khỏe, sự cố, phản hồi của học viên, đội ngũ, bên liên quan và kết quả tự đánh giá để phòng ngừa rủi ro, cải thiện môi trường giáo dục an toàn, lành mạnh, thân thiện, phù hợp với đặc điểm học viên; có minh chứng kết quả sau cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Môi trường giáo dục an toàn, sức khỏe và hạnh phúc",
+            "minh_chung_goi_y": "Bảng kiểm an toàn; hồ sơ vệ sinh, nước sạch, ánh sáng, thông gió, phòng cháy chữa cháy, an toàn số, bảo mật thông tin; hồ sơ sự cố, xử lý và phòng ngừa; hồ sơ tư vấn/hỗ trợ học viên; khảo sát/phản hồi ẩn danh nếu triển khai.",
+            "du_lieu_dinh_luong_goc": "Số sự cố/năm; tỷ lệ xử lý sự cố đúng quy trình (%); tỷ lệ giảm sự cố qua các năm (%); mức độ hài lòng môi trường giáo dục (%) nếu khảo sát.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số sự cố/năm",
+              "tỷ lệ xử lý sự cố đúng quy trình (%)",
+              "tỷ lệ giảm sự cố qua các năm (%)",
+              "mức độ hài lòng môi trường giáo dục (%) nếu khảo sát"
+            ]
+          }
+        },
+        {
+          "ma": "4.3",
+          "ten": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+          "la_bat_buoc": false,
+          "muc_do": [
+            {
+              "muc": 1,
+              "noi_dung_yeu_cau": "Duy trì kênh liên lạc với học viên; phối hợp với gia đình/người giám hộ khi phù hợp, chính quyền, y tế, công an, cơ sở giáo dục, cơ sở giáo dục nghề nghiệp, doanh nghiệp sử dụng lao động, tổ chức xã hội để hỗ trợ học viên, bảo đảm an toàn, hướng nghiệp, phân luồng, học tiếp, học nghề và học tập suốt đời. Có hồ sơ, dữ liệu và phân công thực hiện."
+            },
+            {
+              "muc": 2,
+              "noi_dung_yeu_cau": "Đạt Mức 1; sử dụng dữ liệu, phản hồi của học viên, gia đình/người giám hộ khi phù hợp, cộng đồng, tổ chức liên quan và kết quả tự đánh giá để điều chỉnh hoạt động phối hợp, huy động và sử dụng nguồn lực hợp pháp; có minh chứng kết quả sau phối hợp hoặc cải tiến qua chu kỳ."
+            }
+          ],
+          "thong_tin_minh_chung": {
+            "nhom_noi_dung": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+            "minh_chung_goi_y": "Kế hoạch phối hợp; kênh thông tin với học viên, gia đình/người giám hộ khi phù hợp; hồ sơ phối hợp với chính quyền, y tế, công an, cơ sở giáo dục nghề nghiệp, doanh nghiệp, tổ chức xã hội; minh chứng phối hợp, hỗ trợ từ các tổ chức, cá nhân theo quy định (nếu có); minh chứng kết quả hoặc tác động của hoạt động phối hợp.",
+            "du_lieu_dinh_luong_goc": "Số hoạt động phối hợp trong năm học/khóa học; số người học được hỗ trợ hoặc hưởng lợi từ hoạt động phối hợp.",
+            "khong_yeu_cau_du_lieu_dinh_luong_rieng": false,
+            "chi_so_dinh_luong": [
+              "Số hoạt động phối hợp trong năm học/khóa học",
+              "số người học được hỗ trợ hoặc hưởng lợi từ hoạt động phối hợp"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

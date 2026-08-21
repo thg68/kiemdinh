@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import tt57All from "./tt57-all.json";
 import validation from "./validation.json";
 
@@ -20,6 +22,23 @@ function flattenCriteria(boTieuChuan: (typeof tt57All.bo_tieu_chuan)[number]) {
 }
 
 describe("du lieu tham chieu TT57", () => {
+  it("khong lech voi goi nguon tt57_seed do nguoi dung cung cap", () => {
+    const files = [
+      "tt57-all.json",
+      "tt57-gdtx.json",
+      "tt57-mam-non.json",
+      "tt57-pho-thong.json",
+      "validation.json",
+    ];
+
+    for (const file of files) {
+      const source = readFileSync(join(process.cwd(), "tt57_seed", file), "utf8");
+      const appCopy = readFileSync(join(process.cwd(), "data", "tt57", file), "utf8");
+
+      expect(appCopy).toBe(source);
+    }
+  });
+
   it("dung so hieu va ngay hieu luc da xac minh", () => {
     expect(tt57All.metadata.ma_van_ban).toBe("57/2026/TT-BGDĐT");
     expect(tt57All.metadata.ngay_hieu_luc).toBe("2026-07-07");

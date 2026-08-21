@@ -7,11 +7,33 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
+  Criterion,
   Evidence,
   EvidenceCriterionLink,
   formatEvidenceStatus,
 } from "@/lib/evidence";
+
+function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
+  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
+
+  if (!reference) {
+    return criterion;
+  }
+
+  return {
+    ...criterion,
+    ten: reference.ten,
+    la_bat_buoc: reference.la_bat_buoc,
+    tieu_chuan: criterion.tieu_chuan
+      ? {
+          ...criterion.tieu_chuan,
+          ten: reference.tieu_chuan.ten,
+        }
+      : criterion.tieu_chuan,
+  };
+}
 
 export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
   const router = useRouter();
@@ -45,11 +67,20 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       .eq("auth_user_id", userData.user.id)
       .maybeSingle();
 
-    const { data: evidenceData, error } = await supabase
-      .from("minh_chung")
-      .select("*")
-      .eq("id", evidenceId)
-      .maybeSingle();
+    const [{ data: evidenceData, error }, { data: schoolData }] = await Promise.all([
+      supabase
+        .from("minh_chung")
+        .select("*")
+        .eq("id", evidenceId)
+        .maybeSingle(),
+      profileData
+        ? supabase
+            .from("co_so_giao_duc")
+            .select("loai_hinh")
+            .eq("id", profileData.co_so_id)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
     if (error || !evidenceData) {
       setMessage(error?.message ?? "Không tìm thấy minh chứng.");
@@ -65,7 +96,14 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       )
       .eq("minh_chung_id", evidenceId);
 
-    setLinks((linkData ?? []) as unknown as EvidenceCriterionLink[]);
+    setLinks(
+      ((linkData ?? []) as unknown as EvidenceCriterionLink[]).map((link) => ({
+        ...link,
+        tieu_chi: link.tieu_chi
+          ? enrichCriterionLabel(link.tieu_chi, schoolData?.loai_hinh ?? "mam_non")
+          : link.tieu_chi,
+      })),
+    );
 
     if (profileData) {
       await supabase.from("nhat_ky_truy_cap").insert({

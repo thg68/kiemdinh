@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 import { CapHoc, KetQuaTieuChi, xacDinhMucTuKetQua } from "@/lib/assessment/level-engine";
+import {
+  getTT57CriterionReference,
+  getTT57StandardReference,
+} from "@/lib/tt57/reference-data";
 
 export type ReportSupabaseClient = ReturnType<typeof createRequestSupabaseClient>;
 
@@ -278,12 +282,24 @@ export async function collectReportData(
     .filter((criterion) => criterion.loai_hinh_ap_dung === (schoolData as ReportSchool).loai_hinh)
     .map((criterion) => {
       const levels = levelByCriterion.get(criterion.id) ?? { muc_1: "", muc_2: "" };
+      const reference = getTT57CriterionReference((schoolData as ReportSchool).loai_hinh, criterion.ma);
+      const standard = firstArrayItem(criterion.tieu_chuan) ?? undefined;
+      const standardReference = standard
+        ? getTT57StandardReference((schoolData as ReportSchool).loai_hinh, standard.so_thu_tu)
+        : null;
 
       return {
         ...criterion,
-        tieu_chuan: firstArrayItem(criterion.tieu_chuan) ?? undefined,
-        muc_1: levels.muc_1,
-        muc_2: levels.muc_2,
+        ten: reference?.ten ?? criterion.ten,
+        la_bat_buoc: reference?.la_bat_buoc ?? criterion.la_bat_buoc,
+        tieu_chuan: standard
+          ? {
+              ...standard,
+              ten: standardReference?.ten ?? standard.ten,
+            }
+          : undefined,
+        muc_1: reference?.muc_1 ?? levels.muc_1,
+        muc_2: reference?.muc_2 ?? levels.muc_2,
       };
     });
   const standardsById = new Map<string, ReportStandard>();

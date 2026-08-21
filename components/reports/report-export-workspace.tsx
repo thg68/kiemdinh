@@ -7,6 +7,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { CapHoc } from "@/lib/assessment/level-engine";
+import { getTT57StandardReference } from "@/lib/tt57/reference-data";
 
 type Profile = {
   id: string;
@@ -149,7 +150,12 @@ export function ReportExportWorkspace() {
         : criterion.tieu_chuan;
 
       if (standard) {
-        standardsById.set(standard.id, standard);
+        const reference = getTT57StandardReference(loadedSchool?.loai_hinh, standard.so_thu_tu);
+
+        standardsById.set(standard.id, {
+          ...standard,
+          ten: reference?.ten ?? standard.ten,
+        });
       }
     }
 

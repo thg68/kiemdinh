@@ -7,6 +7,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   CapHoc,
   KetQuaTieuChi,
@@ -194,7 +195,26 @@ export function AssessmentWorkspace() {
     const loadedSchool = schoolData as School | null;
     const loadedCriteria = ((criterionData ?? []) as Criterion[]).filter(
       (criterion) => criterion.loai_hinh_ap_dung === (loadedSchool?.loai_hinh ?? "mam_non"),
-    );
+    ).map((criterion) => {
+      const reference = getTT57CriterionReference(loadedSchool?.loai_hinh, criterion.ma);
+
+      if (!reference) {
+        return criterion;
+      }
+
+      return {
+        ...criterion,
+        ten: reference.ten,
+        la_bat_buoc: reference.la_bat_buoc,
+        muc_tieu_chi: [
+          { muc: 1 as const, noi_dung_yeu_cau: reference.muc_1 },
+          { muc: 2 as const, noi_dung_yeu_cau: reference.muc_2 },
+        ],
+        minh_chung_goi_y: reference.minh_chung_goi_y
+          ? [{ mo_ta: reference.minh_chung_goi_y }]
+          : criterion.minh_chung_goi_y,
+      };
+    });
 
     setSchool(loadedSchool);
     setYears((yearData ?? []) as SchoolYear[]);

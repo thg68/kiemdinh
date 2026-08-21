@@ -7,6 +7,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   Criterion,
   Evidence,
@@ -30,6 +31,26 @@ type Filters = {
   trangThai: string;
 };
 
+function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
+  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
+
+  if (!reference) {
+    return criterion;
+  }
+
+  return {
+    ...criterion,
+    ten: reference.ten,
+    la_bat_buoc: reference.la_bat_buoc,
+    tieu_chuan: criterion.tieu_chuan
+      ? {
+          ...criterion.tieu_chuan,
+          ten: reference.tieu_chuan.ten,
+        }
+      : criterion.tieu_chuan,
+  };
+}
+
 export function EvidenceWorkspace() {
   const router = useRouter();
   const supabase = useMemo(() => {
@@ -40,6 +61,7 @@ export function EvidenceWorkspace() {
     return createBrowserSupabaseClient();
   }, []);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [schoolType, setSchoolType] = useState("mam_non");
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [evidence, setEvidence] = useState<EvidenceWithCriteria[]>([]);
@@ -106,8 +128,14 @@ export function EvidenceWorkspace() {
       .eq("loai_hinh_ap_dung", schoolData?.loai_hinh ?? "mam_non")
       .order("ma", { ascending: true });
 
+    const loadedSchoolType = schoolData?.loai_hinh ?? "mam_non";
+    const enrichedCriteria = ((criterionData ?? []) as unknown as Criterion[]).map((criterion) =>
+      enrichCriterionLabel(criterion, loadedSchoolType),
+    );
+
+    setSchoolType(loadedSchoolType);
     setYears((yearData ?? []) as SchoolYear[]);
-    setCriteria((criterionData ?? []) as unknown as Criterion[]);
+    setCriteria(enrichedCriteria);
     setLoading(false);
   }, [router, supabase]);
 
@@ -161,7 +189,8 @@ export function EvidenceWorkspace() {
         criteria: links
           .filter((link) => link.minh_chung_id === item.id)
           .map((link) => link.tieu_chi)
-          .filter(Boolean) as Criterion[],
+          .filter(Boolean)
+          .map((criterion) => enrichCriterionLabel(criterion as Criterion, schoolType)) as Criterion[],
       }))
       .filter((item) => {
         if (filters.tieuChiId) {
@@ -190,7 +219,7 @@ export function EvidenceWorkspace() {
         so_dong: rows.length,
       },
     });
-  }, [filters, profile, selectedYearId, supabase]);
+  }, [filters, profile, schoolType, selectedYearId, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

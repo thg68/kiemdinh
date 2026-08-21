@@ -1,4 +1,5 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   CapHoc,
   KetQuaTieuChi,
@@ -112,12 +113,13 @@ export async function docDuLieuTinhMuc(
   const ketQuaTieuChi = criteriaForSchool.map<KetQuaTieuChi>(
     (criterion) => {
       const row = assessments.get(criterion.id);
+      const reference = getTT57CriterionReference(schoolData?.loai_hinh, criterion.ma);
 
       return {
         id: criterion.id,
         ma: criterion.ma,
-        ten: criterion.ten,
-        laBatBuoc: criterion.la_bat_buoc,
+        ten: reference?.ten ?? criterion.ten,
+        laBatBuoc: reference?.la_bat_buoc ?? criterion.la_bat_buoc,
         mucDat: row?.muc_dat ?? 0,
         moTaMuc1: row?.mo_ta_muc_1 ?? "",
         moTaMuc2: row?.mo_ta_muc_2 ?? "",

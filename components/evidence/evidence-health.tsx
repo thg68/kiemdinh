@@ -7,6 +7,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   Criterion,
   Evidence,
@@ -14,6 +15,26 @@ import {
   SchoolYear,
   todayIsoDate,
 } from "@/lib/evidence";
+
+function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
+  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
+
+  if (!reference) {
+    return criterion;
+  }
+
+  return {
+    ...criterion,
+    ten: reference.ten,
+    la_bat_buoc: reference.la_bat_buoc,
+    tieu_chuan: criterion.tieu_chuan
+      ? {
+          ...criterion.tieu_chuan,
+          ten: reference.tieu_chuan.ten,
+        }
+      : criterion.tieu_chuan,
+  };
+}
 
 export function EvidenceHealth() {
   const router = useRouter();
@@ -119,9 +140,9 @@ export function EvidenceHealth() {
 
     const linkedCriterionIds = new Set(links.map((link) => link.tieu_chi_id));
     setEmptyCriteria(
-      ((criterionData ?? []) as unknown as Criterion[]).filter(
-        (criterion) => !linkedCriterionIds.has(criterion.id),
-      ),
+      ((criterionData ?? []) as unknown as Criterion[])
+        .filter((criterion) => !linkedCriterionIds.has(criterion.id))
+        .map((criterion) => enrichCriterionLabel(criterion, schoolData?.loai_hinh ?? "mam_non")),
     );
 
     await supabase.from("nhat_ky_truy_cap").insert({

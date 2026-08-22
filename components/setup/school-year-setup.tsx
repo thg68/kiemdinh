@@ -27,6 +27,32 @@ type SchoolYear = {
   trang_thai: string;
 };
 
+type Role = {
+  id: string;
+  ma: string;
+  ten: string;
+};
+
+type UserRole = {
+  vai_tro?: Role | Role[] | null;
+};
+
+type ManagedUser = {
+  id: string;
+  ho_ten: string;
+  email: string | null;
+  trang_thai: string;
+  nguoi_dung_vai_tro?: UserRole[];
+};
+
+const assignableRoleCodes = [
+  "SELF_ASSESSMENT_CHAIR",
+  "SECRETARY",
+  "MEMBER",
+  "TEACHER",
+  "VIEWER",
+];
+
 const capHocOptions = [
   { value: "mam_non", label: "Mầm non" },
   { value: "tieu_hoc", label: "Tiểu học" },
@@ -49,6 +75,9 @@ export function SchoolYearSetup() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [years, setYears] = useState<SchoolYear[]>([]);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [canManageUsers, setCanManageUsers] = useState(false);
 
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
@@ -99,7 +128,13 @@ export function SchoolYearSetup() {
 
     setProfile(profileData);
 
-    const [{ data: schoolData }, { data: yearData }] = await Promise.all([
+    const [
+      { data: schoolData },
+      { data: yearData },
+      { data: userData },
+      { data: roleData },
+      { data: canManage },
+    ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
         .select("id, ten, loai_hinh")
@@ -110,10 +145,26 @@ export function SchoolYearSetup() {
         .select("id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
+      supabase
+        .from("nguoi_dung")
+        .select("id, ho_ten, email, trang_thai, nguoi_dung_vai_tro(vai_tro:vai_tro_id(id, ma, ten))")
+        .eq("co_so_id", profileData.co_so_id)
+        .order("ho_ten", { ascending: true }),
+      supabase
+        .from("vai_tro")
+        .select("id, ma, ten")
+        .in("ma", assignableRoleCodes)
+        .order("ten", { ascending: true }),
+      supabase.rpc("fn_can_manage_users", {
+        p_co_so_id: profileData.co_so_id,
+      }),
     ]);
 
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
+    setUsers((userData ?? []) as unknown as ManagedUser[]);
+    setRoles((roleData ?? []) as Role[]);
+    setCanManageUsers(Boolean(canManage));
     setLoading(false);
   }, [router, supabase]);
 
@@ -217,6 +268,12 @@ export function SchoolYearSetup() {
         ? current.filter((item) => item !== value)
         : [...current, value],
     );
+  }
+
+  function userRoles(user: ManagedUser) {
+    return (user.nguoi_dung_vai_tro ?? [])
+      .map((item) => (Array.isArray(item.vai_tro) ? item.vai_tro[0] : item.vai_tro))
+      .filter(Boolean) as Role[];
   }
 
   if (loading) {
@@ -376,8 +433,241 @@ export function SchoolYearSetup() {
         </button>
       </form>
 
+      <UserRoleManager
+        canManageUsers={canManageUsers}
+        currentUserId={profile.id}
+        roles={roles}
+        supabase={supabase}
+        users={users}
+        userRoles={userRoles}
+        onChanged={loadData}
+        onMessage={setMessage}
+      />
+
       {message ? <Message text={message} /> : null}
     </div>
+  );
+}
+
+function UserRoleManager(props: {
+  canManageUsers: boolean;
+  currentUserId: string;
+  roles: Role[];
+  supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
+  users: ManagedUser[];
+  userRoles: (user: ManagedUser) => Role[];
+  onChanged: () => Promise<void>;
+  onMessage: (message: string) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [hoTen, setHoTen] = useState("");
+  const [roleCode, setRoleCode] = useState("TEACHER");
+  const [saving, setSaving] = useState("");
+
+  async function inviteUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!props.supabase) {
+      props.onMessage("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    setSaving("invite");
+    props.onMessage("");
+
+    const { error } = await props.supabase.rpc("fn_moi_nguoi_dung_vao_co_so", {
+      p_email: email,
+      p_ho_ten: hoTen,
+      p_vai_tro_ma: roleCode,
+    });
+
+    setSaving("");
+
+    if (error) {
+      props.onMessage(error.message);
+      return;
+    }
+
+    setEmail("");
+    setHoTen("");
+    setRoleCode("TEACHER");
+    props.onMessage("Đã thêm người dùng vào đơn vị và gán vai trò.");
+    await props.onChanged();
+  }
+
+  async function updateUserRoles(userId: string, selectedRoleCodes: string[]) {
+    if (!props.supabase) {
+      props.onMessage("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    setSaving(userId);
+    props.onMessage("");
+
+    const { error } = await props.supabase.rpc("fn_cap_nhat_vai_tro_nguoi_dung", {
+      p_nguoi_dung_id: userId,
+      p_vai_tro_mas: selectedRoleCodes,
+    });
+
+    setSaving("");
+
+    if (error) {
+      props.onMessage(error.message);
+      return;
+    }
+
+    props.onMessage("Đã cập nhật vai trò người dùng.");
+    await props.onChanged();
+  }
+
+  return (
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h2 className="section-title text-xl">Người dùng và phân quyền</h2>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+          Người dùng cần tạo tài khoản ở trang đăng nhập trước. Sau đó Hiệu trưởng nhập email ở đây để đưa vào đơn vị và gán vai trò.
+        </p>
+      </div>
+
+      {props.canManageUsers ? (
+        <form className="grid gap-4 border-b border-[var(--color-border)] p-5 lg:grid-cols-[1fr_1fr_220px_auto]" onSubmit={inviteUser}>
+          <label className="text-sm font-medium">
+            Email tài khoản
+            <input
+              className="form-control mt-2"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Họ và tên
+            <input
+              className="form-control mt-2"
+              value={hoTen}
+              onChange={(event) => setHoTen(event.target.value)}
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Vai trò ban đầu
+            <select
+              className="form-control mt-2"
+              value={roleCode}
+              onChange={(event) => setRoleCode(event.target.value)}
+            >
+              {props.roles.map((role) => (
+                <option key={role.ma} value={role.ma}>
+                  {role.ten}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex items-end">
+            <button className="button-primary w-full" disabled={saving === "invite"}>
+              {saving === "invite" ? "Đang thêm..." : "Thêm người"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <p className="border-b border-[var(--color-border)] px-5 py-4 text-sm text-[var(--color-graphite)]/70">
+          Bạn đang xem danh sách vai trò. Chỉ Hiệu trưởng mới được thêm người hoặc cập nhật phân quyền.
+        </p>
+      )}
+
+      <div className="divide-y divide-[var(--color-border)]">
+        {props.users.length === 0 ? (
+          <p className="px-5 py-6 text-sm text-[var(--color-graphite)]/70">
+            Chưa có người dùng trong đơn vị.
+          </p>
+        ) : (
+          props.users.map((user) => (
+            <UserRoleRow
+              canManageUsers={props.canManageUsers}
+              currentUserId={props.currentUserId}
+              isSaving={saving === user.id}
+              key={`${user.id}-${props.userRoles(user).map((role) => role.ma).join("-")}`}
+              roles={props.roles}
+              user={user}
+              userRoles={props.userRoles(user)}
+              onSave={(roleCodes) => updateUserRoles(user.id, roleCodes)}
+            />
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function UserRoleRow(props: {
+  canManageUsers: boolean;
+  currentUserId: string;
+  isSaving: boolean;
+  roles: Role[];
+  user: ManagedUser;
+  userRoles: Role[];
+  onSave: (roleCodes: string[]) => Promise<void>;
+}) {
+  const [selectedRoleCodes, setSelectedRoleCodes] = useState<string[]>(
+    props.userRoles.map((role) => role.ma),
+  );
+
+  function toggleRole(roleCode: string) {
+    setSelectedRoleCodes((current) =>
+      current.includes(roleCode)
+        ? current.filter((item) => item !== roleCode)
+        : [...current, roleCode],
+    );
+  }
+
+  const isCurrentUser = props.user.id === props.currentUserId;
+  const canEditRow = props.canManageUsers && !isCurrentUser;
+
+  return (
+    <article className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(220px,1fr)_2fr_auto]">
+      <div>
+        <p className="font-semibold text-[var(--color-ink-navy)]">{props.user.ho_ten}</p>
+        <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
+          {props.user.email ?? "Chưa có email"}
+        </p>
+        {isCurrentUser ? (
+          <p className="mt-2 text-xs font-semibold text-[var(--color-electric-cobalt)]">
+            Tài khoản đang đăng nhập
+          </p>
+        ) : null}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2">
+        {props.roles.map((role) => (
+          <label
+            className={`surface-card flex items-start gap-2 p-3 text-sm ${!canEditRow ? "opacity-70" : ""}`}
+            key={role.ma}
+          >
+            <input
+              checked={selectedRoleCodes.includes(role.ma)}
+              disabled={!canEditRow}
+              type="checkbox"
+              onChange={() => toggleRole(role.ma)}
+            />
+            <span>
+              <span className="block font-semibold text-[var(--color-ink-navy)]">{role.ten}</span>
+              <span className="text-xs text-[var(--color-graphite)]/60">{role.ma}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+
+      <div className="flex items-start lg:justify-end">
+        <button
+          className="button-secondary disabled:text-[var(--color-stone)]"
+          disabled={!canEditRow || props.isSaving}
+          type="button"
+          onClick={() => props.onSave(selectedRoleCodes)}
+        >
+          {props.isSaving ? "Đang lưu..." : "Lưu vai trò"}
+        </button>
+      </div>
+    </article>
   );
 }
 

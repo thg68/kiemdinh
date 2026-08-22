@@ -36,6 +36,8 @@ npm run import:school-year -- --manifest=data/import-manifest.example.csv --dry-
 
 Nếu quên mật khẩu, vào `/quen-mat-khau` để gửi email đặt lại mật khẩu qua Supabase Auth.
 
+Quản lý người dùng nằm trong `/thiet-lap`: người dùng mới cần tạo tài khoản ở `/login` trước, sau đó Hiệu trưởng nhập email để đưa vào đơn vị và gán vai trò như Thư ký, Giáo viên hoặc Ủy viên.
+
 Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng tại `/minh-chung/suc-khoe`.
 
 Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { CurrentUserRoles } from "@/components/layout/current-user-roles";
 
 type ApplicationShellProps = {
   active: "dashboard" | "standards" | "evidence" | "assessment" | "reports" | "settings";
@@ -45,6 +46,8 @@ export function ApplicationShell({
               </Link>
             ))}
           </nav>
+
+          <CurrentUserRoles />
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
             <LogoutButton />

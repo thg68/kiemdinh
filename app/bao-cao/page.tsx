@@ -1,6 +1,8 @@
 import { ReportExportWorkspace } from "@/components/reports/report-export-workspace";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function ReportsPage() {
   return (
     <ApplicationShell

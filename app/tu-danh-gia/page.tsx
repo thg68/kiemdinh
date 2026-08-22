@@ -1,6 +1,8 @@
 import { AssessmentWorkspace } from "@/components/assessment/assessment-workspace";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function SelfAssessmentPage() {
   return (
     <ApplicationShell

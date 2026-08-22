@@ -1,6 +1,8 @@
 import { EvidenceDetail } from "@/components/evidence/evidence-detail";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 export default async function EvidenceDetailPage({
   params,
 }: {

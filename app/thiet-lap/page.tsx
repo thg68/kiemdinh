@@ -1,6 +1,8 @@
 import { SchoolYearSetup } from "@/components/setup/school-year-setup";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function SetupPage() {
   return (
     <ApplicationShell

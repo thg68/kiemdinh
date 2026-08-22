@@ -1,6 +1,8 @@
 import { EvidenceWorkspace } from "@/components/evidence/evidence-workspace";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 export default function EvidencePage() {
   return (
     <ApplicationShell

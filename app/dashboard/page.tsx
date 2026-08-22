@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ApplicationShell } from "@/components/layout/application-shell";
 
+export const dynamic = "force-dynamic";
+
 const workingAreas = [
   {
     title: "Minh chứng",

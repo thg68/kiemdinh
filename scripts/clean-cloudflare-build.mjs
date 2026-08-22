@@ -2,7 +2,7 @@ import { rmSync } from "node:fs";
 import { join } from "node:path";
 import { cwd, exit } from "node:process";
 
-const targets = [".open-next"];
+const targets = [".next", ".open-next", ".vercel/output"];
 
 for (const target of targets) {
   const path = join(cwd(), target);

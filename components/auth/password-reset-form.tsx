@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import {
   createBrowserSupabaseClient,
+  getPublicAppUrl,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 
@@ -47,7 +48,7 @@ export function PasswordResetForm() {
     setIsSubmitting(true);
     setMessage("");
 
-    const redirectTo = `${window.location.origin}/quen-mat-khau?dat-lai=1`;
+    const redirectTo = `${getPublicAppUrl()}/quen-mat-khau?dat-lai=1`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo,
     });

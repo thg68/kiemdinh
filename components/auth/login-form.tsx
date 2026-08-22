@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   createBrowserSupabaseClient,
+  getPublicAppUrl,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 
@@ -26,6 +27,15 @@ export function LoginForm() {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const search = new URLSearchParams(window.location.search);
+
+    if (search.has("xac_nhan_email")) {
+      setMessage("Email đã được xác nhận. Bạn có thể đăng nhập vào hệ thống thật.");
+      setMode("dang_nhap");
+    }
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -44,6 +54,7 @@ export function LoginForm() {
             email,
             password,
             options: {
+              emailRedirectTo: `${getPublicAppUrl()}/login?xac_nhan_email=1`,
               data: {
                 ho_ten: hoTen,
               },

@@ -92,23 +92,40 @@ export default function Home() {
                       Năm học 2026-2027
                     </p>
                   </div>
-                  <span className="mini-badge">Ảnh minh họa UI</span>
+                  <span className="mini-badge">Dữ liệu hệ thống</span>
                 </div>
                 <div className="grid gap-5 pt-5 md:grid-cols-[1fr_0.9fr]">
                   <div className="featured-card">
-                    <p className="text-sm text-white/72">Trạng thái chất lượng</p>
-                    <p className="mt-5 font-serif text-4xl font-medium text-white">Đạt Mức 1</p>
-                    <p className="mt-4 text-sm text-white/72">13 / 15 tiêu chí đạt</p>
-                    <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/16">
-                      <div className="h-full w-[87%] rounded-full bg-[var(--color-electric-cobalt)]" />
-                    </div>
+                    <p className="text-sm text-white/72">Làm việc trên dữ liệu thật</p>
+                    <p className="mt-5 font-serif text-4xl font-medium text-white">
+                      Mở hệ thống quản trị
+                    </p>
+                    <p className="mt-4 text-sm leading-6 text-white/72">
+                      Sau khi đăng nhập, số liệu được lấy từ tự đánh giá, kho minh chứng và năm học đang hoạt động.
+                    </p>
+                    <Link className="mt-6 inline-flex rounded-[var(--radius-pill)] bg-white px-5 py-3 text-sm font-bold text-[var(--color-ink-navy)]" href="/dashboard">
+                      Vào dashboard
+                    </Link>
                   </div>
                   <div className="grid gap-3">
-                    {["2.2 chưa đạt Mức 2", "4.1 thiếu minh chứng", "3 việc cần ưu tiên"].map((item) => (
-                      <div className="surface-card p-4" key={item}>
-                        <p className="text-sm font-semibold text-[var(--color-ink-navy)]">{item}</p>
-                      </div>
-                    ))}
+                    <Link className="surface-card p-4" href="/tu-danh-gia">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Mở Gap Board thật</p>
+                      <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
+                        Xem đủ 15 tiêu chí theo dữ liệu tự đánh giá.
+                      </p>
+                    </Link>
+                    <Link className="surface-card p-4" href="/minh-chung">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Mở kho minh chứng</p>
+                      <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
+                        Tải lên, gắn tiêu chí và dùng lại mã minh chứng.
+                      </p>
+                    </Link>
+                    <Link className="surface-card p-4" href="/bao-cao">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Xuất báo cáo thật</p>
+                      <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
+                        Sinh Mẫu 1, Mẫu 2 và danh mục từ dữ liệu hiện có.
+                      </p>
+                    </Link>
                   </div>
                 </div>
               </div>

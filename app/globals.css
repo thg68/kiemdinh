@@ -115,13 +115,11 @@ button:disabled {
 .landing-shell {
   background: var(--color-canvas);
   color: var(--color-charcoal);
-  height: 100svh;
   min-height: 100vh;
-  overflow-y: auto;
+  overflow: visible;
   overscroll-behavior-y: contain;
   scroll-behavior: smooth;
   scroll-padding-top: 72px;
-  scroll-snap-type: y mandatory;
 }
 
 .landing-nav {
@@ -139,8 +137,6 @@ button:disabled {
   min-height: calc(100svh - 72px);
   padding: 80px 20px;
   scroll-margin-top: 72px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .landing-section > .content-wrap {

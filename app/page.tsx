@@ -101,27 +101,28 @@ export default function Home() {
                       Mở hệ thống quản trị
                     </p>
                     <p className="mt-4 text-sm leading-6 text-white/72">
-                      Sau khi đăng nhập, số liệu được lấy từ tự đánh giá, kho minh chứng và năm học đang hoạt động.
+                      Đăng nhập hoặc đăng ký tài khoản trước, sau đó số liệu được lấy từ tự đánh giá,
+                      kho minh chứng và năm học đang hoạt động.
                     </p>
-                    <Link className="mt-6 inline-flex rounded-[var(--radius-pill)] bg-white px-5 py-3 text-sm font-bold text-[var(--color-ink-navy)]" href="/dashboard">
-                      Vào dashboard
+                    <Link className="mt-6 inline-flex rounded-[var(--radius-pill)] bg-white px-5 py-3 text-sm font-bold text-[var(--color-ink-navy)]" href="/login">
+                      Đăng nhập để sử dụng
                     </Link>
                   </div>
                   <div className="grid gap-3">
-                    <Link className="surface-card p-4" href="/tu-danh-gia">
-                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Mở Gap Board thật</p>
+                    <Link className="surface-card p-4" href="/login">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Gap Board sau đăng nhập</p>
                       <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
                         Xem đủ 15 tiêu chí theo dữ liệu tự đánh giá.
                       </p>
                     </Link>
-                    <Link className="surface-card p-4" href="/minh-chung">
-                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Mở kho minh chứng</p>
+                    <Link className="surface-card p-4" href="/login">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Kho minh chứng sau đăng nhập</p>
                       <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
                         Tải lên, gắn tiêu chí và dùng lại mã minh chứng.
                       </p>
                     </Link>
-                    <Link className="surface-card p-4" href="/bao-cao">
-                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Xuất báo cáo thật</p>
+                    <Link className="surface-card p-4" href="/login">
+                      <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Xuất báo cáo sau đăng nhập</p>
                       <p className="mt-2 text-xs leading-5 text-[var(--color-graphite)]/70">
                         Sinh Mẫu 1, Mẫu 2 và danh mục từ dữ liệu hiện có.
                       </p>

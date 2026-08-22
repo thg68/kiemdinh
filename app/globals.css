@@ -115,7 +115,13 @@ button:disabled {
 .landing-shell {
   background: var(--color-canvas);
   color: var(--color-charcoal);
+  height: 100svh;
   min-height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  scroll-padding-top: 72px;
+  scroll-snap-type: y mandatory;
 }
 
 .landing-nav {
@@ -128,7 +134,35 @@ button:disabled {
 }
 
 .landing-section {
+  align-items: center;
+  display: flex;
+  min-height: calc(100svh - 72px);
   padding: 80px 20px;
+  scroll-margin-top: 72px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.landing-section > .content-wrap {
+  animation: landing-section-reveal both linear;
+  animation-range: entry 8% cover 28%;
+  animation-timeline: view();
+}
+
+.landing-shell footer {
+  scroll-snap-align: end;
+}
+
+@keyframes landing-section-reveal {
+  from {
+    opacity: 0.22;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .landing-heading {
@@ -398,6 +432,19 @@ button:disabled {
   }
 
   .landing-section {
+    min-height: auto;
     padding: 56px 20px;
+    scroll-snap-align: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-shell {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .landing-section > .content-wrap {
+    animation: none;
   }
 }

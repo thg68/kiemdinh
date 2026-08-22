@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/run-with-node22.mjs next build",
+    "build:next": "next build",
     "clean:cloudflare": "node scripts/clean-cloudflare-build.mjs",
     "dev": "next dev",
     "start": "next start",
@@ -11,9 +12,12 @@
     "test": "vitest run",
     "design:check": "impeccable detect app components",
     "import:school-year": "node scripts/import-school-year.mjs",
-    "preview": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "upload": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "preview": "node scripts/run-with-node22.mjs npm run preview:cloudflare",
+    "preview:cloudflare": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "node scripts/run-with-node22.mjs npm run deploy:cloudflare",
+    "deploy:cloudflare": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "node scripts/run-with-node22.mjs npm run upload:cloudflare",
+    "upload:cloudflare": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "engines": {

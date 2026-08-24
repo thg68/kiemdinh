@@ -37,6 +37,7 @@ yarn-error.log*
 
 # temporary scaffold folder
 /kiemdinh-app/
+/.tmp/
 
 # supabase local state
 supabase/.temp/

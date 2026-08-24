@@ -335,6 +335,15 @@ export function AssessmentWorkspace() {
 
       {message ? <Message text={message} /> : null}
 
+      <div className="flex flex-wrap gap-3">
+        <Link className="button-secondary" href="/tu-danh-gia/cho-duyet">
+          Xem tiêu chí chờ duyệt
+        </Link>
+        <Link className="button-secondary" href="/bo-tieu-chuan">
+          Tra cứu bộ tiêu chuẩn
+        </Link>
+      </div>
+
       <GapBoard
         ketQuaTieuChi={ketQuaTieuChi}
         selectedCriterionId={selectedCriterion?.id ?? ""}

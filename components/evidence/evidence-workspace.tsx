@@ -250,6 +250,9 @@ export function EvidenceWorkspace() {
         <Link className="button-primary" href="/minh-chung/suc-khoe">
           Kiểm tra sức khỏe
         </Link>
+        <Link className="button-secondary" href="/minh-chung/xac-minh">
+          Xác minh minh chứng
+        </Link>
         <Link className="button-secondary" href="/thiet-lap">
           Năm học
         </Link>

@@ -56,9 +56,13 @@ export function LoginForm() {
     const search = new URLSearchParams(window.location.search);
 
     if (search.has("xac_nhan_email")) {
-      setMessage("Email đã được xác nhận. Bạn có thể đăng nhập vào hệ thống thật.");
-      setMessageTone("success");
-      setMode("dang_nhap");
+      const timer = window.setTimeout(() => {
+        setMessage("Email đã được xác nhận. Bạn có thể đăng nhập vào hệ thống thật.");
+        setMessageTone("success");
+        setMode("dang_nhap");
+      }, 0);
+
+      return () => window.clearTimeout(timer);
     }
   }, []);
 

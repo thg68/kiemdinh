@@ -55,6 +55,7 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/definition-of-done-m0-m4.md`: kiểm tra Định nghĩa Hoàn thành cho M0-M4.
 - `docs/nhap-noi-dung-phu-luc-tt57.md`: nguyên tắc nhập nội dung phụ lục TT57 vào bảng dữ liệu.
 - `docs/phan-quyen-phu-luc-b.md`: mô tả phân quyền và RLS theo Phụ lục B.
+- `docs/luong-man-hinh-theo-vai-tro.md`: mapping vai trò với các màn hình thao tác chính.
 - `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
 
 ## Cấu Trúc Thư Mục

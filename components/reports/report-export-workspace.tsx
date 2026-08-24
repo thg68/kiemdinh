@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -427,6 +428,15 @@ export function ReportExportWorkspace() {
           </select>
         </label>
       </section>
+
+      <div className="flex flex-wrap gap-3">
+        <Link className="button-secondary" href="/bao-cao/da-phe-duyet">
+          Xem báo cáo đã phê duyệt
+        </Link>
+        <Link className="button-secondary" href="/ke-hoach-cai-tien">
+          Nhập kế hoạch cải tiến
+        </Link>
+      </div>
 
       {message ? <Message text={message} /> : null}
 

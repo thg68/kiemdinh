@@ -5,21 +5,39 @@ import { useState } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { CurrentUserRoles } from "@/components/layout/current-user-roles";
 
+type ActiveNav =
+  | "dashboard"
+  | "work"
+  | "standards"
+  | "evidence"
+  | "assessment"
+  | "improvement"
+  | "council"
+  | "reports"
+  | "legal"
+  | "audit"
+  | "settings";
+
 type ApplicationShellProps = {
-  active: "dashboard" | "standards" | "evidence" | "assessment" | "reports" | "settings";
+  active: ActiveNav;
   children: React.ReactNode;
   description?: string;
   title: string;
 };
 
-const primaryNav = [
+const primaryNav: { key: ActiveNav; label: string; href: string }[] = [
   { key: "dashboard", label: "Tổng quan", href: "/dashboard" },
-  { key: "standards", label: "Bộ tiêu chuẩn", href: "/dashboard#standards" },
+  { key: "work", label: "Việc của tôi", href: "/viec-cua-toi" },
+  { key: "standards", label: "Bộ tiêu chuẩn", href: "/bo-tieu-chuan" },
   { key: "evidence", label: "Minh chứng", href: "/minh-chung" },
   { key: "assessment", label: "Tự đánh giá", href: "/tu-danh-gia" },
+  { key: "improvement", label: "Kế hoạch cải tiến", href: "/ke-hoach-cai-tien" },
+  { key: "council", label: "Hội đồng TĐG", href: "/hoi-dong-tu-danh-gia" },
   { key: "reports", label: "Báo cáo", href: "/bao-cao" },
+  { key: "legal", label: "Văn bản liên quan", href: "/van-ban-lien-quan" },
+  { key: "audit", label: "Nhật ký", href: "/nhat-ky" },
   { key: "settings", label: "Cài đặt", href: "/thiet-lap" },
-] as const;
+];
 
 export function ApplicationShell({
   active,

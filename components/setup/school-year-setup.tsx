@@ -754,12 +754,16 @@ function AssignmentManager(props: {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const userId = selectedUserId || assignableUsers[0]?.id || "";
-    const userAssignments = props.assignments.filter((item) => item.nguoi_dung_id === userId);
+    const timer = window.setTimeout(() => {
+      const userId = selectedUserId || assignableUsers[0]?.id || "";
+      const userAssignments = props.assignments.filter((item) => item.nguoi_dung_id === userId);
 
-    setSelectedUserId(userId);
-    setSelectedCriterionIds(userAssignments.map((item) => item.tieu_chi_id));
-    setAssignmentRole(userAssignments[0]?.vai_tro_trong_tieu_chi ?? "phu_trach_nhap_lieu");
+      setSelectedUserId(userId);
+      setSelectedCriterionIds(userAssignments.map((item) => item.tieu_chi_id));
+      setAssignmentRole(userAssignments[0]?.vai_tro_trong_tieu_chi ?? "phu_trach_nhap_lieu");
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [assignableUsers, props.assignments, selectedUserId]);
 
   function toggleCriterion(id: string) {

@@ -8,6 +8,9 @@ import {
 } from "@/lib/supabase/client";
 import { CapHoc } from "@/lib/assessment/level-engine";
 import { getTT57StandardReference } from "@/lib/tt57/reference-data";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/ui/loading-state";
 
 type Profile = {
   id: string;
@@ -314,14 +317,15 @@ export function ReportExportWorkspace() {
   }
 
   if (loading) {
-    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải dữ liệu xuất báo cáo...</p>;
+    return <LoadingState label="Đang tải dữ liệu xuất báo cáo..." />;
   }
 
   if (!profile || years.length === 0) {
     return (
-      <div className="surface-card surface-card-pad">
-        <p className="text-sm text-[var(--color-graphite)]/70">Chưa có đơn vị hoặc năm học để xuất báo cáo.</p>
-      </div>
+      <EmptyState
+        title="Chưa có dữ liệu để xuất báo cáo"
+        description="Hãy thiết lập đơn vị và năm học đang hoạt động trước khi xuất Mẫu 1, Mẫu 2 hoặc danh mục minh chứng."
+      />
     );
   }
 
@@ -380,6 +384,7 @@ export function ReportExportWorkspace() {
             <button
               className="surface-card px-4 py-4 text-left text-sm font-semibold text-[var(--color-ink-navy)] hover:border-[var(--color-electric-cobalt)] hover:bg-[var(--color-lavender-mist)]/45 disabled:text-[var(--color-stone)]"
               disabled={Boolean(downloading)}
+              aria-busy={downloading === item.endpoint}
               key={item.endpoint}
               type="button"
               onClick={() => download(item.endpoint)}
@@ -463,8 +468,6 @@ function StandardNotesForm(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="status-message text-sm">
-      {text}
-    </p>
+    <Alert tone={text.includes("Đã ") ? "success" : "warning"}>{text}</Alert>
   );
 }

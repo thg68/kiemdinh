@@ -15,6 +15,9 @@ import {
   xacDinhMucToanTruongTuKetQua,
   xacDinhMucTuKetQua,
 } from "@/lib/assessment/level-engine";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/ui/loading-state";
 
 type Profile = {
   id: string;
@@ -290,17 +293,16 @@ export function AssessmentWorkspace() {
   }, [loadAssessmentData]);
 
   if (loading) {
-    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải tự đánh giá...</p>;
+    return <LoadingState label="Đang tải tự đánh giá..." />;
   }
 
   if (!profile || !activeYear) {
     return (
-      <div className="surface-card surface-card-pad">
-        <p className="text-sm text-[var(--color-graphite)]/70">Chưa có đơn vị hoặc năm học đang hoạt động.</p>
-        <Link className="button-primary mt-3" href="/thiet-lap">
-          Thiết lập ngay
-        </Link>
-      </div>
+      <EmptyState
+        title="Chưa có dữ liệu để tự đánh giá"
+        description="Hãy thiết lập cơ sở giáo dục và năm học đang hoạt động trước khi nhập tự đánh giá."
+        action={<Link className="button-primary" href="/thiet-lap">Thiết lập ngay</Link>}
+      />
     );
   }
 
@@ -425,6 +427,7 @@ function GapBoard(props: {
               className={`grid min-h-32 grid-rows-[auto_1fr_auto] rounded-[var(--radius-card)] border p-2.5 text-left text-[13px] transition hover:border-[var(--color-electric-cobalt)] hover:shadow-sm ${tone} ${
                 props.selectedCriterionId === item.id ? "outline outline-2 outline-[var(--color-electric-cobalt)]" : ""
               }`}
+              aria-pressed={props.selectedCriterionId === item.id}
               key={item.id}
               type="button"
               title={`${item.ma} - ${item.ten}`}
@@ -744,6 +747,15 @@ function WhatIfPanel(props: {
           <option value={2}>Mức 2</option>
         </select>
       </label>
+      {hasWhatIf ? (
+        <button
+          className="button-secondary"
+          type="button"
+          onClick={() => props.setWhatIfLevel(null)}
+        >
+          Tắt giả định
+        </button>
+      ) : null}
       <div className="rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-lavender-mist)]/45 p-3">
         <p className="text-xs font-semibold uppercase tracking-normal text-[var(--color-graphite)]/70">
           Xem trước, không lưu
@@ -782,8 +794,6 @@ function WhatIfPanel(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="status-message text-sm">
-      {text}
-    </p>
+    <Alert tone={text.includes("Đã ") ? "success" : "warning"}>{text}</Alert>
   );
 }

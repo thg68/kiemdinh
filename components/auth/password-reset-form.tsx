@@ -7,6 +7,7 @@ import {
   getPublicAppUrl,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { Alert } from "@/components/ui/alert";
 
 type ResetStep = "request" | "update";
 
@@ -145,7 +146,7 @@ export function PasswordResetForm() {
         </form>
       )}
 
-      {message ? <p className="status-message mt-4 text-sm">{message}</p> : null}
+      {message ? <Alert className="mt-4" tone={message.includes("đã") || message.includes("Đã") ? "success" : "warning"}>{message}</Alert> : null}
 
       <Link
         className="mt-5 inline-flex text-sm font-semibold text-[var(--color-electric-cobalt)]"

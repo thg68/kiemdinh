@@ -14,6 +14,8 @@ import {
   EvidenceCriterionLink,
   formatEvidenceStatus,
 } from "@/lib/evidence";
+import { Alert } from "@/components/ui/alert";
+import { LoadingState } from "@/components/ui/loading-state";
 
 function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
   const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
@@ -157,11 +159,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
   }
 
   if (!evidence) {
-    return (
-      <p className="text-sm text-[var(--color-graphite)]/70">
-        {message || "Đang tải minh chứng..."}
-      </p>
-    );
+    return message ? <Alert tone="warning">{message}</Alert> : <LoadingState label="Đang tải minh chứng..." />;
   }
 
   return (
@@ -176,6 +174,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
         {evidence.storage_path ? (
           <button
             className="button-primary"
+            aria-label="Tạo liên kết tạm thời và mở tệp minh chứng trong tab mới"
             onClick={openFile}
           >
             Xem tệp 10 phút
@@ -258,8 +257,6 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="status-message text-sm">
-      {text}
-    </p>
+    <Alert tone="warning">{text}</Alert>
   );
 }

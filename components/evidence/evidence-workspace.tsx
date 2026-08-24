@@ -18,6 +18,9 @@ import {
   sha256File,
   storagePathForEvidence,
 } from "@/lib/evidence";
+import { Alert } from "@/components/ui/alert";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingState } from "@/components/ui/loading-state";
 
 type EvidenceWithCriteria = Evidence & {
   criteria: Criterion[];
@@ -238,7 +241,7 @@ export function EvidenceWorkspace() {
   }, [loadEvidence]);
 
   if (loading) {
-    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải kho minh chứng...</p>;
+    return <LoadingState label="Đang tải kho minh chứng..." />;
   }
 
   return (
@@ -283,7 +286,29 @@ export function EvidenceWorkspace() {
 
         <div className="divide-y divide-[var(--color-border)]">
           {evidence.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-[var(--color-graphite)]/70">Chưa có minh chứng phù hợp.</p>
+            <div className="p-5">
+              <EmptyState
+                title="Chưa có minh chứng phù hợp"
+                description="Hãy tải minh chứng đầu tiên hoặc xóa bớt bộ lọc để xem các minh chứng đã có."
+                action={
+                  <button
+                    className="button-secondary"
+                    type="button"
+                    onClick={() =>
+                      setFilters({
+                        keyword: "",
+                        namHocId: "",
+                        tieuChuan: "",
+                        tieuChiId: "",
+                        trangThai: "",
+                      })
+                    }
+                  >
+                    Xóa bộ lọc
+                  </button>
+                }
+              />
+            </div>
           ) : (
             evidence.map((item) => (
               <article className="grid gap-3 px-5 py-4 hover:bg-[var(--color-lavender-mist)]/45 lg:grid-cols-[1fr_220px]" key={item.id}>
@@ -454,8 +479,9 @@ function EvidenceCreateForm(props: {
             Tạo mã mới từ tiêu chí gốc hoặc dùng lại mã minh chứng đã có.
           </p>
         </div>
-        <div className="segmented-control grid-cols-2 text-sm font-medium">
+        <div className="segmented-control grid-cols-2 text-sm font-medium" aria-label="Kiểu thêm minh chứng">
           <button
+            aria-pressed={mode === "new"}
             className={`segmented-option ${mode === "new" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
             type="button"
             onClick={() => setMode("new")}
@@ -463,6 +489,7 @@ function EvidenceCreateForm(props: {
             Mới
           </button>
           <button
+            aria-pressed={mode === "reuse"}
             className={`segmented-option ${mode === "reuse" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
             type="button"
             onClick={() => setMode("reuse")}
@@ -473,6 +500,12 @@ function EvidenceCreateForm(props: {
       </div>
 
       <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
+        <div className="grid gap-2 rounded-[var(--radius-card)] bg-[var(--color-info-soft)] p-3 text-sm leading-6 text-[var(--color-ink-navy)] sm:grid-cols-3">
+          <p><strong>1.</strong> Chọn tệp hoặc liên kết.</p>
+          <p><strong>2.</strong> Gắn một hoặc nhiều tiêu chí.</p>
+          <p><strong>3.</strong> Hệ thống giữ một mã minh chứng duy nhất.</p>
+        </div>
+
         {mode === "reuse" ? (
           <label className="text-sm font-medium">
             Minh chứng có sẵn
@@ -676,14 +709,29 @@ function EvidenceFilters(props: {
           ))}
         </select>
       </label>
+      <div className="lg:col-span-5">
+        <button
+          className="button-secondary"
+          type="button"
+          onClick={() =>
+            props.setFilters({
+              keyword: "",
+              namHocId: "",
+              tieuChuan: "",
+              tieuChiId: "",
+              trangThai: "",
+            })
+          }
+        >
+          Xóa bộ lọc
+        </button>
+      </div>
     </section>
   );
 }
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="status-message text-sm">
-      {text}
-    </p>
+    <Alert tone={text.includes("Đã ") ? "success" : "warning"}>{text}</Alert>
   );
 }

@@ -15,6 +15,7 @@ import {
   SchoolYear,
   todayIsoDate,
 } from "@/lib/evidence";
+import { Alert } from "@/components/ui/alert";
 
 function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
   const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
@@ -173,9 +174,7 @@ export function EvidenceHealth() {
         </Link>
       </div>
 
-      {message ? (
-        <p className="status-message text-sm">{message}</p>
-      ) : null}
+      {message ? <Alert tone="warning">{message}</Alert> : null}
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Hết hiệu lực" value={expired.length} />

@@ -6,6 +6,8 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { Alert } from "@/components/ui/alert";
+import { LoadingState } from "@/components/ui/loading-state";
 
 type Profile = {
   id: string;
@@ -277,7 +279,7 @@ export function SchoolYearSetup() {
   }
 
   if (loading) {
-    return <p className="text-sm text-[var(--color-graphite)]/70">Đang tải dữ liệu...</p>;
+    return <LoadingState label="Đang tải dữ liệu thiết lập..." />;
   }
 
   if (!profile) {
@@ -716,8 +718,6 @@ function YearFields(props: {
 
 function Message({ text }: { text: string }) {
   return (
-    <p className="status-message text-sm">
-      {text}
-    </p>
+    <Alert tone={text.includes("Đã ") ? "success" : "warning"}>{text}</Alert>
   );
 }

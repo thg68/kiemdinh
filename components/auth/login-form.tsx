@@ -8,8 +8,32 @@ import {
   getPublicAppUrl,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { Alert } from "@/components/ui/alert";
 
 type AuthMode = "dang_nhap" | "dang_ky";
+type MessageTone = "danger" | "info" | "success" | "warning";
+
+function authErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("invalid login") || normalized.includes("invalid credentials")) {
+    return "Email hoặc mật khẩu chưa đúng. Vui lòng kiểm tra lại thông tin đăng nhập.";
+  }
+
+  if (normalized.includes("email not confirmed")) {
+    return "Tài khoản chưa xác nhận email. Hãy mở email xác nhận trước khi đăng nhập.";
+  }
+
+  if (normalized.includes("already registered") || normalized.includes("user already registered")) {
+    return "Email này đã có tài khoản. Hãy chuyển sang tab Đăng nhập.";
+  }
+
+  if (normalized.includes("password")) {
+    return "Mật khẩu chưa hợp lệ. Vui lòng dùng mật khẩu tối thiểu 6 ký tự.";
+  }
+
+  return "Không xử lý được yêu cầu. Vui lòng thử lại hoặc liên hệ quản trị hệ thống.";
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,6 +49,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [hoTen, setHoTen] = useState("");
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<MessageTone>("info");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -32,6 +57,7 @@ export function LoginForm() {
 
     if (search.has("xac_nhan_email")) {
       setMessage("Email đã được xác nhận. Bạn có thể đăng nhập vào hệ thống thật.");
+      setMessageTone("success");
       setMode("dang_nhap");
     }
   }, []);
@@ -41,6 +67,7 @@ export function LoginForm() {
 
     if (!supabase) {
       setMessage("Chưa cấu hình Supabase trong .env.local.");
+      setMessageTone("warning");
       return;
     }
 
@@ -64,7 +91,8 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (result.error) {
-      setMessage(result.error.message);
+      setMessage(authErrorMessage(result.error.message));
+      setMessageTone("danger");
       return;
     }
 
@@ -74,6 +102,7 @@ export function LoginForm() {
     }
 
     setMessage("Tài khoản đã được tạo. Hãy đăng nhập để thiết lập đơn vị.");
+    setMessageTone("success");
     setMode("dang_nhap");
   }
 
@@ -89,6 +118,7 @@ export function LoginForm() {
       <div className="segmented-control grid-cols-2 text-sm font-medium">
         <button
           type="button"
+          aria-pressed={mode === "dang_nhap"}
           className={`segmented-option ${mode === "dang_nhap" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_nhap")}
         >
@@ -96,6 +126,7 @@ export function LoginForm() {
         </button>
         <button
           type="button"
+          aria-pressed={mode === "dang_ky"}
           className={`segmented-option ${mode === "dang_ky" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_ky")}
         >
@@ -160,11 +191,7 @@ export function LoginForm() {
         </button>
       </form>
 
-      {message ? (
-        <p className="status-message mt-4 text-sm">
-          {message}
-        </p>
-      ) : null}
+      {message ? <Alert className="mt-4" tone={messageTone}>{message}</Alert> : null}
     </div>
   );
 }

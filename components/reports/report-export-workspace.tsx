@@ -50,6 +50,13 @@ type StandardNote = {
   dinh_huong_cai_tien: string | null;
 };
 
+type ReportRecord = {
+  id: string;
+  loai_bao_cao: string;
+  trang_thai: string;
+  ngay_phe_duyet: string | null;
+};
+
 const capHocLabels: Record<CapHoc, string> = {
   mam_non: "Mầm non",
   tieu_hoc: "Tiểu học",
@@ -60,11 +67,11 @@ const capHocLabels: Record<CapHoc, string> = {
 };
 
 const exports = [
-  { endpoint: "mau-1", label: "Mẫu 1 - Báo cáo tự đánh giá (.docx)" },
-  { endpoint: "mau-2", label: "Mẫu 2 - Kế hoạch cải tiến (.docx)" },
-  { endpoint: "danh-muc-minh-chung", label: "Danh mục minh chứng (.xlsx)" },
-  { endpoint: "goi-minh-chung", label: "Gói minh chứng (.zip)" },
-  { endpoint: "export-json", label: "Dữ liệu đầy đủ năm học (.json)" },
+  { endpoint: "mau-1", label: "Mẫu 1 - Báo cáo tự đánh giá (.docx)", reportType: "mau_1_tu_danh_gia" },
+  { endpoint: "mau-2", label: "Mẫu 2 - Kế hoạch cải tiến (.docx)", reportType: "mau_2_ke_hoach_cai_tien" },
+  { endpoint: "danh-muc-minh-chung", label: "Danh mục minh chứng (.xlsx)", reportType: "danh_muc_minh_chung" },
+  { endpoint: "goi-minh-chung", label: "Gói minh chứng (.zip)", reportType: "goi_minh_chung" },
+  { endpoint: "export-json", label: "Dữ liệu đầy đủ năm học (.json)", reportType: "du_lieu_nam_hoc_json" },
 ];
 
 export function ReportExportWorkspace() {
@@ -81,6 +88,7 @@ export function ReportExportWorkspace() {
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [standards, setStandards] = useState<Standard[]>([]);
   const [standardNotes, setStandardNotes] = useState<StandardNote[]>([]);
+  const [reportRecords, setReportRecords] = useState<ReportRecord[]>([]);
   const [selectedYearId, setSelectedYearId] = useState("");
   const [selectedCapHoc, setSelectedCapHoc] = useState<CapHoc>("mam_non");
   const [loading, setLoading] = useState(true);
@@ -193,6 +201,26 @@ export function ReportExportWorkspace() {
     setStandardNotes((data ?? []) as StandardNote[]);
   }, [profile, selectedCapHoc, selectedYearId, supabase]);
 
+  const loadReportRecords = useCallback(async () => {
+    if (!supabase || !profile || !selectedYearId) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("bao_cao")
+      .select("id, loai_bao_cao, trang_thai, ngay_phe_duyet")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", selectedYearId)
+      .eq("version", 1);
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setReportRecords((data ?? []) as ReportRecord[]);
+  }, [profile, selectedYearId, supabase]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadData();
@@ -208,6 +236,14 @@ export function ReportExportWorkspace() {
 
     return () => window.clearTimeout(timer);
   }, [loadStandardNotes]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadReportRecords();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadReportRecords]);
 
   function updateNote(standardId: string, field: keyof Omit<StandardNote, "id" | "tieu_chuan_id">, value: string) {
     setStandardNotes((current) => {
@@ -316,6 +352,35 @@ export function ReportExportWorkspace() {
     setMessage("Đã tạo file. Nếu Mẫu 1 còn cảnh báo đỏ, chưa được coi là báo cáo xuất bản chính thức.");
   }
 
+  async function updateReportStatus(reportType: string, status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai") {
+    if (!supabase || !selectedYearId) {
+      setMessage("Hãy chọn năm học trước khi cập nhật trạng thái báo cáo.");
+      return;
+    }
+
+    const { error } = await supabase.rpc("fn_luu_trang_thai_bao_cao", {
+      p_nam_hoc_id: selectedYearId,
+      p_loai_bao_cao: reportType,
+      p_trang_thai: status,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setMessage(
+      status === "da_phe_duyet"
+        ? "Đã phê duyệt báo cáo. Khách chỉ đọc chỉ xem được báo cáo ở trạng thái này."
+        : status === "cho_duyet"
+          ? "Đã gửi báo cáo sang trạng thái chờ duyệt."
+          : status === "tra_lai"
+            ? "Đã trả báo cáo về để chỉnh sửa."
+            : "Đã lưu trạng thái bản nháp báo cáo.",
+    );
+    await loadReportRecords();
+  }
+
   if (loading) {
     return <LoadingState label="Đang tải dữ liệu xuất báo cáo..." />;
   }
@@ -381,20 +446,59 @@ export function ReportExportWorkspace() {
         </div>
         <div className="grid gap-3 p-5 sm:grid-cols-2">
           {exports.map((item) => (
-            <button
-              className="surface-card px-4 py-4 text-left text-sm font-semibold text-[var(--color-ink-navy)] hover:border-[var(--color-electric-cobalt)] hover:bg-[var(--color-lavender-mist)]/45 disabled:text-[var(--color-stone)]"
-              disabled={Boolean(downloading)}
-              aria-busy={downloading === item.endpoint}
+            <ReportExportCard
+              currentStatus={reportRecords.find((record) => record.loai_bao_cao === item.reportType)?.trang_thai ?? "chưa tạo"}
+              isDownloading={downloading === item.endpoint}
+              isLocked={Boolean(downloading)}
+              item={item}
               key={item.endpoint}
-              type="button"
-              onClick={() => download(item.endpoint)}
-            >
-              {downloading === item.endpoint ? "Đang tạo file..." : item.label}
-            </button>
+              onDownload={() => download(item.endpoint)}
+              onUpdateStatus={updateReportStatus}
+            />
           ))}
         </div>
       </section>
     </div>
+  );
+}
+
+function ReportExportCard(props: {
+  currentStatus: string;
+  isDownloading: boolean;
+  isLocked: boolean;
+  item: (typeof exports)[number];
+  onDownload: () => void;
+  onUpdateStatus: (reportType: string, status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai") => Promise<void>;
+}) {
+  return (
+    <article className="surface-card grid gap-3 p-4">
+      <div>
+        <p className="text-sm font-semibold text-[var(--color-ink-navy)]">{props.item.label}</p>
+        <p className="mt-2 inline-flex rounded-full bg-[var(--color-lavender-mist)] px-3 py-1 text-xs font-semibold text-[var(--color-ink-navy)]">
+          Trạng thái: {props.currentStatus}
+        </p>
+      </div>
+      <button
+        className="button-primary"
+        disabled={props.isLocked}
+        aria-busy={props.isDownloading}
+        type="button"
+        onClick={props.onDownload}
+      >
+        {props.isDownloading ? "Đang tạo file..." : "Xuất file"}
+      </button>
+      <div className="grid gap-2 sm:grid-cols-3">
+        <button className="button-secondary" type="button" onClick={() => props.onUpdateStatus(props.item.reportType, "nhap")}>
+          Bản nháp
+        </button>
+        <button className="button-secondary" type="button" onClick={() => props.onUpdateStatus(props.item.reportType, "cho_duyet")}>
+          Gửi duyệt
+        </button>
+        <button className="button-secondary" type="button" onClick={() => props.onUpdateStatus(props.item.reportType, "da_phe_duyet")}>
+          Phê duyệt
+        </button>
+      </div>
+    </article>
   );
 }
 

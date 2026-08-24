@@ -35,6 +35,21 @@ type Role = {
   ten: string;
 };
 
+type Criterion = {
+  id: string;
+  ma: string;
+  ten: string;
+  loai_hinh_ap_dung: string;
+};
+
+type Assignment = {
+  id: string;
+  nam_hoc_id: string;
+  nguoi_dung_id: string;
+  tieu_chi_id: string;
+  vai_tro_trong_tieu_chi: string | null;
+};
+
 type UserRole = {
   vai_tro?: Role | Role[] | null;
 };
@@ -79,7 +94,10 @@ export function SchoolYearSetup() {
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [criteria, setCriteria] = useState<Criterion[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [canManageUsers, setCanManageUsers] = useState(false);
+  const [canManageAssignments, setCanManageAssignments] = useState(false);
 
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
@@ -89,6 +107,7 @@ export function SchoolYearSetup() {
   const [tenNamHoc, setTenNamHoc] = useState("2026-2027");
   const [ngayBatDau, setNgayBatDau] = useState("2026-09-01");
   const [ngayKetThuc, setNgayKetThuc] = useState("2027-05-31");
+  const activeYear = years.find((year) => year.trang_thai === "dang_hoat_dong") ?? years[0];
 
   const loadData = useCallback(async () => {
     if (!supabase) {
@@ -136,6 +155,8 @@ export function SchoolYearSetup() {
       { data: userData },
       { data: roleData },
       { data: canManage },
+      { data: canManageAssignment },
+      { data: criterionData },
     ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
@@ -160,13 +181,42 @@ export function SchoolYearSetup() {
       supabase.rpc("fn_can_manage_users", {
         p_co_so_id: profileData.co_so_id,
       }),
+      supabase.rpc("fn_can_manage_assignment", {
+        p_co_so_id: profileData.co_so_id,
+      }),
+      supabase
+        .from("tieu_chi")
+        .select("id, ma, ten, loai_hinh_ap_dung")
+        .order("ma", { ascending: true }),
     ]);
 
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
     setUsers((userData ?? []) as unknown as ManagedUser[]);
     setRoles((roleData ?? []) as Role[]);
+    setCriteria(
+      ((criterionData ?? []) as Criterion[]).filter(
+        (criterion) => criterion.loai_hinh_ap_dung === (schoolData?.loai_hinh ?? "mam_non"),
+      ),
+    );
     setCanManageUsers(Boolean(canManage));
+    setCanManageAssignments(Boolean(canManageAssignment));
+
+    const loadedYears = (yearData ?? []) as SchoolYear[];
+    const loadedActiveYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
+
+    if (loadedActiveYear) {
+      const { data: assignmentData } = await supabase
+        .from("phan_cong_tieu_chi")
+        .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, vai_tro_trong_tieu_chi")
+        .eq("co_so_id", profileData.co_so_id)
+        .eq("nam_hoc_id", loadedActiveYear.id);
+
+      setAssignments((assignmentData ?? []) as Assignment[]);
+    } else {
+      setAssignments([]);
+    }
+
     setLoading(false);
   }, [router, supabase]);
 
@@ -446,6 +496,17 @@ export function SchoolYearSetup() {
         onMessage={setMessage}
       />
 
+      <AssignmentManager
+        activeYear={activeYear ?? null}
+        assignments={assignments}
+        canManageAssignments={canManageAssignments}
+        criteria={criteria}
+        supabase={supabase}
+        users={users}
+        onChanged={loadData}
+        onMessage={setMessage}
+      />
+
       {message ? <Message text={message} /> : null}
     </div>
   );
@@ -670,6 +731,151 @@ function UserRoleRow(props: {
         </button>
       </div>
     </article>
+  );
+}
+
+function AssignmentManager(props: {
+  activeYear: SchoolYear | null;
+  assignments: Assignment[];
+  canManageAssignments: boolean;
+  criteria: Criterion[];
+  supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
+  users: ManagedUser[];
+  onChanged: () => Promise<void>;
+  onMessage: (message: string) => void;
+}) {
+  const assignableUsers = useMemo(
+    () => props.users.filter((user) => user.trang_thai === "active"),
+    [props.users],
+  );
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedCriterionIds, setSelectedCriterionIds] = useState<string[]>([]);
+  const [assignmentRole, setAssignmentRole] = useState("phu_trach_nhap_lieu");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const userId = selectedUserId || assignableUsers[0]?.id || "";
+    const userAssignments = props.assignments.filter((item) => item.nguoi_dung_id === userId);
+
+    setSelectedUserId(userId);
+    setSelectedCriterionIds(userAssignments.map((item) => item.tieu_chi_id));
+    setAssignmentRole(userAssignments[0]?.vai_tro_trong_tieu_chi ?? "phu_trach_nhap_lieu");
+  }, [assignableUsers, props.assignments, selectedUserId]);
+
+  function toggleCriterion(id: string) {
+    setSelectedCriterionIds((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
+  }
+
+  async function saveAssignments() {
+    if (!props.supabase || !props.activeYear || !selectedUserId) {
+      props.onMessage("Chưa đủ thông tin để lưu phân công.");
+      return;
+    }
+
+    setSaving(true);
+    props.onMessage("");
+
+    const { error } = await props.supabase.rpc("fn_phan_cong_tieu_chi_cho_nguoi_dung", {
+      p_nam_hoc_id: props.activeYear.id,
+      p_nguoi_dung_id: selectedUserId,
+      p_tieu_chi_ids: selectedCriterionIds,
+      p_vai_tro_trong_tieu_chi: assignmentRole,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      props.onMessage(error.message);
+      return;
+    }
+
+    props.onMessage("Đã cập nhật phạm vi tiêu chí được phân công.");
+    await props.onChanged();
+  }
+
+  return (
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h2 className="section-title text-xl">Phân công phạm vi tiêu chí</h2>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+          Giáo viên, ủy viên và tổ trưởng chỉ thao tác trong các tiêu chí được phân công.
+        </p>
+      </div>
+
+      {!props.activeYear ? (
+        <p className="px-5 py-5 text-sm text-[var(--color-graphite)]/70">
+          Chưa có năm học để phân công.
+        </p>
+      ) : (
+        <div className="grid gap-4 p-5">
+          <div className="grid gap-4 lg:grid-cols-[1fr_260px_auto]">
+            <label className="text-sm font-medium">
+              Người được phân công
+              <select
+                className="form-control mt-2"
+                disabled={!props.canManageAssignments}
+                value={selectedUserId}
+                onChange={(event) => setSelectedUserId(event.target.value)}
+              >
+                {assignableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.ho_ten} {user.email ? `- ${user.email}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              Vai trò trong phân công
+              <select
+                className="form-control mt-2"
+                disabled={!props.canManageAssignments}
+                value={assignmentRole}
+                onChange={(event) => setAssignmentRole(event.target.value)}
+              >
+                <option value="phu_trach_nhap_lieu">Phụ trách nhập liệu</option>
+                <option value="ra_soat">Rà soát nội dung</option>
+                <option value="tong_hop">Tổng hợp tiêu chuẩn</option>
+              </select>
+            </label>
+            <div className="flex items-end">
+              <button
+                className="button-primary w-full"
+                disabled={!props.canManageAssignments || saving || !selectedUserId}
+                type="button"
+                onClick={saveAssignments}
+              >
+                {saving ? "Đang lưu..." : "Lưu phân công"}
+              </button>
+            </div>
+          </div>
+
+          {!props.canManageAssignments ? (
+            <Alert tone="info">
+              Bạn chỉ có thể xem phân công. Chỉ Hiệu trưởng hoặc Chủ tịch Hội đồng tự đánh giá được chỉnh phần này.
+            </Alert>
+          ) : null}
+
+          <div className="grid max-h-96 gap-2 overflow-auto rounded-[var(--radius-card)] border border-[var(--color-border)] p-3 sm:grid-cols-2 lg:grid-cols-3">
+            {props.criteria.map((criterion) => (
+              <label className="surface-card flex items-start gap-2 p-3 text-sm" key={criterion.id}>
+                <input
+                  checked={selectedCriterionIds.includes(criterion.id)}
+                  disabled={!props.canManageAssignments}
+                  type="checkbox"
+                  onChange={() => toggleCriterion(criterion.id)}
+                />
+                <span>
+                  <strong className="text-[var(--color-ink-navy)]">{criterion.ma}</strong>{" "}
+                  {criterion.ten}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

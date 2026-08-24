@@ -61,6 +61,7 @@ type AssessmentRow = {
   mo_ta_muc_2: string | null;
   dat_muc_2: boolean;
   muc_dat: 0 | 1 | 2;
+  trang_thai: string;
 };
 
 type EvidenceOption = {
@@ -242,7 +243,7 @@ export function AssessmentWorkspace() {
       await Promise.all([
         supabase
           .from("tu_danh_gia")
-          .select("id, tieu_chi_id, mo_ta_muc_1, dat_muc_1, mo_ta_muc_2, dat_muc_2, muc_dat")
+          .select("id, tieu_chi_id, mo_ta_muc_1, dat_muc_1, mo_ta_muc_2, dat_muc_2, muc_dat, trang_thai")
           .eq("co_so_id", profile.co_so_id)
           .eq("nam_hoc_id", activeYear.id)
           .eq("cap_hoc", selectedCapHoc),
@@ -594,6 +595,30 @@ function CriterionAssessmentForm(props: {
     await props.onDone(error ? error.message : "Đã lưu tự đánh giá cho tiêu chí.");
   }
 
+  async function updateStatus(status: "cho_duyet" | "da_duyet" | "dang_ra_soat") {
+    if (!props.supabase) {
+      await props.onDone("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    const { error } = await props.supabase.rpc("fn_cap_nhat_trang_thai_tu_danh_gia", {
+      p_nam_hoc_id: props.activeYearId,
+      p_cap_hoc: props.selectedCapHoc,
+      p_tieu_chi_id: props.criterion.id,
+      p_trang_thai: status,
+    });
+
+    await props.onDone(
+      error
+        ? error.message
+        : status === "cho_duyet"
+          ? "Đã gửi tiêu chí sang trạng thái chờ duyệt."
+          : status === "da_duyet"
+            ? "Đã chốt mức tự đánh giá cho tiêu chí."
+            : "Đã chuyển tiêu chí về trạng thái rà soát.",
+    );
+  }
+
   return (
     <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>
       <div>
@@ -601,6 +626,9 @@ function CriterionAssessmentForm(props: {
           {props.criterion.ma} {props.criterion.la_bat_buoc ? "bắt buộc" : ""}
         </p>
         <h2 className="mt-1 text-xl font-semibold text-[var(--color-ink-navy)]">{props.criterion.ten}</h2>
+        <p className="mt-2 inline-flex rounded-full bg-[var(--color-lavender-mist)] px-3 py-1 text-xs font-semibold text-[var(--color-ink-navy)]">
+          Trạng thái: {props.row?.trang_thai ?? "chưa nhập"}
+        </p>
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/70">
           Nội dung quy định của tiêu chí nằm ngay dưới từng mức. Nhà trường chỉ nhập hiện trạng thực tế và gắn mã minh chứng.
         </p>
@@ -691,6 +719,18 @@ function CriterionAssessmentForm(props: {
       >
         {saving ? "Đang lưu..." : "Lưu tự đánh giá"}
       </button>
+
+      <div className="grid gap-2 border-t border-[var(--color-border)] pt-4 sm:grid-cols-3">
+        <button className="button-secondary" type="button" onClick={() => updateStatus("cho_duyet")}>
+          Gửi duyệt
+        </button>
+        <button className="button-secondary" type="button" onClick={() => updateStatus("dang_ra_soat")}>
+          Trả về rà soát
+        </button>
+        <button className="button-primary" type="button" onClick={() => updateStatus("da_duyet")}>
+          Chốt mức
+        </button>
+      </div>
     </form>
   );
 }

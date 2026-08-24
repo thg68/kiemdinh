@@ -22,6 +22,9 @@ Từ migration `010_permission_hardening_appendix_b.sql`, phân quyền chính �
 - `storage.objects` bucket `evidence`: chỉ đọc được tệp khi metadata minh chứng tương ứng cũng đọc được qua RLS.
 - `bao_cao`: Khách chỉ đọc chỉ xem báo cáo có trạng thái đã phê duyệt.
 - `bao_cao` và `tu_danh_gia`: trạng thái đã duyệt/chốt chỉ do Hiệu trưởng hoặc Chủ tịch Hội đồng thực hiện.
+- `fn_phan_cong_tieu_chi_cho_nguoi_dung`: Hiệu trưởng hoặc Chủ tịch Hội đồng dùng để giới hạn phạm vi tiêu chí của giáo viên, ủy viên và tổ trưởng.
+- `fn_cap_nhat_trang_thai_tu_danh_gia`: chuyển tiêu chí qua các trạng thái nhập, chờ duyệt, rà soát hoặc đã duyệt.
+- `fn_luu_trang_thai_bao_cao`: lưu bản nháp, gửi duyệt hoặc phê duyệt báo cáo theo năm học.
 
 ## Lưu ý
 

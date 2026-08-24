@@ -21,6 +21,7 @@ Nếu quên mật khẩu, chọn **Quên mật khẩu?** trên màn hình đăng
 2. Chọn đúng năm học và cấp học cần xem.
 3. Xem phần kết quả tổng hợp ở đầu trang.
 4. Xem **Gap Board** để biết tiêu chí nào còn thiếu.
+5. Khi tiêu chí đã đủ nội dung và minh chứng, chọn **Chốt mức** để khóa kết quả tự đánh giá của tiêu chí đó.
 
 Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu chí bắt buộc cần được chú ý trước vì chỉ cần thiếu một tiêu chí bắt buộc thì mức tương ứng sẽ không được công nhận.
 
@@ -57,6 +58,16 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 3. Chọn **Mẫu 1 - Báo cáo tự đánh giá (.docx)**.
 4. Mở file Word vừa tải về.
 5. Kiểm tra các dòng cảnh báo màu đỏ. Nếu còn cảnh báo, báo cáo chưa nên dùng chính thức.
+6. Khi báo cáo đã được rà soát, chọn **Phê duyệt** để chuyển báo cáo sang trạng thái khách chỉ đọc có thể xem.
+
+## 6. Phân công phạm vi tiêu chí
+
+1. Vào **Thiết lập**.
+2. Ở phần **Phân công phạm vi tiêu chí**, chọn người được phân công.
+3. Chọn các tiêu chí người đó được phép nhập hiện trạng hoặc tải minh chứng.
+4. Chọn **Lưu phân công**.
+
+[CHÈN ẢNH: Phân công phạm vi tiêu chí trong màn hình thiết lập]
 
 [CHÈN ẢNH: Nút xuất Mẫu 1]
 

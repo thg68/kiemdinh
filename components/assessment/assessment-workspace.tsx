@@ -16,8 +16,10 @@ import {
   xacDinhMucTuKetQua,
 } from "@/lib/assessment/level-engine";
 import { Alert } from "@/components/ui/alert";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type Profile = {
   id: string;
@@ -497,6 +499,28 @@ function CriterionAssessmentForm(props: {
   const [mucDat, setMucDat] = useState<0 | 1 | 2>(0);
   const [selectedEvidenceIds, setSelectedEvidenceIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<"cho_duyet" | "da_duyet" | "dang_ra_soat" | null>(null);
+  const statusConfirm = {
+    cho_duyet: {
+      confirmLabel: "Gửi duyệt",
+      description: "Tiêu chí sẽ chuyển sang hàng đợi để người có thẩm quyền xem xét. Bạn vẫn nên lưu nội dung tự đánh giá trước khi gửi.",
+      title: "Gửi tiêu chí này sang chờ duyệt?",
+      tone: "primary" as const,
+    },
+    da_duyet: {
+      confirmLabel: "Chốt mức",
+      description: "Mức tự đánh giá của tiêu chí sẽ được chốt theo dữ liệu hiện tại. Hãy chắc chắn mô tả hiện trạng và mã minh chứng đã đúng.",
+      title: "Chốt mức tự đánh giá?",
+      tone: "danger" as const,
+    },
+    dang_ra_soat: {
+      confirmLabel: "Trả về rà soát",
+      description: "Tiêu chí sẽ quay lại trạng thái rà soát để người phụ trách chỉnh sửa hoặc bổ sung minh chứng.",
+      title: "Trả tiêu chí về rà soát?",
+      tone: "warning" as const,
+    },
+  };
+  const pendingConfirm = pendingStatus ? statusConfirm[pendingStatus] : null;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -628,6 +652,16 @@ function CriterionAssessmentForm(props: {
     );
   }
 
+  async function confirmStatusChange() {
+    if (!pendingStatus) {
+      return;
+    }
+
+    const status = pendingStatus;
+    setPendingStatus(null);
+    await updateStatus(status);
+  }
+
   return (
     <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>
       <div>
@@ -635,9 +669,9 @@ function CriterionAssessmentForm(props: {
           {props.criterion.ma} {props.criterion.la_bat_buoc ? "bắt buộc" : ""}
         </p>
         <h2 className="mt-1 text-xl font-semibold text-[var(--color-ink-navy)]">{props.criterion.ten}</h2>
-        <p className="mt-2 inline-flex rounded-full bg-[var(--color-lavender-mist)] px-3 py-1 text-xs font-semibold text-[var(--color-ink-navy)]">
-          Trạng thái: {props.row?.trang_thai ?? "chưa nhập"}
-        </p>
+        <div className="mt-2">
+          <StatusBadge status={props.row?.trang_thai ?? "chua_nhap"} />
+        </div>
         <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/70">
           Nội dung quy định của tiêu chí nằm ngay dưới từng mức. Nhà trường chỉ nhập hiện trạng thực tế và gắn mã minh chứng.
         </p>
@@ -730,16 +764,25 @@ function CriterionAssessmentForm(props: {
       </button>
 
       <div className="grid gap-2 border-t border-[var(--color-border)] pt-4 sm:grid-cols-3">
-        <button className="button-secondary" type="button" onClick={() => updateStatus("cho_duyet")}>
+        <button className="button-secondary" type="button" onClick={() => setPendingStatus("cho_duyet")}>
           Gửi duyệt
         </button>
-        <button className="button-secondary" type="button" onClick={() => updateStatus("dang_ra_soat")}>
+        <button className="button-secondary" type="button" onClick={() => setPendingStatus("dang_ra_soat")}>
           Trả về rà soát
         </button>
-        <button className="button-primary" type="button" onClick={() => updateStatus("da_duyet")}>
+        <button className="button-danger" type="button" onClick={() => setPendingStatus("da_duyet")}>
           Chốt mức
         </button>
       </div>
+      <ConfirmDialog
+        confirmLabel={pendingConfirm?.confirmLabel}
+        description={pendingConfirm?.description ?? ""}
+        isOpen={Boolean(pendingConfirm)}
+        title={pendingConfirm?.title ?? ""}
+        tone={pendingConfirm?.tone}
+        onCancel={() => setPendingStatus(null)}
+        onConfirm={confirmStatusChange}
+      />
     </form>
   );
 }

@@ -17,10 +17,12 @@ import {
   formatEvidenceStatus,
   sha256File,
   storagePathForEvidence,
+  validateEvidenceFile,
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 
 type EvidenceWithCriteria = Evidence & {
   criteria: Criterion[];
@@ -30,7 +32,7 @@ type Filters = {
   keyword: string;
   namHocId: string;
   tieuChuan: string;
-  tieuChiId: string;
+  tieuChiIds: string[];
   trangThai: string;
 };
 
@@ -54,7 +56,7 @@ function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion
   };
 }
 
-export function EvidenceWorkspace() {
+export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" }) {
   const router = useRouter();
   const supabase = useMemo(() => {
     if (!isSupabaseConfigured()) {
@@ -74,12 +76,19 @@ export function EvidenceWorkspace() {
     keyword: "",
     namHocId: "",
     tieuChuan: "",
-    tieuChiId: "",
+    tieuChiIds: [],
     trangThai: "",
   });
 
   const activeYear = years.find((year) => year.trang_thai === "dang_hoat_dong");
   const selectedYearId = filters.namHocId || activeYear?.id || years[0]?.id || "";
+  const hasActiveFilters = Boolean(
+      filters.keyword.trim() ||
+      filters.namHocId ||
+      filters.tieuChuan ||
+      filters.tieuChiIds.length > 0 ||
+      filters.trangThai,
+  );
 
   const loadData = useCallback(async () => {
     if (!supabase) {
@@ -196,14 +205,18 @@ export function EvidenceWorkspace() {
           .map((criterion) => enrichCriterionLabel(criterion as Criterion, schoolType)) as Criterion[],
       }))
       .filter((item) => {
-        if (filters.tieuChiId) {
-          return item.criteria.some((criterion) => criterion.id === filters.tieuChiId);
+        if (
+          filters.tieuChiIds.length > 0 &&
+          !item.criteria.some((criterion) => filters.tieuChiIds.includes(criterion.id))
+        ) {
+          return false;
         }
 
-        if (filters.tieuChuan) {
-          return item.criteria.some(
-            (criterion) => String(criterion.tieu_chuan?.so_thu_tu) === filters.tieuChuan,
-          );
+        if (
+          filters.tieuChuan &&
+          !item.criteria.some((criterion) => String(criterion.tieu_chuan?.so_thu_tu) === filters.tieuChuan)
+        ) {
+          return false;
         }
 
         return true;
@@ -246,39 +259,39 @@ export function EvidenceWorkspace() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap gap-3">
-        <Link className="button-primary" href="/minh-chung/suc-khoe">
-          Kiểm tra sức khỏe
-        </Link>
-        <Link className="button-secondary" href="/minh-chung/xac-minh">
-          Xác minh minh chứng
-        </Link>
-        <Link className="button-secondary" href="/thiet-lap">
-          Năm học
-        </Link>
-      </div>
+      <EvidenceSubnav active={mode === "create" ? "create" : "list"} />
 
       {message ? <Message text={message} /> : null}
 
-      <EvidenceCreateForm
-        criteria={criteria}
-        evidence={evidence}
-        profile={profile}
-        selectedYearId={selectedYearId}
-        supabase={supabase}
-        onDone={async (text) => {
-          setMessage(text);
-          await loadEvidence();
-        }}
-      />
+      {mode === "create" ? (
+        <EvidenceCreateForm
+          criteria={criteria}
+          evidence={evidence}
+          profile={profile}
+          selectedYearId={selectedYearId}
+          supabase={supabase}
+          onCancel={() => router.push("/minh-chung")}
+          onDone={async (text) => {
+            setMessage(text);
+            await loadEvidence();
 
-      <EvidenceFilters
-        criteria={criteria}
-        filters={filters}
-        setFilters={setFilters}
-        years={years}
-      />
+            if (text.startsWith("Đã")) {
+              router.push("/minh-chung");
+            }
+          }}
+        />
+      ) : null}
 
+      {mode === "list" && (evidence.length > 0 || hasActiveFilters) ? (
+        <EvidenceFilters
+          criteria={criteria}
+          filters={filters}
+          setFilters={setFilters}
+          years={years}
+        />
+      ) : null}
+
+      {mode === "list" ? (
       <section className="surface-card overflow-hidden">
         <div className="border-b border-[var(--color-border)] px-5 py-4">
           <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Danh sách minh chứng</h2>
@@ -291,24 +304,34 @@ export function EvidenceWorkspace() {
           {evidence.length === 0 ? (
             <div className="p-5">
               <EmptyState
-                title="Chưa có minh chứng phù hợp"
-                description="Hãy tải minh chứng đầu tiên hoặc xóa bớt bộ lọc để xem các minh chứng đã có."
+                title={hasActiveFilters ? "Không có minh chứng phù hợp" : "Hiện chưa có minh chứng nào được tải lên"}
+                description={
+                  hasActiveFilters
+                    ? "Hãy xóa bớt bộ lọc để xem các minh chứng đã có."
+                    : "Bấm Tạo minh chứng để tải tệp hoặc gắn liên kết điện tử đầu tiên."
+                }
                 action={
-                  <button
-                    className="button-secondary"
-                    type="button"
-                    onClick={() =>
-                      setFilters({
-                        keyword: "",
-                        namHocId: "",
-                        tieuChuan: "",
-                        tieuChiId: "",
-                        trangThai: "",
-                      })
-                    }
-                  >
-                    Xóa bộ lọc
-                  </button>
+                  hasActiveFilters ? (
+                    <button
+                      className="button-secondary"
+                      type="button"
+                      onClick={() =>
+                        setFilters({
+                          keyword: "",
+                          namHocId: "",
+                          tieuChuan: "",
+                          tieuChiIds: [],
+                          trangThai: "",
+                        })
+                      }
+                    >
+                      Xóa bộ lọc
+                    </button>
+                  ) : (
+                    <Link className="button-primary" href="/minh-chung/tao">
+                      Tạo minh chứng
+                    </Link>
+                  )
                 }
               />
             </div>
@@ -342,6 +365,7 @@ export function EvidenceWorkspace() {
           )}
         </div>
       </section>
+      ) : null}
     </div>
   );
 }
@@ -352,6 +376,7 @@ function EvidenceCreateForm(props: {
   profile: Profile | null;
   selectedYearId: string;
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
+  onCancel: () => void;
   onDone: (message: string) => Promise<void>;
 }) {
   const [mode, setMode] = useState<"new" | "reuse">("new");
@@ -392,9 +417,20 @@ function EvidenceCreateForm(props: {
       return;
     }
 
+    if (!props.selectedYearId) {
+      await props.onDone("Hãy tạo hoặc chọn năm học trước khi tạo minh chứng.");
+      return;
+    }
+
     setSubmitting(true);
 
     if (mode === "reuse") {
+      if (!selectedEvidenceId) {
+        setSubmitting(false);
+        await props.onDone("Hãy chọn minh chứng có sẵn trước khi gắn thêm tiêu chí.");
+        return;
+      }
+
       const { error } = await props.supabase.rpc("fn_gan_minh_chung_tieu_chi", {
         p_minh_chung_id: selectedEvidenceId,
         p_tieu_chi_ids: selectedCriterionIds,
@@ -411,6 +447,12 @@ function EvidenceCreateForm(props: {
       return;
     }
 
+    if (!ten.trim()) {
+      setSubmitting(false);
+      await props.onDone("Hãy nhập tên minh chứng.");
+      return;
+    }
+
     if (!file && !hyperlink.trim()) {
       setSubmitting(false);
       await props.onDone("Hãy chọn tệp hoặc nhập liên kết điện tử.");
@@ -423,6 +465,14 @@ function EvidenceCreateForm(props: {
     let type: string | null = null;
 
     if (file) {
+      const fileError = validateEvidenceFile(file);
+
+      if (fileError) {
+        setSubmitting(false);
+        await props.onDone(fileError);
+        return;
+      }
+
       storagePath = storagePathForEvidence(props.profile.co_so_id, props.selectedYearId, file);
       hash = await sha256File(file);
       size = file.size;
@@ -446,7 +496,7 @@ function EvidenceCreateForm(props: {
       p_nam_hoc_id: props.selectedYearId,
       p_tieu_chi_ids: selectedCriterionIds,
       p_tieu_chi_goc_id: rootCriterionId,
-      p_ten: ten,
+      p_ten: ten.trim(),
       p_loai_tep: type,
       p_duong_dan: hyperlink,
       p_storage_path: storagePath,
@@ -459,6 +509,10 @@ function EvidenceCreateForm(props: {
     setSubmitting(false);
 
     if (error) {
+      if (storagePath) {
+        await props.supabase.storage.from("evidence").remove([storagePath]);
+      }
+
       await props.onDone(error.message);
       return;
     }
@@ -482,22 +536,27 @@ function EvidenceCreateForm(props: {
             Tạo mã mới từ tiêu chí gốc hoặc dùng lại mã minh chứng đã có.
           </p>
         </div>
-        <div className="segmented-control grid-cols-2 text-sm font-medium" aria-label="Kiểu thêm minh chứng">
-          <button
-            aria-pressed={mode === "new"}
-            className={`segmented-option ${mode === "new" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
-            type="button"
-            onClick={() => setMode("new")}
-          >
-            Mới
-          </button>
-          <button
-            aria-pressed={mode === "reuse"}
-            className={`segmented-option ${mode === "reuse" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
-            type="button"
-            onClick={() => setMode("reuse")}
-          >
-            Dùng lại
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="segmented-control grid-cols-2 text-sm font-medium" aria-label="Kiểu thêm minh chứng">
+            <button
+              aria-pressed={mode === "new"}
+              className={`segmented-option ${mode === "new" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
+              type="button"
+              onClick={() => setMode("new")}
+            >
+              Mới
+            </button>
+            <button
+              aria-pressed={mode === "reuse"}
+              className={`segmented-option ${mode === "reuse" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
+              type="button"
+              onClick={() => setMode("reuse")}
+            >
+              Dùng lại
+            </button>
+          </div>
+          <button className="button-secondary" type="button" onClick={props.onCancel}>
+            Đóng
           </button>
         </div>
       </div>
@@ -539,11 +598,15 @@ function EvidenceCreateForm(props: {
             </label>
             <label className="text-sm font-medium">
               Tệp minh chứng
-              <input
-                className="form-control mt-2 text-sm"
-                type="file"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-              />
+              <span className="file-picker mt-2">
+                <span className="file-picker-button">Chọn tệp</span>
+                <span className="file-picker-name">{file ? file.name : "Chưa chọn tệp nào"}</span>
+                <input
+                  className="file-picker-input"
+                  type="file"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                />
+              </span>
             </label>
             <label className="text-sm font-medium lg:col-span-2">
               Hoặc liên kết điện tử
@@ -606,7 +669,7 @@ function CriterionPicker(props: {
   return (
     <fieldset className="grid gap-3">
       <legend className="text-sm font-semibold text-[var(--color-ink-navy)]">Tiêu chí sử dụng minh chứng</legend>
-      <div className="grid max-h-72 gap-2 overflow-auto rounded-[var(--radius-card)] border border-[var(--color-border)] p-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 rounded-[var(--radius-card)] border border-[var(--color-border)] p-3 sm:grid-cols-2 lg:grid-cols-3">
         {props.criteria.map((criterion) => (
           <label className="surface-card grid gap-2 p-3 text-sm hover:border-[var(--color-electric-cobalt)]" key={criterion.id}>
             <span className="flex items-start gap-2">
@@ -643,6 +706,14 @@ function EvidenceFilters(props: {
   setFilters: (filters: Filters) => void;
   years: SchoolYear[];
 }) {
+  const hasAnyFilter = Boolean(
+    props.filters.keyword.trim() ||
+      props.filters.namHocId ||
+      props.filters.tieuChuan ||
+      props.filters.tieuChiIds.length > 0 ||
+      props.filters.trangThai,
+  );
+
   return (
     <section className="surface-card grid gap-3 p-5 lg:grid-cols-5">
       <label className="text-sm font-medium lg:col-span-2">
@@ -697,12 +768,24 @@ function EvidenceFilters(props: {
           <option value="het_hieu_luc">Hết hiệu lực</option>
         </select>
       </label>
-      <label className="text-sm font-medium lg:col-span-5">
+      <CriterionFilterGrid
+        criteria={props.criteria}
+        selectedIds={props.filters.tieuChiIds}
+        onChange={(tieuChiIds) => props.setFilters({ ...props.filters, tieuChiIds })}
+      />
+
+      <label className="hidden">
         Tiêu chí
         <select
-          className="form-control mt-2"
-          value={props.filters.tieuChiId}
-          onChange={(event) => props.setFilters({ ...props.filters, tieuChiId: event.target.value })}
+          className="form-control mt-2 min-h-40"
+          multiple
+          value={props.filters.tieuChiIds}
+          onChange={(event) =>
+            props.setFilters({
+              ...props.filters,
+              tieuChiIds: Array.from(event.target.selectedOptions, (option) => option.value).filter(Boolean),
+            })
+          }
         >
           <option value="">Tất cả tiêu chí</option>
           {props.criteria.map((criterion) => (
@@ -712,6 +795,7 @@ function EvidenceFilters(props: {
           ))}
         </select>
       </label>
+      {hasAnyFilter ? (
       <div className="lg:col-span-5">
         <button
           className="button-secondary"
@@ -721,7 +805,7 @@ function EvidenceFilters(props: {
               keyword: "",
               namHocId: "",
               tieuChuan: "",
-              tieuChiId: "",
+              tieuChiIds: [],
               trangThai: "",
             })
           }
@@ -729,7 +813,56 @@ function EvidenceFilters(props: {
           Xóa bộ lọc
         </button>
       </div>
+      ) : null}
     </section>
+  );
+}
+
+function CriterionFilterGrid({
+  criteria,
+  onChange,
+  selectedIds,
+}: {
+  criteria: Criterion[];
+  onChange: (ids: string[]) => void;
+  selectedIds: string[];
+}) {
+  function toggleCriterion(id: string) {
+    onChange(selectedIds.includes(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id]);
+  }
+
+  return (
+    <fieldset className="criterion-filter lg:col-span-5">
+      <div className="criterion-filter-header">
+        <legend className="text-sm font-semibold text-[var(--color-ink-navy)]">Tiêu chí</legend>
+        {selectedIds.length > 0 ? (
+          <button className="criterion-filter-clear" type="button" onClick={() => onChange([])}>
+            Bỏ chọn tiêu chí
+          </button>
+        ) : (
+          <span className="criterion-filter-hint">Chọn một hoặc nhiều tiêu chí</span>
+        )}
+      </div>
+
+      <div className="criterion-filter-grid">
+        {criteria.map((criterion) => {
+          const isSelected = selectedIds.includes(criterion.id);
+
+          return (
+            <button
+              aria-pressed={isSelected}
+              className={`criterion-filter-option ${isSelected ? "criterion-filter-option-active" : ""}`}
+              key={criterion.id}
+              type="button"
+              onClick={() => toggleCriterion(criterion.id)}
+            >
+              <span className="criterion-filter-code">{criterion.ma}</span>
+              <span className="criterion-filter-name">{criterion.ten}</span>
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 

@@ -16,6 +16,7 @@ import {
   todayIsoDate,
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
+import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 
 function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
   const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
@@ -168,7 +169,9 @@ export function EvidenceHealth() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-wrap gap-3">
+      <EvidenceSubnav active="health" />
+
+      <div className="hidden">
         <Link className="button-secondary" href="/minh-chung">
           Quay lại kho
         </Link>

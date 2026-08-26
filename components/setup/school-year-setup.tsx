@@ -98,6 +98,7 @@ export function SchoolYearSetup() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [canManageUsers, setCanManageUsers] = useState(false);
   const [canManageAssignments, setCanManageAssignments] = useState(false);
+  const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
 
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
@@ -423,7 +424,9 @@ export function SchoolYearSetup() {
 
   return (
     <div className="grid gap-6">
-      <section className="featured-card">
+      <SetupTabs activePanel={setupPanel} onChange={setSetupPanel} />
+      {message ? <Message text={message} /> : null}
+      <section className={`featured-card ${setupPanel === "school" ? "" : "hidden"}`}>
         <p className="text-sm text-white/70">Cơ sở giáo dục</p>
         <h2 className="mt-1 text-2xl font-semibold text-white">
           {school?.ten ?? "Chưa tải được tên đơn vị"}
@@ -433,7 +436,7 @@ export function SchoolYearSetup() {
         </p>
       </section>
 
-      <section className="surface-card surface-card-pad">
+      <section className={`surface-card surface-card-pad ${setupPanel === "school" ? "" : "hidden"}`}>
         <h2 className="section-title text-xl">Năm học</h2>
         <div className="mt-4 grid gap-3">
           {years.length === 0 ? (
@@ -466,7 +469,7 @@ export function SchoolYearSetup() {
       </section>
 
       <form
-        className="surface-card grid gap-5 p-6"
+        className={`surface-card grid gap-5 p-6 ${setupPanel === "school" ? "" : "hidden"}`}
         onSubmit={handleCreateYear}
       >
         <h2 className="section-title text-xl">
@@ -485,6 +488,7 @@ export function SchoolYearSetup() {
         </button>
       </form>
 
+      {setupPanel === "users" ? (
       <UserRoleManager
         canManageUsers={canManageUsers}
         currentUserId={profile.id}
@@ -495,7 +499,9 @@ export function SchoolYearSetup() {
         onChanged={loadData}
         onMessage={setMessage}
       />
+      ) : null}
 
+      {setupPanel === "assignments" ? (
       <AssignmentManager
         activeYear={activeYear ?? null}
         assignments={assignments}
@@ -506,8 +512,41 @@ export function SchoolYearSetup() {
         onChanged={loadData}
         onMessage={setMessage}
       />
+      ) : null}
 
-      {message ? <Message text={message} /> : null}
+    </div>
+  );
+}
+
+function SetupTabs({
+  activePanel,
+  onChange,
+}: {
+  activePanel: "assignments" | "school" | "users";
+  onChange: (panel: "assignments" | "school" | "users") => void;
+}) {
+  const tabs = [
+    { id: "school" as const, label: "Đơn vị và năm học" },
+    { id: "users" as const, label: "Người dùng và vai trò" },
+    { id: "assignments" as const, label: "Phân công tiêu chí" },
+  ];
+
+  return (
+    <div className="surface-card p-2">
+      <div className="segmented-control grid-cols-1 text-sm font-semibold md:grid-cols-3" role="tablist" aria-label="Khu vực thiết lập">
+        {tabs.map((tab) => (
+          <button
+            aria-selected={activePanel === tab.id}
+            className={`segmented-option ${activePanel === tab.id ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
+            key={tab.id}
+            role="tab"
+            type="button"
+            onClick={() => onChange(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

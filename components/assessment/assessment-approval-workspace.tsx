@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useAppContext } from "@/components/shared/use-app-context";
 
 type Criterion = {
@@ -19,6 +21,8 @@ type AssessmentRow = {
   id: string;
   tieu_chi_id: string;
   cap_hoc: string;
+  mo_ta_muc_1: string | null;
+  mo_ta_muc_2: string | null;
   muc_dat: 0 | 1 | 2;
   trang_thai: string;
   ngay_cap_nhat: string;
@@ -52,6 +56,10 @@ export function AssessmentApprovalWorkspace() {
   const [rows, setRows] = useState<AssessmentRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [updatingId, setUpdatingId] = useState("");
+  const [pendingAction, setPendingAction] = useState<{
+    row: AssessmentRow;
+    status: "da_duyet" | "dang_ra_soat";
+  } | null>(null);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
 
@@ -66,7 +74,7 @@ export function AssessmentApprovalWorkspace() {
     const { data, error } = await supabase
       .from("tu_danh_gia")
       .select(
-        "id, tieu_chi_id, cap_hoc, muc_dat, trang_thai, ngay_cap_nhat, nguoi_nhap:nguoi_nhap(ho_ten, email), tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc)",
+        "id, tieu_chi_id, cap_hoc, mo_ta_muc_1, mo_ta_muc_2, muc_dat, trang_thai, ngay_cap_nhat, nguoi_nhap:nguoi_nhap(ho_ten, email), tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc)",
       )
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", effectiveYearId)
@@ -116,6 +124,16 @@ export function AssessmentApprovalWorkspace() {
 
     setMessage(status === "da_duyet" ? "Đã chốt mức tự đánh giá." : "Đã trả tiêu chí về rà soát.");
     await loadRows();
+  }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) {
+      return;
+    }
+
+    const action = pendingAction;
+    setPendingAction(null);
+    await updateStatus(action.row, action.status);
   }
 
   if (loading || loadingRows) {
@@ -182,14 +200,28 @@ export function AssessmentApprovalWorkspace() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold tabular-nums text-[var(--color-ink-navy)]">{criterion?.ma ?? "?"}</span>
                       {criterion?.la_bat_buoc ? <Badge tone="warning">Bắt buộc</Badge> : null}
-                      <Badge>{capHocLabels[row.cap_hoc] ?? row.cap_hoc}</Badge>
-                      <Badge tone={row.muc_dat === 2 ? "success" : row.muc_dat === 1 ? "warning" : "danger"}>
+                      <StatusBadge tone="info">{capHocLabels[row.cap_hoc] ?? row.cap_hoc}</StatusBadge>
+                      <StatusBadge tone={row.muc_dat === 2 ? "success" : row.muc_dat === 1 ? "warning" : "danger"}>
                         {levelLabel(row.muc_dat)}
-                      </Badge>
+                      </StatusBadge>
                     </div>
                     <h3 className="mt-2 text-base font-semibold leading-7 text-[var(--color-ink-navy)]">
                       {criterion?.ten ?? "Tiêu chí không còn tồn tại"}
                     </h3>
+                    <div className="mt-3 grid gap-2 text-sm leading-6 md:grid-cols-2">
+                      <div className="rounded-[var(--radius-card)] bg-[var(--color-info-soft)] p-3">
+                        <p className="font-semibold text-[var(--color-ink-navy)]">Mức 1</p>
+                        <p className="mt-1 line-clamp-3 text-[var(--color-graphite)]/78">
+                          {row.mo_ta_muc_1?.trim() || "Chưa có mô tả Mức 1."}
+                        </p>
+                      </div>
+                      <div className="rounded-[var(--radius-card)] bg-[var(--color-info-soft)] p-3">
+                        <p className="font-semibold text-[var(--color-ink-navy)]">Mức 2</p>
+                        <p className="mt-1 line-clamp-3 text-[var(--color-graphite)]/78">
+                          {row.mo_ta_muc_2?.trim() || "Chưa có mô tả Mức 2."}
+                        </p>
+                      </div>
+                    </div>
                     <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
                       Người nhập: {row.nguoi_nhap?.ho_ten ?? row.nguoi_nhap?.email ?? "Chưa rõ"} ·
                       {" "}Cập nhật: {new Date(row.ngay_cap_nhat).toLocaleString("vi-VN")}
@@ -200,15 +232,15 @@ export function AssessmentApprovalWorkspace() {
                       className="button-secondary"
                       disabled={Boolean(updatingId)}
                       type="button"
-                      onClick={() => updateStatus(row, "dang_ra_soat")}
+                      onClick={() => setPendingAction({ row, status: "dang_ra_soat" })}
                     >
                       {updatingId === row.id ? "Đang lưu..." : "Trả về rà soát"}
                     </button>
                     <button
-                      className="button-primary"
+                      className="button-danger"
                       disabled={Boolean(updatingId)}
                       type="button"
-                      onClick={() => updateStatus(row, "da_duyet")}
+                      onClick={() => setPendingAction({ row, status: "da_duyet" })}
                     >
                       {updatingId === row.id ? "Đang lưu..." : "Chốt mức"}
                     </button>
@@ -219,6 +251,20 @@ export function AssessmentApprovalWorkspace() {
           </div>
         )}
       </section>
+      <ConfirmDialog
+        confirmLabel={pendingAction?.status === "da_duyet" ? "Chốt mức" : "Trả về rà soát"}
+        description={
+          pendingAction?.status === "da_duyet"
+            ? "Tiêu chí sẽ được chốt theo nội dung đang hiển thị trong hàng đợi. Hãy chắc chắn mô tả hiện trạng và mức tự đánh giá đã phù hợp."
+            : "Tiêu chí sẽ quay lại trạng thái rà soát để người phụ trách chỉnh sửa hoặc bổ sung minh chứng."
+        }
+        isOpen={Boolean(pendingAction)}
+        isWorking={Boolean(updatingId)}
+        title={pendingAction?.status === "da_duyet" ? "Chốt mức tự đánh giá?" : "Trả tiêu chí về rà soát?"}
+        tone={pendingAction?.status === "da_duyet" ? "danger" : "warning"}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={confirmPendingAction}
+      />
     </div>
   );
 }

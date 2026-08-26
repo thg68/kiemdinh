@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useAppContext } from "@/components/shared/use-app-context";
 
 type ReportRow = {
@@ -38,6 +39,7 @@ export function ApprovedReportsWorkspace() {
   const [selectedYearId, setSelectedYearId] = useState("");
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
+  const [downloadingId, setDownloadingId] = useState("");
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
 
@@ -76,6 +78,29 @@ export function ApprovedReportsWorkspace() {
 
     return () => window.clearTimeout(timer);
   }, [loadRows]);
+
+  async function downloadApprovedReport(row: ReportRow) {
+    if (!supabase || !row.storage_path) {
+      setMessage("Báo cáo này chưa có file lưu trữ để tải xuống.");
+      return;
+    }
+
+    setDownloadingId(row.id);
+    setMessage("");
+
+    const { data, error } = await supabase.storage
+      .from("reports")
+      .createSignedUrl(row.storage_path, 60);
+
+    setDownloadingId("");
+
+    if (error || !data?.signedUrl) {
+      setMessage(error?.message ?? "Không tạo được liên kết tải báo cáo.");
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  }
 
   if (loading || loadingRows) {
     return <LoadingState label="Đang tải báo cáo đã phê duyệt..." />;
@@ -139,20 +164,42 @@ export function ApprovedReportsWorkspace() {
                     <h3 className="text-base font-semibold text-[var(--color-ink-navy)]">
                       {reportTypeLabels[row.loai_bao_cao] ?? row.loai_bao_cao}
                     </h3>
-                    <Badge tone="success">Đã phê duyệt</Badge>
+                    <StatusBadge status={row.trang_thai} />
                     <Badge>v{row.version}</Badge>
                   </div>
                   <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/70">
                     Người tạo: {row.nguoi_tao?.ho_ten ?? row.nguoi_tao?.email ?? "Chưa rõ"} ·
                     {" "}Người phê duyệt: {row.nguoi_phe_duyet?.ho_ten ?? row.nguoi_phe_duyet?.email ?? "Chưa rõ"}
                   </p>
-                  <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
-                    File lưu trữ: {row.storage_path ?? "Chưa lưu file xuất vào kho lưu trữ"}
-                  </p>
+                  {row.storage_path ? (
+                    <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+                      File lưu trữ: {row.storage_path}
+                    </p>
+                  ) : (
+                    <Alert className="mt-3" tone="warning">
+                      Bản ghi đã phê duyệt nhưng chưa có file lưu trữ. Hãy mở màn xuất báo cáo và xuất lại từ dữ liệu hiện tại.
+                    </Alert>
+                  )}
                 </div>
-                <time className="text-sm text-[var(--color-graphite)]/70" dateTime={row.ngay_phe_duyet ?? undefined}>
-                  {row.ngay_phe_duyet ? new Date(row.ngay_phe_duyet).toLocaleString("vi-VN") : "Chưa có ngày phê duyệt"}
-                </time>
+                <div className="grid gap-3 md:justify-items-end">
+                  <time className="text-sm text-[var(--color-graphite)]/70" dateTime={row.ngay_phe_duyet ?? undefined}>
+                    {row.ngay_phe_duyet ? new Date(row.ngay_phe_duyet).toLocaleString("vi-VN") : "Chưa có ngày phê duyệt"}
+                  </time>
+                  {row.storage_path ? (
+                    <button
+                      className="button-primary"
+                      disabled={downloadingId === row.id}
+                      type="button"
+                      onClick={() => void downloadApprovedReport(row)}
+                    >
+                      {downloadingId === row.id ? "Đang tạo liên kết..." : "Tải file đã phê duyệt"}
+                    </button>
+                  ) : (
+                    <Link className="button-secondary" href="/bao-cao">
+                      Mở màn xuất file
+                    </Link>
+                  )}
+                </div>
               </article>
             ))}
           </div>

@@ -62,3 +62,11 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Bổ sung migration `009` để có đủ khung tiêu chuẩn cho 3 loại hình và RPC tạo năm học mới có kế thừa tự đánh giá.
 - Ghi rõ điểm còn theo dõi: nhập nội dung phụ lục TT57 chính thức và kiểm thử bằng dữ liệu trường thật.
 - Bổ sung migration `010` để siết RLS/RBAC theo Phụ lục B: phân công, tự đánh giá, minh chứng, Storage và báo cáo đã phê duyệt.
+
+## Hardening Sau Sprint 6
+
+- Bổ sung migration `015` để thu hẹp các policy RLS còn quá rộng, khóa thay đổi vai trò trực tiếp và đưa xác minh minh chứng qua RPC có kiểm tra quyền, audit.
+- Báo cáo được phê duyệt phải lưu file snapshot trong bucket Storage private `reports`; người dùng tải lại bằng signed URL có thời hạn.
+- Engine tính mức luôn chuẩn hóa đủ 15 tiêu chí; tiêu chí bị thiếu khỏi dữ liệu đầu vào được tính là chưa đạt.
+- Bổ sung giới hạn 25MB và danh sách định dạng cho tệp minh chứng; tự dọn tệp Storage nếu giao dịch tạo minh chứng thất bại.
+- Bổ sung migration `016` sửa lỗi biên dịch hàm tạo năm học và kế thừa tự đánh giá `ke_thua_cho_cap_nhat`.

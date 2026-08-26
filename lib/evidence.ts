@@ -48,6 +48,51 @@ export type EvidenceCriterionLink = {
   tieu_chi?: Criterion;
 };
 
+export const MAX_EVIDENCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+
+const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "text/csv",
+  "text/plain",
+]);
+
+const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
+  "csv",
+  "doc",
+  "docx",
+  "jpeg",
+  "jpg",
+  "pdf",
+  "png",
+  "txt",
+  "webp",
+  "xls",
+  "xlsx",
+]);
+
+export function validateEvidenceFile(file: File) {
+  if (file.size > MAX_EVIDENCE_FILE_SIZE_BYTES) {
+    return "Tệp minh chứng vượt quá 25MB. Hãy nén hoặc tách tệp trước khi tải lên.";
+  }
+
+  const extension = file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() : "";
+  const hasAllowedMime = file.type ? ALLOWED_EVIDENCE_MIME_TYPES.has(file.type) : false;
+  const hasAllowedExtension = extension ? ALLOWED_EVIDENCE_EXTENSIONS.has(extension) : false;
+
+  if (!hasAllowedMime && !hasAllowedExtension) {
+    return "Định dạng tệp chưa được hỗ trợ. Hệ thống hiện nhận PDF, Word, Excel, CSV, TXT và ảnh JPG/PNG/WebP.";
+  }
+
+  return null;
+}
+
 export async function sha256File(file: File) {
   const buffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);

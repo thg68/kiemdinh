@@ -9,6 +9,21 @@ export const MA_TIEU_CHI_BAT_BUOC = new Set([
   "4.2",
 ]);
 
+export const MA_TIEU_CHI_CON_LAI = new Set([
+  "1.1",
+  "1.2",
+  "2.3",
+  "3.3",
+  "3.4",
+  "3.5",
+  "4.3",
+]);
+
+export const MA_TIEU_CHI_TT57 = [
+  ...MA_TIEU_CHI_BAT_BUOC,
+  ...MA_TIEU_CHI_CON_LAI,
+];
+
 export type CapHoc = "mam_non" | "tieu_hoc" | "thcs" | "thpt" | "gdtx" | "khac";
 
 export type MucDatCapHoc = "Không đạt Mức 1" | "Đạt Mức 1" | "Đạt Mức 2";
@@ -43,6 +58,33 @@ function coNoiDung(value?: string | null) {
 
 function coMinhChung(item: KetQuaTieuChi) {
   return (item.maMinhChung ?? []).some((ma) => ma.trim().length > 0);
+}
+
+function chuanHoaKetQuaTieuChi(ketQuaTieuChi: KetQuaTieuChi[]) {
+  const theoMa = new Map(ketQuaTieuChi.map((item) => [item.ma, item]));
+
+  // Luôn tính trên đủ 15 tiêu chí TT57. Bản ghi bị thiếu được xem là chưa đạt,
+  // tránh kết quả sai khi truy vấn hoặc dữ liệu năm học chưa đầy đủ.
+  return MA_TIEU_CHI_TT57.map<KetQuaTieuChi>((ma) => {
+    const item = theoMa.get(ma);
+
+    if (!item) {
+      return {
+        ma,
+        ten: `Tiêu chí ${ma}`,
+        laBatBuoc: MA_TIEU_CHI_BAT_BUOC.has(ma),
+        mucDat: 0,
+        moTaMuc1: null,
+        moTaMuc2: null,
+        maMinhChung: [],
+      };
+    }
+
+    return {
+      ...item,
+      laBatBuoc: MA_TIEU_CHI_BAT_BUOC.has(ma),
+    };
+  });
 }
 
 export function mucHopLe(item: KetQuaTieuChi): 0 | 1 | 2 {
@@ -145,8 +187,9 @@ function taoKhoangCachLenMuc1(batBuoc: KetQuaTieuChi[], conLai: KetQuaTieuChi[])
 }
 
 export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc {
-  const batBuoc = ketQuaTieuChi.filter((item) => item.laBatBuoc);
-  const conLai = ketQuaTieuChi.filter((item) => !item.laBatBuoc);
+  const ketQuaDaChuanHoa = chuanHoaKetQuaTieuChi(ketQuaTieuChi);
+  const batBuoc = ketQuaDaChuanHoa.filter((item) => item.laBatBuoc);
+  const conLai = ketQuaDaChuanHoa.filter((item) => !item.laBatBuoc);
   const batBuocMuc2 = demTheoMuc(batBuoc, 2);
   const batBuocMuc1 = demTheoMuc(batBuoc, 1);
   const conLaiMuc2 = demTheoMuc(conLai, 2);

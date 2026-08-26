@@ -64,6 +64,14 @@ describe("xacDinhMucTuKetQua", () => {
     expect(result.chanLenMucTiepTheo).toContain("1.3 chưa đạt Mức 1");
   });
 
+  it("xem tiêu chí bắt buộc bị thiếu khỏi đầu vào là chưa đạt Mức 1", () => {
+    const ketQua = taoBoTieuChi().filter((item) => item.ma !== "1.3");
+    const result = xacDinhMucTuKetQua(ketQua);
+
+    expect(result.mucDat).toBe("Không đạt Mức 1");
+    expect(result.chanLenMucTiepTheo).toContain("1.3 chưa đạt Mức 1");
+  });
+
   it("không tính đạt khi thiếu mã minh chứng dù đã bật cờ đạt", () => {
     const ketQua = taoBoTieuChi({
       "1.4": { mucDat: 2, maMinhChung: [] },

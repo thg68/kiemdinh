@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 import { formatEvidenceStatus } from "@/lib/evidence";
 import { useAppContext } from "@/components/shared/use-app-context";
 
@@ -46,6 +48,11 @@ export function EvidenceVerificationWorkspace() {
   const [rows, setRows] = useState<EvidenceRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [updatingId, setUpdatingId] = useState("");
+  const [pendingAction, setPendingAction] = useState<{
+    id: string;
+    name: string;
+    status: "da_xac_minh" | "tu_choi";
+  } | null>(null);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
 
@@ -100,14 +107,10 @@ export function EvidenceVerificationWorkspace() {
     setUpdatingId(id);
     setMessage("");
 
-    const { error } = await supabase
-      .from("minh_chung")
-      .update({
-        trang_thai_xac_minh: status,
-        nguoi_xac_minh: profile.id,
-        ngay_xac_minh: new Date().toISOString(),
-      })
-      .eq("id", id);
+    const { error } = await supabase.rpc("fn_xac_minh_minh_chung", {
+      p_minh_chung_id: id,
+      p_trang_thai: status,
+    });
 
     setUpdatingId("");
 
@@ -118,6 +121,16 @@ export function EvidenceVerificationWorkspace() {
 
     setMessage(status === "da_xac_minh" ? "Đã xác minh minh chứng." : "Đã từ chối minh chứng.");
     await loadRows();
+  }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) {
+      return;
+    }
+
+    const action = pendingAction;
+    setPendingAction(null);
+    await updateStatus(action.id, action.status);
   }
 
   if (loading || loadingRows) {
@@ -136,6 +149,7 @@ export function EvidenceVerificationWorkspace() {
 
   return (
     <div className="grid gap-6">
+      <EvidenceSubnav active="verify" />
       {message ? <Alert tone={message.startsWith("Đã") ? "success" : "warning"}>{message}</Alert> : null}
 
       <section className="surface-card grid gap-3 p-5 md:grid-cols-2">
@@ -222,7 +236,7 @@ export function EvidenceVerificationWorkspace() {
                       className="button-secondary"
                       disabled={Boolean(updatingId)}
                       type="button"
-                      onClick={() => updateStatus(row.id, "tu_choi")}
+                      onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "tu_choi" })}
                     >
                       {updatingId === row.id ? "Đang lưu..." : "Từ chối"}
                     </button>
@@ -230,7 +244,7 @@ export function EvidenceVerificationWorkspace() {
                       className="button-primary"
                       disabled={Boolean(updatingId)}
                       type="button"
-                      onClick={() => updateStatus(row.id, "da_xac_minh")}
+                      onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "da_xac_minh" })}
                     >
                       {updatingId === row.id ? "Đang lưu..." : "Xác minh"}
                     </button>
@@ -241,6 +255,20 @@ export function EvidenceVerificationWorkspace() {
           </div>
         )}
       </section>
+      <ConfirmDialog
+        confirmLabel={pendingAction?.status === "da_xac_minh" ? "Xác minh" : "Từ chối"}
+        description={
+          pendingAction?.status === "da_xac_minh"
+            ? `Minh chứng "${pendingAction.name}" sẽ được đánh dấu là đủ tin cậy để sử dụng trong tự đánh giá và báo cáo.`
+            : `Minh chứng "${pendingAction?.name ?? ""}" sẽ bị từ chối và cần được thay thế hoặc bổ sung lại.`
+        }
+        isOpen={Boolean(pendingAction)}
+        isWorking={Boolean(updatingId)}
+        title={pendingAction?.status === "da_xac_minh" ? "Xác minh minh chứng này?" : "Từ chối minh chứng này?"}
+        tone={pendingAction?.status === "da_xac_minh" ? "primary" : "danger"}
+        onCancel={() => setPendingAction(null)}
+        onConfirm={confirmPendingAction}
+      />
     </div>
   );
 }

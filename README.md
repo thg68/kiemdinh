@@ -14,7 +14,18 @@ npm run dev
 
 Sau đó mở `http://localhost:3000`.
 
-Điền `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` trong `.env.local`. Áp dụng các migration trong `supabase/migrations/` theo đúng thứ tự trước khi dùng dữ liệu thật.
+Điền `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` và `NEXT_PUBLIC_APP_URL` trong `.env.local`. `NEXT_PUBLIC_APP_URL` là URL gốc của môi trường hiện tại, ví dụ `http://localhost:3000` khi chạy local hoặc domain HTTPS thật khi triển khai. Áp dụng các migration trong `supabase/migrations/` theo đúng thứ tự trước khi dùng dữ liệu thật.
+
+## Triển Khai Cloudflare
+
+Cloudflare/OpenNext dùng Node.js 22. Có thể chạy trực tiếp bằng Node 22 hoặc đặt `NODE22_HOME` tới thư mục cài Node 22 trước khi dùng các lệnh sau:
+
+```bash
+npm run preview
+npm run deploy
+```
+
+Trước khi triển khai, chạy `npm run test`, `npm run lint`, `npm run build` và `npx supabase db lint --linked --level warning`. Không đưa `.env.local`, `.dev.vars` hoặc khóa Supabase `service_role` vào Git.
 
 ## Kiểm Thử
 

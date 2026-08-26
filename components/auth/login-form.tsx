@@ -119,6 +119,12 @@ export function LoginForm() {
         </p>
       </div>
 
+      {mode === "dang_ky" ? (
+        <Alert className="mt-4" tone="info">
+          Đăng ký chỉ tạo tài khoản đăng nhập. Vai trò như Hiệu trưởng, Thư ký hoặc Giáo viên sẽ do tài khoản có quyền quản lý phân công sau.
+        </Alert>
+      ) : null}
+
       <div className="segmented-control grid-cols-2 text-sm font-medium">
         <button
           type="button"

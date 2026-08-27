@@ -50,9 +50,17 @@ export async function withReportData(
 
     return handler({ data, supabase });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Không xuất được báo cáo.";
+    const normalized = message.toLocaleLowerCase("vi");
+    const status = normalized.includes("cần đăng nhập")
+      ? 401
+      : normalized.includes("chưa có quyền") || normalized.includes("không có quyền")
+        ? 403
+        : 500;
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Không xuất được báo cáo." },
-      { status: 500 },
+      { error: message },
+      { status },
     );
   }
 }

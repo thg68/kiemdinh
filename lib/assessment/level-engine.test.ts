@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   KetQuaTieuChi,
   kiemTraRangBuocCapNhat,
+  mucHopLe,
   xacDinhMucToanTruongTuKetQua,
   xacDinhMucTuKetQua,
 } from "./level-engine";
@@ -42,6 +43,22 @@ describe("xacDinhMucTuKetQua", () => {
 
     expect(result.mucDat).toBe("Đạt Mức 1");
     expect(result.chanLenMucTiepTheo).toContain("2.2 đang Mức 1");
+  });
+
+  it("đạt Mức 1 khi đủ 5/7 tiêu chí còn lại và giải trình hai tiêu chí dưới Mức 1", () => {
+    const batBuocMuc1 = Object.fromEntries(
+      MA_BAT_BUOC.map((ma) => [ma, { mucDat: 1 as const, moTaMuc2: "" }]),
+    );
+    const ketQua = taoBoTieuChi({
+      ...batBuocMuc1,
+      "3.5": { mucDat: 0, moTaMuc1: "", moTaMuc2: "", maMinhChung: [] },
+      "4.3": { mucDat: 0, moTaMuc1: "", moTaMuc2: "", maMinhChung: [] },
+    });
+    const result = xacDinhMucTuKetQua(ketQua);
+
+    expect(result.mucDat).toBe("Đạt Mức 1");
+    expect(result.khoangCach).toContain("2 tiêu chí còn lại tối thiểu lên Mức 1");
+    expect(result.chanLenMucTiepTheo).toContain("3.5 chưa đạt tối thiểu Mức 1");
   });
 
   it("chỉ 4/7 tiêu chí còn lại đạt Mức 1 thì trượt Mức 1", () => {
@@ -109,6 +126,29 @@ describe("kiemTraRangBuocCapNhat", () => {
     expect(result.hopLe).toBe(false);
     expect(result.loi).toContain("2.1 chưa có mô tả hiện trạng Mức 1.");
   });
+
+  it("chấp nhận Mức 1 khi có mô tả và mã minh chứng", () => {
+    const item: KetQuaTieuChi = {
+      ma: "2.1",
+      laBatBuoc: true,
+      mucDat: 1,
+      moTaMuc1: "Có hiện trạng",
+      maMinhChung: ["MC.2.1.01"],
+    };
+
+    expect(kiemTraRangBuocCapNhat(item)).toEqual({ hopLe: true, loi: [] });
+    expect(mucHopLe(item)).toBe(1);
+  });
+
+  it("không chấp nhận mã minh chứng chỉ có khoảng trắng", () => {
+    expect(mucHopLe({
+      ma: "2.1",
+      laBatBuoc: true,
+      mucDat: 1,
+      moTaMuc1: "Có hiện trạng",
+      maMinhChung: ["   "],
+    })).toBe(0);
+  });
 });
 
 describe("xacDinhMucToanTruongTuKetQua", () => {
@@ -124,5 +164,45 @@ describe("xacDinhMucToanTruongTuKetQua", () => {
     ]);
 
     expect(result.mucDat).toBe("Đạt Mức 1");
+  });
+
+  it("không suy diễn mức khi trường chưa khai báo cấp học", () => {
+    const result = xacDinhMucToanTruongTuKetQua([]);
+
+    expect(result.mucDat).toBe("Không đạt");
+    expect(result.chanLenMucTiepTheo).toContain(
+      "Cần khai báo ít nhất một cấp học trong năm học.",
+    );
+  });
+
+  it("không đếm trùng một tiêu chí khi dữ liệu đầu vào bị lặp", () => {
+    const duplicated = [...taoBoTieuChi(), taoBoTieuChi()[0]];
+
+    expect(xacDinhMucTuKetQua(duplicated).mucDat).toBe("Đạt Mức 2");
+  });
+
+  it("một mã minh chứng bị lặp không làm thay đổi kết quả tiêu chí", () => {
+    const result = xacDinhMucTuKetQua(taoBoTieuChi({
+      "1.3": { maMinhChung: ["MC.1.3.01", "MC.1.3.01"] },
+    }));
+
+    expect(result.mucDat).toBe("Đạt Mức 2");
+  });
+
+  it("lấy Không đạt nếu một trong nhiều cấp học thiếu minh chứng", () => {
+    const result = xacDinhMucToanTruongTuKetQua([
+      { capHoc: "tieu_hoc", ketQuaTieuChi: taoBoTieuChi() },
+      {
+        capHoc: "thcs",
+        ketQuaTieuChi: taoBoTieuChi({
+          "1.3": { mucDat: 2, maMinhChung: [] },
+        }),
+      },
+    ]);
+
+    expect(result.mucDat).toBe("Không đạt");
+    expect(result.chanLenMucTiepTheo).toContain(
+      "1.3 thiếu mô tả hiện trạng hoặc mã minh chứng",
+    );
   });
 });

@@ -206,6 +206,15 @@ function mucThuTu(muc: MucDatCapHoc) {
 export function xacDinhMucToanTruongTuKetQua(
   cacCapHoc: KetQuaTheoCapHoc[],
 ): GiaiTrinhMuc<MucDatToanTruong> {
+  if (cacCapHoc.length === 0) {
+    return {
+      mucDat: "Không đạt",
+      lyDo: "Chưa có cấp học nào để xác định mức toàn trường.",
+      chanLenMucTiepTheo: ["Cần khai báo ít nhất một cấp học trong năm học."],
+      khoangCach: "Cần kiểm tra lại thông tin cấp học của cơ sở giáo dục.",
+    };
+  }
+
   const ketQua = cacCapHoc.map((cap) => ({
     capHoc: cap.capHoc,
     giaiTrinh: xacDinhMucTuKetQua(cap.ketQuaTieuChi),

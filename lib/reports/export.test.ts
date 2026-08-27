@@ -95,4 +95,35 @@ describe("xuất dữ liệu năm học", () => {
     expect(archive.file("danh-muc-minh-chung.xlsx")).not.toBeNull();
     expect(await archive.file("minh-chung/MC.1.1.01 - Ke hoach nam hoc.txt")?.async("text")).toBe("noi-dung-tep");
   });
+
+  it("ghi file hướng dẫn cho minh chứng chỉ có liên kết điện tử", async () => {
+    const fixture = reportFixture();
+    fixture.evidence[0].storage_path = null;
+    fixture.evidence[0].duong_dan = "https://example.test/minh-chung";
+    const supabase = {
+      storage: { from: vi.fn() },
+    } as unknown as ReportSupabaseClient;
+
+    const stream = await buildEvidenceZip(fixture, supabase);
+    const archive = await JSZip.loadAsync(await new Response(stream).arrayBuffer());
+    const note = await archive.file("minh-chung/MC.1.1.01 - khong-co-tep.txt")?.async("text");
+
+    expect(note).toContain("https://example.test/minh-chung");
+    expect(supabase.storage.from).not.toHaveBeenCalled();
+  });
+
+  it("dừng xuất ZIP khi Storage không tạo được signed URL", async () => {
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({
+          createSignedUrl: vi.fn().mockResolvedValue({
+            data: null,
+            error: { message: "storage denied" },
+          }),
+        })),
+      },
+    } as unknown as ReportSupabaseClient;
+
+    await expect(buildEvidenceZip(reportFixture(), supabase)).rejects.toThrow("storage denied");
+  });
 });

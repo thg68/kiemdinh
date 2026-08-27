@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
-import { extname, isAbsolute, resolve } from "node:path";
+import { basename, extname, isAbsolute, resolve } from "node:path";
 
 const REQUIRED_ENV = [
   "NEXT_PUBLIC_SUPABASE_URL",
@@ -11,6 +11,7 @@ const REQUIRED_ENV = [
   "SUPABASE_IMPORT_EMAIL",
   "SUPABASE_IMPORT_PASSWORD",
 ];
+const SUPPORTED_TYPES = new Set(["evidence", "assessment", "standard_note", "plan"]);
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((item) => {
@@ -19,80 +20,52 @@ const args = Object.fromEntries(
   }),
 );
 
-function requireEnv(name) {
-  const value = process.env[name];
-
-  if (!value) {
-    throw new Error(`Thiếu biến môi trường ${name}.`);
-  }
-
-  return value;
+function resolveInputPath(value) {
+  if (!value) return "";
+  return isAbsolute(value) ? value : resolve(process.cwd(), value);
 }
 
 function loadEnvFile(filePath) {
   const fullPath = resolveInputPath(filePath);
+  if (!existsSync(fullPath)) return;
 
-  if (!existsSync(fullPath)) {
-    return;
-  }
-
-  const lines = readFileSync(fullPath, "utf8").split(/\r?\n/);
-
-  for (const line of lines) {
+  for (const line of readFileSync(fullPath, "utf8").split(/\r?\n/)) {
     const trimmed = line.trim();
-
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
-      continue;
-    }
-
+    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
     const [key, ...value] = trimmed.split("=");
     process.env[key] ||= value.join("=").replace(/^["']|["']$/g, "");
   }
 }
 
-function resolveInputPath(pathValue) {
-  if (!pathValue) {
-    return "";
-  }
-
-  return isAbsolute(pathValue) ? pathValue : resolve(process.cwd(), pathValue);
-}
-
-function bool(value) {
-  return ["1", "true", "yes", "co", "có", "dat", "đạt", "x"].includes(String(value ?? "").trim().toLowerCase());
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) throw new Error(`Thiếu biến môi trường ${name}.`);
+  return value;
 }
 
 function clean(value) {
   return String(value ?? "").trim();
 }
 
-function parseDate(value) {
-  const text = clean(value);
-  return text || null;
+function truthy(value) {
+  return ["1", "true", "yes", "co", "có", "dat", "đạt", "x"].includes(clean(value).toLowerCase());
 }
 
 function sha256(buffer) {
   return createHash("sha256").update(buffer).digest("hex");
 }
 
+function safeName(value) {
+  return basename(value).replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
 async function extractDocxText(pathValue) {
-  if (!pathValue) {
-    return "";
-  }
-
+  if (!pathValue) return "";
   const filePath = resolveInputPath(pathValue);
-
-  if (!existsSync(filePath)) {
-    throw new Error(`Không tìm thấy file Word: ${filePath}`);
-  }
-
+  if (!existsSync(filePath)) throw new Error(`Không tìm thấy file Word: ${filePath}`);
   const zip = await JSZip.loadAsync(readFileSync(filePath));
   const xml = await zip.file("word/document.xml")?.async("text");
-
-  if (!xml) {
-    return "";
-  }
-
+  if (!xml) return "";
   return xml
     .replace(/<w:tab\/>/g, "\t")
     .replace(/<w:br\/>/g, "\n")
@@ -105,323 +78,199 @@ async function extractDocxText(pathValue) {
     .trim();
 }
 
+function worksheetToRows(worksheet) {
+  const headers = [];
+  const rows = [];
+  worksheet.getRow(1).eachCell((cell, index) => {
+    headers[index] = clean(cell.value).toLowerCase();
+  });
+  worksheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return;
+    const item = {};
+    let hasValue = false;
+    row.eachCell({ includeEmpty: true }, (cell, index) => {
+      const key = headers[index];
+      if (!key) return;
+      const value = cell.value?.text ?? cell.value?.result ?? cell.value ?? "";
+      item[key] = clean(value);
+      hasValue ||= item[key].length > 0;
+    });
+    if (hasValue) rows.push({ rowNumber, value: item });
+  });
+  return rows;
+}
+
 async function readManifest(filePath) {
   const fullPath = resolveInputPath(filePath);
-
-  if (!existsSync(fullPath)) {
-    throw new Error(`Không tìm thấy manifest: ${fullPath}`);
-  }
-
+  if (!existsSync(fullPath)) throw new Error(`Không tìm thấy manifest: ${fullPath}`);
   const workbook = new ExcelJS.Workbook();
-  const extension = extname(fullPath).toLowerCase();
-
-  if (extension === ".csv") {
-    const worksheet = await workbook.csv.readFile(fullPath);
-    return worksheetToRows(worksheet);
+  if (extname(fullPath).toLowerCase() === ".csv") {
+    return worksheetToRows(await workbook.csv.readFile(fullPath));
   }
-
   await workbook.xlsx.readFile(fullPath);
   return worksheetToRows(workbook.worksheets[0]);
 }
 
-function worksheetToRows(worksheet) {
-  const headers = [];
-  const rows = [];
+async function normalizeRow(item, criterionCodes, standardNumbers) {
+  const row = item.value;
+  const type = clean(row.loai_dong || row.type || "evidence").toLowerCase();
+  const errors = [];
+  if (!SUPPORTED_TYPES.has(type)) errors.push(`Loại dòng không hỗ trợ: ${type || "trống"}.`);
 
-  worksheet.getRow(1).eachCell((cell, index) => {
-    headers[index] = clean(cell.value).toLowerCase();
-  });
+  const criterionList = clean(row.ma_tieu_chi)
+    .split(/[;,]/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (["evidence", "assessment", "plan"].includes(type) && criterionList.length === 0) {
+    errors.push("Thiếu mã tiêu chí.");
+  }
+  if (["assessment", "plan"].includes(type) && criterionList.length > 1) {
+    errors.push("Dòng tự đánh giá hoặc kế hoạch chỉ được tham chiếu một tiêu chí.");
+  }
+  for (const code of criterionList) {
+    if (!criterionCodes.has(code)) errors.push(`Không tìm thấy tiêu chí ${code} trong năm học.`);
+  }
+  if (type === "standard_note" && !standardNumbers.has(clean(row.tieu_chuan_so))) {
+    errors.push(`Không tìm thấy tiêu chuẩn ${clean(row.tieu_chuan_so) || "trống"}.`);
+  }
 
-  worksheet.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) {
-      return;
+  const data = { ...row, ma_tieu_chi: criterionList.join(",") };
+  if (type === "assessment") {
+    try {
+      data.mo_ta_muc_1 = clean(row.mo_ta_muc_1) || (await extractDocxText(row.word_path));
+    } catch (error) {
+      errors.push(error.message);
     }
-
-    const item = {};
-    let hasValue = false;
-
-    row.eachCell({ includeEmpty: true }, (cell, index) => {
-      const key = headers[index];
-      if (!key) {
-        return;
-      }
-
-      const value = cell.value?.text ?? cell.value?.result ?? cell.value ?? "";
-      item[key] = clean(value);
-      hasValue ||= clean(value).length > 0;
-    });
-
-    if (hasValue) {
-      rows.push(item);
-    }
-  });
-
-  return rows;
+    data.mo_ta_muc_2 = clean(row.mo_ta_muc_2);
+    data.muc_dat = truthy(row.dat_muc_2) ? "2" : truthy(row.dat_muc_1) ? "1" : "0";
+    if (data.muc_dat === "2" && !data.mo_ta_muc_1) errors.push("Đạt Mức 2 nhưng mô tả Mức 1 đang trống.");
+  }
+  if (type === "evidence") {
+    if (!clean(row.ten_minh_chung || row.ten)) errors.push("Thiếu tên minh chứng.");
+    const filePath = resolveInputPath(row.file_path);
+    if (!filePath && !clean(row.duong_dan)) errors.push("Minh chứng phải có tệp hoặc liên kết điện tử.");
+    if (filePath && !existsSync(filePath)) errors.push(`Không tìm thấy tệp: ${filePath}`);
+    data.file_path = filePath;
+  }
+  return { rowNumber: item.rowNumber, type: SUPPORTED_TYPES.has(type) ? type : "unknown", data, errors };
 }
 
 async function main() {
-  const manifest = args.manifest;
-  const dryRun = args["dry-run"] === "true";
-
-  if (!manifest) {
+  const manifestPath = resolveInputPath(args.manifest);
+  if (!manifestPath) {
     throw new Error("Cần truyền --manifest=duong_dan_file.xlsx hoặc --manifest=duong_dan_file.csv.");
   }
+  const sourceBuffer = readFileSync(manifestPath);
+  const sourceHash = sha256(sourceBuffer);
+  const rows = await readManifest(manifestPath);
 
-  const rows = await readManifest(manifest);
-
-  if (dryRun) {
-    const stats = rows.reduce(
-      (result, row) => {
-        const type = clean(row.loai_dong || row.type || "evidence").toLowerCase();
-        result[type] = (result[type] ?? 0) + 1;
-        return result;
-      },
-      { evidence: 0, assessment: 0, standard_note: 0, plan: 0 },
-    );
-    console.log("Dry-run manifest:", stats);
+  if (args["dry-run"] === "true") {
+    console.log({ file: manifestPath, hash: sourceHash, rows: rows.length });
     return;
   }
 
-  loadEnvFile(".env.local");
-
-  for (const name of REQUIRED_ENV) {
-    requireEnv(name);
-  }
-
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: process.env.SUPABASE_IMPORT_EMAIL,
-    password: process.env.SUPABASE_IMPORT_PASSWORD,
+  loadEnvFile(args.env || ".env.local");
+  REQUIRED_ENV.forEach(requireEnv);
+  const supabase = createClient(requireEnv("NEXT_PUBLIC_SUPABASE_URL"), requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"));
+  const { data: auth, error: authError } = await supabase.auth.signInWithPassword({
+    email: requireEnv("SUPABASE_IMPORT_EMAIL"),
+    password: requireEnv("SUPABASE_IMPORT_PASSWORD"),
   });
-
-  if (signInError || !signInData.user) {
-    throw new Error(signInError?.message ?? "Không đăng nhập được tài khoản import.");
-  }
+  if (authError || !auth.user) throw new Error(authError?.message ?? "Không đăng nhập được tài khoản import.");
 
   const { data: profile, error: profileError } = await supabase
     .from("nguoi_dung")
-    .select("id, co_so_id, ho_ten")
-    .eq("auth_user_id", signInData.user.id)
-    .maybeSingle();
+    .select("id, co_so_id")
+    .eq("auth_user_id", auth.user.id)
+    .single();
+  if (profileError || !profile) throw new Error(profileError?.message ?? "Tài khoản import chưa thuộc đơn vị.");
 
-  if (profileError || !profile) {
-    throw new Error(profileError?.message ?? "Tài khoản import chưa thuộc cơ sở giáo dục nào.");
-  }
-
-  const { data: activeYear, error: yearError } = await supabase
+  const { data: year, error: yearError } = await supabase
     .from("nam_hoc")
     .select("id, ten")
     .eq("co_so_id", profile.co_so_id)
     .eq("trang_thai", "dang_hoat_dong")
-    .maybeSingle();
-
-  if (yearError || !activeYear) {
-    throw new Error(yearError?.message ?? "Chưa có năm học đang hoạt động.");
-  }
+    .single();
+  if (yearError || !year) throw new Error(yearError?.message ?? "Chưa có năm học đang hoạt động.");
 
   const { data: criteria, error: criteriaError } = await supabase
     .from("v_tieu_chi_nam_hoc")
-    .select("id, ma, tieu_chuan_id, tieu_chuan_so_thu_tu")
+    .select("ma, tieu_chuan_so_thu_tu")
     .eq("co_so_id", profile.co_so_id)
-    .eq("nam_hoc_id", activeYear.id)
-    .order("ma");
+    .eq("nam_hoc_id", year.id);
+  if (criteriaError) throw new Error(criteriaError.message);
+  const criterionCodes = new Set((criteria ?? []).map((item) => item.ma));
+  const standardNumbers = new Set((criteria ?? []).map((item) => String(item.tieu_chuan_so_thu_tu)));
+  const normalized = [];
+  for (const item of rows) normalized.push(await normalizeRow(item, criterionCodes, standardNumbers));
 
-  if (criteriaError) {
-    throw new Error(criteriaError.message);
-  }
-
-  const criterionByCode = new Map((criteria ?? []).map((item) => [item.ma, item]));
-  const standardByNumber = new Map(
-    (criteria ?? []).map((item) => [
-      String(item.tieu_chuan_so_thu_tu),
-      { id: item.tieu_chuan_id, so_thu_tu: item.tieu_chuan_so_thu_tu },
-    ]),
-  );
-  const stats = {
-    evidence: 0,
-    assessment: 0,
-    standard_note: 0,
-    plan: 0,
-    skipped: 0,
-  };
-
-  console.log(`Import vào cơ sở ${profile.co_so_id}, năm học ${activeYear.ten}${dryRun ? " (dry-run)" : ""}.`);
-
-  for (const [index, row] of rows.entries()) {
-    const type = clean(row.loai_dong || row.type || "evidence").toLowerCase();
-
-    if (dryRun) {
-      stats[type] = (stats[type] ?? 0) + 1;
-      continue;
-    }
-
-    if (type === "evidence") {
-      await importEvidence({ supabase, profile, year: activeYear, criterionByCode, row });
-      stats.evidence += 1;
-    } else if (type === "assessment") {
-      await importAssessment({ supabase, profile, year: activeYear, criterionByCode, row });
-      stats.assessment += 1;
-    } else if (type === "standard_note") {
-      await importStandardNote({ supabase, profile, year: activeYear, standardByNumber, row });
-      stats.standard_note += 1;
-    } else if (type === "plan") {
-      await importPlan({ supabase, profile, year: activeYear, criterionByCode, standardByNumber, row });
-      stats.plan += 1;
-    } else {
-      stats.skipped += 1;
-      console.warn(`Bỏ qua dòng ${index + 2}: loai_dong không hỗ trợ (${type}).`);
-    }
-  }
-
-  console.log("Kết quả import:", stats);
-}
-
-async function importEvidence({ supabase, profile, year, criterionByCode, row }) {
-  const criterionCodes = clean(row.ma_tieu_chi)
-    .split(/[;,]/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const criteria = criterionCodes.map((code) => criterionByCode.get(code));
-
-  if (criteria.some((item) => !item)) {
-    throw new Error(`Không tìm thấy tiêu chí ở dòng minh chứng: ${row.ma_tieu_chi}`);
-  }
-
-  const filePath = resolveInputPath(row.file_path);
-  let storagePath = "";
-  let hash = "";
-  let size = null;
-  let type = row.loai_tep || null;
-
-  if (filePath) {
-    if (!existsSync(filePath)) {
-      throw new Error(`Không tìm thấy tệp minh chứng: ${filePath}`);
-    }
-
-    const buffer = readFileSync(filePath);
-    hash = sha256(buffer);
-    size = buffer.length;
-    type ||= "application/octet-stream";
-    storagePath = `${profile.co_so_id}/${year.id}/import/${Date.now()}-${filePath.split(/[\\/]/).pop()}`;
-
-    const { error: uploadError } = await supabase.storage.from("evidence").upload(storagePath, buffer, {
-      contentType: type,
-      upsert: false,
-    });
-
-    if (uploadError) {
-      throw new Error(uploadError.message);
-    }
-  }
-
-  const rootCriterionId = criteria[0].id;
-  const { error } = await supabase.rpc("fn_tao_minh_chung", {
+  const sourceStoragePath = `${profile.co_so_id}/${year.id}/sources/${sourceHash}-${safeName(manifestPath)}`;
+  const { data: batchId, error: batchError } = await supabase.rpc("fn_tao_dot_import", {
     p_nam_hoc_id: year.id,
-    p_tieu_chi_ids: criteria.map((item) => item.id),
-    p_tieu_chi_goc_id: rootCriterionId,
-    p_ten: row.ten_minh_chung || row.ten || `Minh chứng ${row.ma_tieu_chi}`,
-    p_loai_tep: type,
-    p_duong_dan: row.duong_dan || "",
-    p_storage_path: storagePath,
-    p_hash_tep: hash,
-    p_kich_thuoc: size,
-    p_ngay_ban_hanh: parseDate(row.ngay_ban_hanh),
-    p_ngay_het_gia_tri: parseDate(row.ngay_het_gia_tri),
+    p_ten_tep_goc: basename(manifestPath),
+    p_hash_tep: sourceHash,
+    p_storage_path: sourceStoragePath,
   });
+  if (batchError) throw new Error(batchError.message);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-async function importAssessment({ supabase, profile, year, criterionByCode, row }) {
-  const criterion = criterionByCode.get(clean(row.ma_tieu_chi));
-
-  if (!criterion) {
-    throw new Error(`Không tìm thấy tiêu chí tự đánh giá: ${row.ma_tieu_chi}`);
-  }
-
-  const wordText = await extractDocxText(row.word_path);
-  const moTaMuc1 = row.mo_ta_muc_1 || wordText;
-  const moTaMuc2 = row.mo_ta_muc_2 || "";
-  const datMuc1 = bool(row.dat_muc_1);
-  const datMuc2 = bool(row.dat_muc_2);
-
-  const { error } = await supabase.from("tu_danh_gia").upsert(
-    {
-      co_so_id: profile.co_so_id,
-      nam_hoc_id: year.id,
-      tieu_chi_id: criterion.id,
-      cap_hoc: row.cap_hoc || "mam_non",
-      mo_ta_muc_1: moTaMuc1,
-      dat_muc_1: datMuc1,
-      mo_ta_muc_2: moTaMuc2,
-      dat_muc_2: datMuc2,
-      muc_dat: datMuc2 ? 2 : datMuc1 ? 1 : 0,
-      nguoi_nhap: profile.id,
-    },
-    { onConflict: "co_so_id,nam_hoc_id,tieu_chi_id,cap_hoc" },
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
-async function importStandardNote({ supabase, profile, year, standardByNumber, row }) {
-  const standard = standardByNumber.get(clean(row.tieu_chuan_so));
-
-  if (!standard) {
-    throw new Error(`Không tìm thấy tiêu chuẩn: ${row.tieu_chuan_so}`);
+  const { data: existingBatch, error: existingError } = await supabase
+    .from("dot_import")
+    .select("trang_thai, tong_so_dong")
+    .eq("id", batchId)
+    .single();
+  if (existingError) throw new Error(existingError.message);
+  if (existingBatch.trang_thai === "committed") {
+    console.log(`Tệp này đã được nhập trước đó (${existingBatch.tong_so_dong} dòng). Không tạo dữ liệu trùng.`);
+    return;
   }
 
-  const { error } = await supabase.from("nhan_xet_tieu_chuan").upsert(
-    {
-      co_so_id: profile.co_so_id,
-      nam_hoc_id: year.id,
-      tieu_chuan_id: standard.id,
-      cap_hoc: row.cap_hoc || "mam_non",
-      diem_manh_noi_bat: row.diem_manh_noi_bat || "",
-      han_che_trong_tam: row.han_che_trong_tam || "",
-      dinh_huong_cai_tien: row.dinh_huong_cai_tien || "",
-      nguoi_cap_nhat: profile.id,
-    },
-    { onConflict: "co_so_id,nam_hoc_id,tieu_chuan_id,cap_hoc" },
-  );
+  const { error: sourceUploadError } = await supabase.storage
+    .from("imports")
+    .upload(sourceStoragePath, sourceBuffer, { contentType: "application/octet-stream", upsert: true });
+  if (sourceUploadError) throw new Error(sourceUploadError.message);
 
-  if (error) {
-    throw new Error(error.message);
+  for (const item of normalized) {
+    if (item.type === "evidence" && item.data.file_path && item.errors.length === 0) {
+      const buffer = readFileSync(item.data.file_path);
+      item.data.hash_tep = sha256(buffer);
+      item.data.kich_thuoc = String(buffer.length);
+      item.data.loai_tep ||= "application/octet-stream";
+      item.data.storage_path = `${profile.co_so_id}/${year.id}/import-staging/${batchId}/${item.rowNumber}-${safeName(item.data.file_path)}`;
+      const { error: uploadError } = await supabase.storage.from("evidence").upload(item.data.storage_path, buffer, {
+        contentType: item.data.loai_tep,
+        upsert: true,
+      });
+      if (uploadError) item.errors.push(uploadError.message);
+    }
+    delete item.data.file_path;
+    const { error } = await supabase.rpc("fn_ghi_dong_import", {
+      p_dot_import_id: batchId,
+      p_so_dong: item.rowNumber,
+      p_loai_dong: item.type,
+      p_du_lieu: item.data,
+      p_loi: item.errors,
+    });
+    if (error) throw new Error(`Dòng ${item.rowNumber}: ${error.message}`);
   }
-}
 
-async function importPlan({ supabase, profile, year, criterionByCode, standardByNumber, row }) {
-  const criterion = criterionByCode.get(clean(row.ma_tieu_chi));
-  const standard = standardByNumber.get(clean(row.tieu_chuan_so)) ?? (criterion ? { id: criterion.tieu_chuan_id } : null);
-
-  const { error } = await supabase.from("ke_hoach_cai_tien").insert({
-    co_so_id: profile.co_so_id,
-    nam_hoc_id: year.id,
-    tieu_chuan_id: standard?.id ?? null,
-    tieu_chi_id: criterion?.id ?? null,
-    noi_dung: row.noi_dung || "",
-    muc_tieu: row.muc_tieu || "",
-    hoat_dong: row.hoat_dong || "",
-    chi_so_ket_qua: row.chi_so_ket_qua || "",
-    thoi_gian_bat_dau: parseDate(row.thoi_gian_bat_dau),
-    thoi_gian_ket_thuc: parseDate(row.thoi_gian_ket_thuc),
-    phu_trach_id: profile.id,
-    nguon_luc: row.nguon_luc || "",
-    minh_chung_du_kien: row.minh_chung_du_kien || "",
-    muc_do_thuc_hien: row.muc_do_thuc_hien || "chua_thuc_hien",
-    ghi_chu: row.ghi_chu || "",
+  const { data: validation, error: validationError } = await supabase.rpc("fn_hoan_tat_staging_import", {
+    p_dot_import_id: batchId,
   });
-
-  if (error) {
-    throw new Error(error.message);
+  if (validationError) throw new Error(validationError.message);
+  console.log("Kết quả kiểm tra lô:", validation);
+  if (!validation.ready) {
+    console.log("Lô chưa được commit. Sửa các dòng lỗi trong nguồn rồi chạy lại.");
+    process.exitCode = 2;
+    return;
   }
+  if (args.commit !== "true") {
+    console.log(`Lô đã hợp lệ. Chạy lại với --commit=true để ghi ${validation.valid} dòng vào dữ liệu nghiệp vụ.`);
+    return;
+  }
+
+  const { data: result, error: commitError } = await supabase.rpc("fn_commit_dot_import", { p_dot_import_id: batchId });
+  if (commitError) throw new Error(commitError.message);
+  console.log("Đã commit lô import:", result);
 }
 
 main().catch((error) => {

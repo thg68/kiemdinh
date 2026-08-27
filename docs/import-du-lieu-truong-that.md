@@ -53,11 +53,19 @@ Chạy dry-run trước để kiểm tra manifest:
 npm run import:school-year -- --manifest="C:\du-lieu-truong\manifest.csv" --dry-run=true
 ```
 
-Chạy import thật:
+Tải vào staging và xem kết quả kiểm tra; bước này chưa ghi bảng nghiệp vụ:
 
 ```powershell
 npm run import:school-year -- --manifest="C:\du-lieu-truong\manifest.csv"
 ```
+
+Chỉ khi kết quả có `ready: true`, commit toàn bộ lô trong một transaction:
+
+```powershell
+npm run import:school-year -- --manifest="C:\du-lieu-truong\manifest.csv" --commit=true
+```
+
+Nếu một dòng lỗi, toàn bộ lô giữ ở staging và không có bản ghi nghiệp vụ nào được tạo. Chạy lại cùng file đã commit là thao tác không gây trùng dữ liệu.
 
 ## Kiểm Tra Sau Import
 

@@ -594,57 +594,16 @@ function CriterionAssessmentForm(props: {
 
     setSaving(true);
 
-    for (const evidenceId of selectedEvidenceIds) {
-      const evidence = props.evidence.find((item) => item.id === evidenceId);
-
-      if (!evidence?.tieuChiIds.includes(props.criterion.id)) {
-        const { error } = await props.supabase.rpc("fn_gan_minh_chung_tieu_chi", {
-          p_minh_chung_id: evidenceId,
-          p_tieu_chi_ids: [props.criterion.id],
-        });
-
-        if (error) {
-          setSaving(false);
-          await props.onDone(error.message);
-          return;
-        }
-      }
-    }
-
-    const removedEvidenceIds = props.evidence
-      .filter((item) => item.tieuChiIds.includes(props.criterion.id))
-      .map((item) => item.id)
-      .filter((id) => !selectedEvidenceIds.includes(id));
-
-    if (removedEvidenceIds.length > 0) {
-      const { error } = await props.supabase
-        .from("minh_chung_tieu_chi")
-        .delete()
-        .eq("tieu_chi_id", props.criterion.id)
-        .in("minh_chung_id", removedEvidenceIds);
-
-      if (error) {
-        setSaving(false);
-        await props.onDone(error.message);
-        return;
-      }
-    }
-
-    const { error } = await props.supabase.from("tu_danh_gia").upsert(
-      {
-        co_so_id: props.profile.co_so_id,
-        nam_hoc_id: props.activeYearId,
-        tieu_chi_id: props.criterion.id,
-        cap_hoc: props.selectedCapHoc,
-        mo_ta_muc_1: moTaMuc1,
-        dat_muc_1: mucDat >= 1,
-        mo_ta_muc_2: moTaMuc2,
-        dat_muc_2: mucDat >= 2,
-        muc_dat: mucDat,
-        nguoi_nhap: props.profile.id,
-      },
-      { onConflict: "co_so_id,nam_hoc_id,tieu_chi_id,cap_hoc" },
-    );
+    // CSDL gắn/gỡ minh chứng, lưu tự đánh giá và audit trong cùng một transaction.
+    const { error } = await props.supabase.rpc("fn_luu_tu_danh_gia_atomic", {
+      p_nam_hoc_id: props.activeYearId,
+      p_cap_hoc: props.selectedCapHoc,
+      p_tieu_chi_id: props.criterion.id,
+      p_mo_ta_muc_1: moTaMuc1,
+      p_mo_ta_muc_2: moTaMuc2,
+      p_muc_dat: mucDat,
+      p_minh_chung_ids: selectedEvidenceIds,
+    });
 
     setSaving(false);
     await props.onDone(error ? error.message : "Đã lưu tự đánh giá cho tiêu chí.");

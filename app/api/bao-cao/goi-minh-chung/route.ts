@@ -8,11 +8,11 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   return withReportData(request, async (context) => {
     const { data, supabase } = context;
-    const buffer = await buildEvidenceZip(data, supabase);
+    const stream = await buildEvidenceZip(data, supabase);
     await logReportExport(context, "goi_minh_chung");
 
     return downloadResponse(
-      buffer,
+      stream,
       `Goi-minh-chung-${data.school.ten}-${data.year.ten}.zip`,
       "application/zip",
     );

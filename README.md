@@ -39,7 +39,11 @@ Kiểm tra manifest import trước khi chạy thật:
 
 ```bash
 npm run import:school-year -- --manifest=data/import-manifest.example.csv --dry-run=true
+npm run import:school-year -- --manifest=data/import-manifest.example.csv
+npm run import:school-year -- --manifest=data/import-manifest.example.csv --commit=true
 ```
+
+Lệnh thứ hai tải nguồn vào staging và kiểm tra toàn bộ lô nhưng chưa ghi dữ liệu nghiệp vụ. Chỉ dùng `--commit=true` sau khi kết quả trả về `ready: true`; cùng một file hash được chạy lại sẽ không tạo bản ghi trùng.
 
 ## Hướng Dẫn Ban Đầu
 
@@ -54,6 +58,8 @@ Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng
 Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
+
+Nội dung sáu phần thuyết minh của Mẫu 2 được nhập tại `/ke-hoach-cai-tien`; hai phần còn lại lấy từ thông tin năm học và bảng kế hoạch. Báo cáo chỉ được phê duyệt khi database xác nhận đủ điều kiện và snapshot thật đã lưu trong Storage.
 
 Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 

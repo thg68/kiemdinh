@@ -159,6 +159,10 @@ function warningParagraph(label: string) {
   return p([text(`${label}: `, { bold: true }), text(CANH_BAO_THIEU_DU_LIEU, { color: RED })]);
 }
 
+function reportContent(value: string | null | undefined, label: string) {
+  return value?.trim() ? p([value.trim()]) : warningParagraph(label);
+}
+
 function standardNoteParagraph(data: ReportData, standardId: string, field: "diem_manh_noi_bat" | "han_che_trong_tam" | "dinh_huong_cai_tien", label: string) {
   const note = data.standardNotes.find((item) => item.tieu_chuan_id === standardId);
   const value = note?.[field]?.trim();
@@ -323,19 +327,19 @@ export async function buildImprovementPlanDocx(data: ReportData) {
     p([text("Cơ sở giáo dục: ", { bold: true }), data.school.ten]),
     p([text("Năm học: ", { bold: true }), data.year.ten]),
     p(["2. Căn cứ xây dựng"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Căn cứ xây dựng"),
+    reportContent(data.improvementReportSections?.can_cu_xay_dung, "Căn cứ xây dựng"),
     p(["3. Mục đích, yêu cầu"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Mục đích, yêu cầu"),
+    reportContent(data.improvementReportSections?.muc_dich_yeu_cau, "Mục đích, yêu cầu"),
     p(["4. Tóm tắt vấn đề trọng tâm cần cải tiến"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Tóm tắt vấn đề trọng tâm cần cải tiến"),
+    reportContent(data.improvementReportSections?.tom_tat_van_de_trong_tam, "Tóm tắt vấn đề trọng tâm cần cải tiến"),
     p(["5. Bảng kế hoạch cải tiến"], { heading: HeadingLevel.HEADING_2 }),
     improvementPlanTable(data.plans),
     p(["6. Theo dõi và đánh giá thực hiện"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Theo dõi và đánh giá thực hiện"),
+    reportContent(data.improvementReportSections?.theo_doi_danh_gia, "Theo dõi và đánh giá thực hiện"),
     p(["7. Tổ chức thực hiện"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Tổ chức thực hiện"),
+    reportContent(data.improvementReportSections?.to_chuc_thuc_hien, "Tổ chức thực hiện"),
     p(["8. Cơ chế đánh giá và báo cáo"], { heading: HeadingLevel.HEADING_2 }),
-    warningParagraph("Cơ chế đánh giá và báo cáo"),
+    reportContent(data.improvementReportSections?.co_che_danh_gia_bao_cao, "Cơ chế đánh giá và báo cáo"),
   ];
 
   const document = new Document({

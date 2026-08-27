@@ -59,6 +59,9 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 4. Mở file Word vừa tải về.
 5. Kiểm tra các dòng cảnh báo màu đỏ. Nếu còn cảnh báo, báo cáo chưa nên dùng chính thức.
 6. Khi báo cáo đã được rà soát, chọn **Phê duyệt** để chuyển báo cáo sang trạng thái khách chỉ đọc có thể xem.
+7. Mỗi lần phê duyệt tạo một phiên bản snapshot mới; phiên bản đã phê duyệt không thể ghi đè hoặc xóa.
+
+Để hoàn thiện Mẫu 2, vào **Kế hoạch cải tiến**, nhập sáu phần nội dung chung và bảng kế hoạch. Hệ thống sẽ báo rõ phần còn thiếu trước khi cho phê duyệt.
 
 ## 6. Phân công phạm vi tiêu chí
 

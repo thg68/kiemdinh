@@ -1,6 +1,6 @@
 # Changelog
 
-Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-8.
+Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-9.
 
 ## Sprint 0 - Nền dự án
 
@@ -93,3 +93,13 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Đã rollout migration `017`-`019` lên production sau khi sao lưu và chạy kiểm tra hậu triển khai.
 - Đã hoàn thành UAT kỹ thuật xuyên suốt Giáo viên tạo minh chứng -> Thư ký xác minh -> Hiệu trưởng tự đánh giá -> xuất Mẫu 1; xem biên bản tại `docs/SPRINT-8-ROLLOUT.md`.
 - Migration `019` đồng bộ luồng thiết lập đơn vị ban đầu với ràng buộc phiên bản và được kiểm chứng bằng tài khoản Auth chưa thuộc đơn vị.
+
+## Sprint 9 - Transaction ghi dữ liệu và snapshot báo cáo
+
+- Lưu tự đánh giá, gắn/gỡ minh chứng và audit được gộp vào `fn_luu_tu_danh_gia_atomic`; lỗi ở bất kỳ bước nào làm toàn bộ transaction rollback.
+- Chuyển năm học hoạt động qua `fn_dat_nam_hoc_dang_hoat_dong` với khóa advisory và unique index để luôn giữ đúng một năm hoạt động.
+- Import năm học dùng lô staging có SHA-256, kiểm tra trước khi commit và chống nhập trùng theo `(co_so_id, nam_hoc_id, hash_tep)`.
+- Database là nguồn duy nhất xác định mức sẵn sàng báo cáo qua `fn_kiem_tra_san_sang_bao_cao`; cổng phê duyệt không còn phụ thuộc quyết định phía trình duyệt.
+- Snapshot báo cáo tăng version, bất biến sau phê duyệt và phải trỏ tới object thật trong bucket `reports` cùng MIME, kích thước và SHA-256.
+- Mẫu 2 có đủ nơi nhập sáu phần thuyết minh; thông tin chung và bảng kế hoạch lấy từ dữ liệu năm học để tạo đủ tám phần.
+- JSON năm học mang metadata phiên bản và lịch sử snapshot; gói minh chứng ZIP được nén theo stream từ signed URL thay vì giữ toàn bộ tệp trong RAM.

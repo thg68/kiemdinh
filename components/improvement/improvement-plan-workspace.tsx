@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppContext } from "@/components/shared/use-app-context";
+import { CapHoc } from "@/lib/assessment/level-engine";
 
 type Standard = {
   id: string;
@@ -49,6 +50,33 @@ type Plan = {
   phu_trach?: User | User[] | null;
 };
 
+type ReportSections = {
+  can_cu_xay_dung: string;
+  muc_dich_yeu_cau: string;
+  tom_tat_van_de_trong_tam: string;
+  theo_doi_danh_gia: string;
+  to_chuc_thuc_hien: string;
+  co_che_danh_gia_bao_cao: string;
+};
+
+const emptyReportSections: ReportSections = {
+  can_cu_xay_dung: "",
+  muc_dich_yeu_cau: "",
+  tom_tat_van_de_trong_tam: "",
+  theo_doi_danh_gia: "",
+  to_chuc_thuc_hien: "",
+  co_che_danh_gia_bao_cao: "",
+};
+
+const capHocLabels: Record<CapHoc, string> = {
+  mam_non: "Mầm non",
+  tieu_hoc: "Tiểu học",
+  thcs: "THCS",
+  thpt: "THPT",
+  gdtx: "GDTX",
+  khac: "Khác",
+};
+
 const statusLabels: Record<PlanStatus, string> = {
   chua_thuc_hien: "Chưa thực hiện",
   dang_thuc_hien: "Đang thực hiện",
@@ -78,7 +106,7 @@ function toneForStatus(status: PlanStatus) {
 }
 
 export function ImprovementPlanWorkspace() {
-  const { activeYear, loading, message, profile, setMessage, supabase, years } = useAppContext();
+  const { activeYear, loading, message, profile, school, setMessage, supabase, years } = useAppContext();
   const [selectedYearId, setSelectedYearId] = useState("");
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -95,8 +123,15 @@ export function ImprovementPlanWorkspace() {
   const [minhChungDuKien, setMinhChungDuKien] = useState("");
   const [saving, setSaving] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
+  const [reportSections, setReportSections] = useState<ReportSections>(emptyReportSections);
+  const [savingSections, setSavingSections] = useState(false);
+  const [selectedReportCapHoc, setSelectedReportCapHoc] = useState<CapHoc>("mam_non");
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
+  const schoolCapHoc = (school?.cap_hoc ?? []) as CapHoc[];
+  const reportCapHoc = schoolCapHoc.includes(selectedReportCapHoc)
+    ? selectedReportCapHoc
+    : schoolCapHoc[0] ?? "mam_non";
 
   const loadReferenceData = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -156,6 +191,27 @@ export function ImprovementPlanWorkspace() {
     setPlans((data ?? []) as unknown as Plan[]);
   }, [effectiveYearId, profile, setMessage, supabase]);
 
+  const loadReportSections = useCallback(async () => {
+    if (!supabase || !profile || !effectiveYearId) {
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("noi_dung_mau_2")
+      .select("can_cu_xay_dung, muc_dich_yeu_cau, tom_tat_van_de_trong_tam, theo_doi_danh_gia, to_chuc_thuc_hien, co_che_danh_gia_bao_cao")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", effectiveYearId)
+      .eq("cap_hoc", reportCapHoc)
+      .maybeSingle();
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setReportSections(data ? { ...emptyReportSections, ...data } : emptyReportSections);
+  }, [effectiveYearId, profile, reportCapHoc, setMessage, supabase]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void loadReferenceData();
@@ -171,6 +227,34 @@ export function ImprovementPlanWorkspace() {
 
     return () => window.clearTimeout(timer);
   }, [loadPlans]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadReportSections();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadReportSections]);
+
+  async function saveReportSections() {
+    if (!supabase || !profile || !effectiveYearId) {
+      return;
+    }
+
+    setSavingSections(true);
+    const { error } = await supabase.from("noi_dung_mau_2").upsert(
+      {
+        co_so_id: profile.co_so_id,
+        nam_hoc_id: effectiveYearId,
+        cap_hoc: reportCapHoc,
+        ...reportSections,
+        nguoi_cap_nhat: profile.id,
+      },
+      { onConflict: "co_so_id,nam_hoc_id,cap_hoc" },
+    );
+    setSavingSections(false);
+    setMessage(error ? error.message : "Đã lưu nội dung tám phần của Mẫu 2.");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -283,6 +367,36 @@ export function ImprovementPlanWorkspace() {
         <Link className="button-secondary" href="/bao-cao">
           Xuất Mẫu 2
         </Link>
+      </section>
+
+      <section className="surface-card grid gap-4 p-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Nội dung chung của Mẫu 2</h2>
+          <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+            Hoàn thiện sáu phần văn bản dưới đây; thông tin chung và bảng kế hoạch được hệ thống lấy trực tiếp từ dữ liệu năm học.
+          </p>
+          </div>
+          {schoolCapHoc.length > 1 ? (
+            <label className="grid min-w-44 gap-1 text-sm font-medium">
+              Cấp học
+              <select className="field-control" value={reportCapHoc} onChange={(event) => setSelectedReportCapHoc(event.target.value as CapHoc)}>
+                {schoolCapHoc.map((capHoc) => <option key={capHoc} value={capHoc}>{capHocLabels[capHoc]}</option>)}
+              </select>
+            </label>
+          ) : null}
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <TextArea label="2. Căn cứ xây dựng" value={reportSections.can_cu_xay_dung} onChange={(value) => setReportSections((current) => ({ ...current, can_cu_xay_dung: value }))} />
+          <TextArea label="3. Mục đích, yêu cầu" value={reportSections.muc_dich_yeu_cau} onChange={(value) => setReportSections((current) => ({ ...current, muc_dich_yeu_cau: value }))} />
+          <TextArea label="4. Vấn đề trọng tâm cần cải tiến" value={reportSections.tom_tat_van_de_trong_tam} onChange={(value) => setReportSections((current) => ({ ...current, tom_tat_van_de_trong_tam: value }))} />
+          <TextArea label="6. Theo dõi và đánh giá thực hiện" value={reportSections.theo_doi_danh_gia} onChange={(value) => setReportSections((current) => ({ ...current, theo_doi_danh_gia: value }))} />
+          <TextArea label="7. Tổ chức thực hiện" value={reportSections.to_chuc_thuc_hien} onChange={(value) => setReportSections((current) => ({ ...current, to_chuc_thuc_hien: value }))} />
+          <TextArea label="8. Cơ chế đánh giá và báo cáo" value={reportSections.co_che_danh_gia_bao_cao} onChange={(value) => setReportSections((current) => ({ ...current, co_che_danh_gia_bao_cao: value }))} />
+        </div>
+        <button className="button-primary justify-self-start" disabled={savingSections} type="button" onClick={saveReportSections}>
+          {savingSections ? "Đang lưu..." : "Lưu nội dung Mẫu 2"}
+        </button>
       </section>
 
       <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>

@@ -266,17 +266,10 @@ export function SchoolYearSetup() {
 
     setMessage("");
 
-    await supabase
-      .from("nam_hoc")
-      .update({ trang_thai: "chuan_bi" })
-      .eq("co_so_id", profile.co_so_id)
-      .eq("trang_thai", "dang_hoat_dong");
-
-    const { error } = await supabase
-      .from("nam_hoc")
-      .update({ trang_thai: "dang_hoat_dong" })
-      .eq("id", yearId)
-      .eq("co_so_id", profile.co_so_id);
+    // RPC giữ thao tác hạ năm cũ và kích hoạt năm mới trong cùng transaction.
+    const { error } = await supabase.rpc("fn_dat_nam_hoc_dang_hoat_dong", {
+      p_nam_hoc_id: yearId,
+    });
 
     if (error) {
       setMessage(error.message);

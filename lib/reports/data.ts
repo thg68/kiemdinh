@@ -105,6 +105,30 @@ export type StandardNote = {
   dinh_huong_cai_tien: string | null;
 };
 
+export type ImprovementReportSections = {
+  can_cu_xay_dung: string | null;
+  muc_dich_yeu_cau: string | null;
+  tom_tat_van_de_trong_tam: string | null;
+  theo_doi_danh_gia: string | null;
+  to_chuc_thuc_hien: string | null;
+  co_che_danh_gia_bao_cao: string | null;
+};
+
+export type ReportSnapshot = {
+  id: string;
+  loai_bao_cao: string;
+  cap_hoc: CapHoc | null;
+  version: number;
+  trang_thai: string;
+  storage_path: string | null;
+  ten_tep_goc: string | null;
+  mime_type: string | null;
+  kich_thuoc: number | null;
+  sha256: string | null;
+  export_metadata: Record<string, unknown>;
+  ngay_phe_duyet: string | null;
+};
+
 export type ReportData = {
   profile: ReportProfile;
   school: ReportSchool;
@@ -117,6 +141,8 @@ export type ReportData = {
   plans: ImprovementPlan[];
   councilMembers: CouncilMember[];
   standardNotes: StandardNote[];
+  improvementReportSections: ImprovementReportSections | null;
+  reportSnapshots: ReportSnapshot[];
   ketQuaTieuChi: KetQuaTieuChi[];
   giaiTrinh: ReturnType<typeof xacDinhMucTuKetQua>;
 };
@@ -189,6 +215,8 @@ export async function collectReportData(
     { data: evidenceData, error: evidenceError },
     { data: planData, error: planError },
     { data: noteData, error: noteError },
+    { data: improvementSectionData, error: improvementSectionError },
+    { data: reportSnapshotData, error: reportSnapshotError },
     { data: councilData },
   ] = await Promise.all([
     supabase
@@ -233,6 +261,19 @@ export async function collectReportData(
       .eq("nam_hoc_id", namHocId)
       .eq("cap_hoc", capHoc),
     supabase
+      .from("noi_dung_mau_2")
+      .select("can_cu_xay_dung, muc_dich_yeu_cau, tom_tat_van_de_trong_tam, theo_doi_danh_gia, to_chuc_thuc_hien, co_che_danh_gia_bao_cao")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", namHocId)
+      .eq("cap_hoc", capHoc)
+      .maybeSingle(),
+    supabase
+      .from("bao_cao")
+      .select("id, loai_bao_cao, cap_hoc, version, trang_thai, storage_path, ten_tep_goc, mime_type, kich_thuoc, sha256, export_metadata, ngay_phe_duyet")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", namHocId)
+      .order("version", { ascending: true }),
+    supabase
       .from("hoi_dong_tu_danh_gia")
       .select("id, thanh_vien_hoi_dong(thu_tu, chuc_vu, vai_tro_hoi_dong, nguoi_dung:nguoi_dung_id(ho_ten))")
       .eq("co_so_id", profile.co_so_id)
@@ -247,7 +288,9 @@ export async function collectReportData(
     assessmentError ??
     evidenceError ??
     planError ??
-    noteError;
+    noteError ??
+    improvementSectionError ??
+    reportSnapshotError;
 
   if (firstError) {
     throw new Error(firstError.message);
@@ -352,6 +395,8 @@ export async function collectReportData(
     ),
     councilMembers,
     standardNotes: (noteData ?? []) as StandardNote[],
+    improvementReportSections: (improvementSectionData ?? null) as ImprovementReportSections | null,
+    reportSnapshots: (reportSnapshotData ?? []) as ReportSnapshot[],
     ketQuaTieuChi,
     giaiTrinh: xacDinhMucTuKetQua(ketQuaTieuChi),
   };

@@ -40,12 +40,6 @@ type Standard = {
   ten: string;
 };
 
-type CriterionSummary = {
-  id: string;
-  ma: string;
-  ten: string;
-};
-
 type StandardNote = {
   id?: string;
   tieu_chuan_id: string;
@@ -57,9 +51,21 @@ type StandardNote = {
 type ReportRecord = {
   id: string;
   loai_bao_cao: string;
+  cap_hoc: CapHoc | null;
+  version: number;
   trang_thai: string;
   ngay_phe_duyet: string | null;
   storage_path: string | null;
+};
+
+type ReportReadiness = {
+  ready: boolean;
+  missing_criteria: string[];
+  missing_descriptions: string[];
+  missing_evidence: string[];
+  unverified_evidence: string[];
+  missing_council: boolean;
+  other_blockers: string[];
 };
 
 const capHocLabels: Record<CapHoc, string> = {
@@ -89,7 +95,12 @@ function storagePathForReport(coSoId: string, namHocId: string, reportType: stri
   const safeFileName = fileName.replace(/[\\/:*?"<>|]+/g, "-");
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-  return `${coSoId}/${namHocId}/${reportType}/v1/${timestamp}-${safeFileName}`;
+  return `${coSoId}/${namHocId}/${reportType}/snapshots/${timestamp}-${safeFileName}`;
+}
+
+async function sha256Blob(blob: Blob) {
+  const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export function ReportExportWorkspace() {
@@ -104,7 +115,6 @@ export function ReportExportWorkspace() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [school, setSchool] = useState<School | null>(null);
   const [years, setYears] = useState<SchoolYear[]>([]);
-  const [criteria, setCriteria] = useState<CriterionSummary[]>([]);
   const [standards, setStandards] = useState<Standard[]>([]);
   const [standardNotes, setStandardNotes] = useState<StandardNote[]>([]);
   const [reportRecords, setReportRecords] = useState<ReportRecord[]>([]);
@@ -191,24 +201,21 @@ export function ReportExportWorkspace() {
     }
 
     const standardsById = new Map<string, Standard>();
-    const loadedCriteria = ((data ?? []) as {
+    ((data ?? []) as {
       id: string;
       ma: string;
       ten: string;
       tieu_chuan_id: string;
       tieu_chuan_so_thu_tu: number;
       tieu_chuan_ten: string;
-    }[]).map<CriterionSummary>((criterion) => {
+    }[]).forEach((criterion) => {
       standardsById.set(criterion.tieu_chuan_id, {
         id: criterion.tieu_chuan_id,
         so_thu_tu: criterion.tieu_chuan_so_thu_tu,
         ten: criterion.tieu_chuan_ten,
       });
-
-      return { id: criterion.id, ma: criterion.ma, ten: criterion.ten };
     });
 
-    setCriteria(loadedCriteria);
     setStandards([...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu));
   }, [profile, selectedYearId, supabase]);
 
@@ -239,10 +246,10 @@ export function ReportExportWorkspace() {
 
     const { data, error } = await supabase
       .from("bao_cao")
-      .select("id, loai_bao_cao, trang_thai, ngay_phe_duyet, storage_path")
+      .select("id, loai_bao_cao, cap_hoc, version, trang_thai, ngay_phe_duyet, storage_path")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", selectedYearId)
-      .eq("version", 1);
+      .order("version", { ascending: false });
 
     if (error) {
       setMessage(error.message);
@@ -253,150 +260,75 @@ export function ReportExportWorkspace() {
   }, [profile, selectedYearId, supabase]);
 
   const loadReadiness = useCallback(async () => {
-    if (!supabase || !profile || !selectedYearId || !selectedCapHoc || criteria.length === 0) {
+    if (!supabase || !selectedYearId || !selectedCapHoc) {
       setReadinessItems([]);
       return;
     }
 
-    const criterionIds = criteria.map((criterion) => criterion.id);
-    const [
-      { data: assessmentData, error: assessmentError },
-      { data: validEvidenceData, error: evidenceError },
-      { data: noteData, error: noteError },
-      { data: councilData, error: councilError },
-    ] = await Promise.all([
-      supabase
-        .from("tu_danh_gia")
-        .select("tieu_chi_id, mo_ta_muc_1, mo_ta_muc_2, muc_dat")
-        .eq("co_so_id", profile.co_so_id)
-        .eq("nam_hoc_id", selectedYearId)
-        .eq("cap_hoc", selectedCapHoc)
-        .in("tieu_chi_id", criterionIds),
-      supabase
-        .from("v_minh_chung_hop_le_danh_gia")
-        .select("id")
-        .eq("co_so_id", profile.co_so_id)
-        .eq("nam_hoc_id", selectedYearId),
-      supabase
-        .from("nhan_xet_tieu_chuan")
-        .select("tieu_chuan_id, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien")
-        .eq("co_so_id", profile.co_so_id)
-        .eq("nam_hoc_id", selectedYearId)
-        .eq("cap_hoc", selectedCapHoc),
-      supabase
-        .from("hoi_dong_tu_danh_gia")
-        .select("id, thanh_vien_hoi_dong(id)")
-        .eq("co_so_id", profile.co_so_id)
-        .eq("nam_hoc_id", selectedYearId)
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const { data, error } = await supabase.rpc("fn_kiem_tra_san_sang_bao_cao", {
+      p_nam_hoc_id: selectedYearId,
+      p_cap_hoc: selectedCapHoc,
+      p_loai_bao_cao: "mau_1_tu_danh_gia",
+    });
 
-    if (assessmentError || evidenceError || noteError || councilError) {
-      setReadinessItems([
-        {
-          id: "readiness-error",
-          label: "Không kiểm tra được mức sẵn sàng",
-          detail: assessmentError?.message ?? evidenceError?.message ?? noteError?.message ?? councilError?.message,
-          status: "warning",
-        },
-      ]);
-      return;
-    }
-
-    const assessments = (assessmentData ?? []) as {
-      tieu_chi_id: string;
-      mo_ta_muc_1: string | null;
-      mo_ta_muc_2: string | null;
-      muc_dat: 0 | 1 | 2;
-    }[];
-    const assessmentByCriterion = new Map(assessments.map((row) => [row.tieu_chi_id, row]));
-    const evidenceCriterionIds = new Set<string>();
-    const validEvidenceIds = (validEvidenceData ?? []).map((item) => item.id);
-    const { data: linkData, error: linkError } = validEvidenceIds.length
-      ? await supabase
-          .from("minh_chung_tieu_chi")
-          .select("minh_chung_id, tieu_chi_id")
-          .in("minh_chung_id", validEvidenceIds)
-          .in("tieu_chi_id", criterionIds)
-      : { data: [], error: null };
-
-    if (linkError) {
+    if (error || !data) {
       setReadinessItems([{
         id: "readiness-error",
         label: "Không kiểm tra được mức sẵn sàng",
-        detail: linkError.message,
+        detail: error?.message ?? "Cơ sở dữ liệu không trả về kết quả.",
         status: "warning",
       }]);
       return;
     }
 
-    for (const link of linkData ?? []) {
-      evidenceCriterionIds.add(link.tieu_chi_id);
-    }
-
-    const missingAssessment = criteria.filter((criterion) => !assessmentByCriterion.has(criterion.id));
-    const missingDescription = criteria.filter((criterion) => {
-      const row = assessmentByCriterion.get(criterion.id);
-
-      if (!row) {
-        return false;
-      }
-
-      if (row.muc_dat >= 1 && !row.mo_ta_muc_1?.trim()) {
-        return true;
-      }
-
-      return row.muc_dat >= 2 && !row.mo_ta_muc_2?.trim();
-    });
-    const missingEvidence = criteria.filter((criterion) => !evidenceCriterionIds.has(criterion.id));
-    const notes = (noteData ?? []) as StandardNote[];
-    const incompleteNotes = standards.filter((standard) => {
-      const note = notes.find((item) => item.tieu_chuan_id === standard.id);
-
-      return !note?.diem_manh_noi_bat?.trim() || !note?.han_che_trong_tam?.trim() || !note?.dinh_huong_cai_tien?.trim();
-    });
-    const memberCount = Array.isArray(councilData?.thanh_vien_hoi_dong) ? councilData.thanh_vien_hoi_dong.length : 0;
-
-    setReadinessItems([
+    const readiness = data as ReportReadiness;
+    const items: ReadinessItem[] = [
       {
-        id: "criteria-count",
-        label: "Bộ tiêu chí theo phiên bản năm học",
-        detail: `${criteria.length}/15 tiêu chí thuộc phiên bản đã khóa cho năm học.`,
-        status: criteria.length === 15 ? "ready" : "blocked",
+        id: "overall",
+        label: "Trạng thái phê duyệt",
+        detail: readiness.ready ? "Báo cáo đã đủ điều kiện nghiệp vụ để phê duyệt." : "Báo cáo chưa đủ điều kiện phê duyệt.",
+        status: readiness.ready ? "ready" : "blocked",
       },
       {
         id: "assessment-count",
         label: "Tự đánh giá đủ 15 tiêu chí",
-        detail: missingAssessment.length === 0 ? "Tất cả tiêu chí đã có bản ghi tự đánh giá." : `Còn thiếu: ${missingAssessment.map((item) => item.ma).join(", ")}.`,
-        status: missingAssessment.length === 0 ? "ready" : "blocked",
+        detail: readiness.missing_criteria.length === 0 ? "Tất cả tiêu chí đã có bản ghi." : `Còn thiếu: ${readiness.missing_criteria.join(", ")}.`,
+        status: readiness.missing_criteria.length === 0 ? "ready" : "blocked",
       },
       {
         id: "assessment-description",
-        label: "Mô tả hiện trạng theo mức đạt",
-        detail: missingDescription.length === 0 ? "Các tiêu chí đã đạt đều có mô tả hiện trạng tương ứng." : `Cần bổ sung mô tả: ${missingDescription.map((item) => item.ma).join(", ")}.`,
-        status: missingDescription.length === 0 ? "ready" : "blocked",
+        label: "Mô tả hiện trạng",
+        detail: readiness.missing_descriptions.length === 0 ? "Các tiêu chí đã có mô tả cần thiết." : `Cần bổ sung: ${readiness.missing_descriptions.join(", ")}.`,
+        status: readiness.missing_descriptions.length === 0 ? "ready" : "blocked",
       },
       {
         id: "assessment-evidence",
-        label: "Mã minh chứng gắn với tiêu chí",
-        detail: missingEvidence.length === 0 ? "15/15 tiêu chí đều có minh chứng gắn kèm." : `Còn tiêu chí chưa có minh chứng: ${missingEvidence.map((item) => item.ma).join(", ")}.`,
-        status: missingEvidence.length === 0 ? "ready" : "blocked",
+        label: "Minh chứng hợp lệ",
+        detail: readiness.missing_evidence.length === 0 ? "15/15 tiêu chí đều có minh chứng đã xác minh, còn hiệu lực." : `Còn thiếu: ${readiness.missing_evidence.join(", ")}.`,
+        status: readiness.missing_evidence.length === 0 ? "ready" : "blocked",
       },
       {
-        id: "standard-notes",
-        label: "Nhận xét sau từng tiêu chuẩn",
-        detail: incompleteNotes.length === 0 ? "Đủ điểm mạnh, hạn chế và định hướng cải tiến cho từng tiêu chuẩn." : `Cần hoàn thiện Tiêu chuẩn ${incompleteNotes.map((item) => item.so_thu_tu).join(", ")}.`,
-        status: incompleteNotes.length === 0 ? "ready" : "warning",
+        id: "unverified-evidence",
+        label: "Minh chứng chưa hoàn tất xác minh",
+        detail: readiness.unverified_evidence.length === 0 ? "Không có minh chứng chờ xác minh hoặc bị từ chối." : `Cần xử lý: ${readiness.unverified_evidence.join(", ")}.`,
+        status: readiness.unverified_evidence.length === 0 ? "ready" : "blocked",
       },
       {
         id: "council",
         label: "Hội đồng tự đánh giá",
-        detail: memberCount > 0 ? `Đã có ${memberCount} thành viên hội đồng.` : "Chưa có thành viên hội đồng cho năm học này.",
-        status: memberCount > 0 ? "ready" : "warning",
+        detail: readiness.missing_council ? "Chưa có thành viên hội đồng cho năm học này." : "Hội đồng đã có thành viên.",
+        status: readiness.missing_council ? "blocked" : "ready",
       },
-    ]);
-  }, [criteria, profile, selectedCapHoc, selectedYearId, standards, supabase]);
+      ...readiness.other_blockers.map<ReadinessItem>((blocker, index) => ({
+        id: `other-${index}`,
+        label: "Điều kiện nghiệp vụ khác",
+        detail: blocker,
+        status: "blocked",
+      })),
+    ];
+
+    setReadinessItems(items);
+  }, [selectedCapHoc, selectedYearId, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -564,6 +496,10 @@ export function ReportExportWorkspace() {
     setMessage("");
 
     let storagePath: string | null = null;
+    let originalFileName: string | null = null;
+    let mimeType: string | null = null;
+    let fileSize: number | null = null;
+    let fileHash: string | null = null;
 
     if (status === "da_phe_duyet") {
       const item = exports.find((exportItem) => exportItem.reportType === reportType);
@@ -582,11 +518,15 @@ export function ReportExportWorkspace() {
       }
 
       storagePath = storagePathForReport(profile.co_so_id, selectedYearId, reportType, reportFile.fileName);
+      originalFileName = reportFile.fileName;
+      mimeType = reportFile.blob.type || "application/octet-stream";
+      fileSize = reportFile.blob.size;
+      fileHash = await sha256Blob(reportFile.blob);
 
       const { error: uploadError } = await supabase.storage
         .from("reports")
         .upload(storagePath, reportFile.blob, {
-          contentType: reportFile.blob.type || "application/octet-stream",
+          contentType: mimeType,
           upsert: false,
         });
 
@@ -599,9 +539,19 @@ export function ReportExportWorkspace() {
 
     const { error } = await supabase.rpc("fn_luu_trang_thai_bao_cao", {
       p_nam_hoc_id: selectedYearId,
+      p_cap_hoc: selectedCapHoc,
       p_loai_bao_cao: reportType,
       p_trang_thai: status,
       p_storage_path: storagePath,
+      p_ten_tep_goc: originalFileName,
+      p_mime_type: mimeType,
+      p_kich_thuoc: fileSize,
+      p_sha256: fileHash,
+      p_export_metadata: {
+        nam_hoc_id: selectedYearId,
+        cap_hoc: selectedCapHoc,
+        exported_at: new Date().toISOString(),
+      },
     });
 
     if (error) {
@@ -710,7 +660,7 @@ export function ReportExportWorkspace() {
         <div className="grid gap-3 p-5 sm:grid-cols-2">
           {exports.map((item) => (
             <ReportExportCard
-              currentStatus={reportRecords.find((record) => record.loai_bao_cao === item.reportType)?.trang_thai ?? "chưa tạo"}
+              currentStatus={reportRecords.find((record) => record.loai_bao_cao === item.reportType && record.cap_hoc === selectedCapHoc)?.trang_thai ?? "chưa tạo"}
               isDownloading={downloading === item.endpoint}
               isLocked={Boolean(downloading)}
               item={item}

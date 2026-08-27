@@ -1,29 +1,3 @@
-export const MA_TIEU_CHI_BAT_BUOC = new Set([
-  "1.3",
-  "1.4",
-  "2.1",
-  "2.2",
-  "3.1",
-  "3.2",
-  "4.1",
-  "4.2",
-]);
-
-export const MA_TIEU_CHI_CON_LAI = new Set([
-  "1.1",
-  "1.2",
-  "2.3",
-  "3.3",
-  "3.4",
-  "3.5",
-  "4.3",
-]);
-
-export const MA_TIEU_CHI_TT57 = [
-  ...MA_TIEU_CHI_BAT_BUOC,
-  ...MA_TIEU_CHI_CON_LAI,
-];
-
 export type CapHoc = "mam_non" | "tieu_hoc" | "thcs" | "thpt" | "gdtx" | "khac";
 
 export type MucDatCapHoc = "Không đạt Mức 1" | "Đạt Mức 1" | "Đạt Mức 2";
@@ -61,30 +35,9 @@ function coMinhChung(item: KetQuaTieuChi) {
 }
 
 function chuanHoaKetQuaTieuChi(ketQuaTieuChi: KetQuaTieuChi[]) {
-  const theoMa = new Map(ketQuaTieuChi.map((item) => [item.ma, item]));
-
-  // Luôn tính trên đủ 15 tiêu chí TT57. Bản ghi bị thiếu được xem là chưa đạt,
-  // tránh kết quả sai khi truy vấn hoặc dữ liệu năm học chưa đầy đủ.
-  return MA_TIEU_CHI_TT57.map<KetQuaTieuChi>((ma) => {
-    const item = theoMa.get(ma);
-
-    if (!item) {
-      return {
-        ma,
-        ten: `Tiêu chí ${ma}`,
-        laBatBuoc: MA_TIEU_CHI_BAT_BUOC.has(ma),
-        mucDat: 0,
-        moTaMuc1: null,
-        moTaMuc2: null,
-        maMinhChung: [],
-      };
-    }
-
-    return {
-      ...item,
-      laBatBuoc: MA_TIEU_CHI_BAT_BUOC.has(ma),
-    };
-  });
+  // Nguon su that ve ma va co bat buoc la phien ban bo tieu chuan trong CSDL.
+  // Loai ban ghi trung ma de du lieu loi khong lam tang sai so tieu chi dat.
+  return [...new Map(ketQuaTieuChi.map((item) => [item.ma, item])).values()];
 }
 
 export function mucHopLe(item: KetQuaTieuChi): 0 | 1 | 2 {
@@ -190,6 +143,15 @@ export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc
   const ketQuaDaChuanHoa = chuanHoaKetQuaTieuChi(ketQuaTieuChi);
   const batBuoc = ketQuaDaChuanHoa.filter((item) => item.laBatBuoc);
   const conLai = ketQuaDaChuanHoa.filter((item) => !item.laBatBuoc);
+
+  if (ketQuaDaChuanHoa.length !== 15 || batBuoc.length !== 8 || conLai.length !== 7) {
+    return {
+      mucDat: "Không đạt Mức 1",
+      lyDo: `Dữ liệu phiên bản bộ tiêu chuẩn chưa đầy đủ: ${ketQuaDaChuanHoa.length}/15 tiêu chí, ${batBuoc.length}/8 tiêu chí bắt buộc.`,
+      chanLenMucTiepTheo: ["Bộ tiêu chuẩn của năm học chưa đủ cấu trúc 4-15-8."],
+      khoangCach: "Cần kiểm tra lại phiên bản bộ tiêu chuẩn đã gắn với năm học.",
+    };
+  }
   const batBuocMuc2 = demTheoMuc(batBuoc, 2);
   const batBuocMuc1 = demTheoMuc(batBuoc, 1);
   const conLaiMuc2 = demTheoMuc(conLai, 2);

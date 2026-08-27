@@ -7,7 +7,6 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
-import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   Criterion,
   Evidence,
@@ -17,26 +16,6 @@ import {
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
 import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
-
-function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
-  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
-
-  if (!reference) {
-    return criterion;
-  }
-
-  return {
-    ...criterion,
-    ten: reference.ten,
-    la_bat_buoc: reference.la_bat_buoc,
-    tieu_chuan: criterion.tieu_chuan
-      ? {
-          ...criterion.tieu_chuan,
-          ten: reference.tieu_chuan.ten,
-        }
-      : criterion.tieu_chuan,
-  };
-}
 
 export function EvidenceHealth() {
   const router = useRouter();
@@ -90,26 +69,18 @@ export function EvidenceHealth() {
       return;
     }
 
-    setYear(yearData as SchoolYear);
-
-    const [{ data: evidenceData }, { data: schoolData }] = await Promise.all([
-      supabase
-        .from("minh_chung")
-        .select("*")
-        .eq("co_so_id", profile.co_so_id)
-        .eq("nam_hoc_id", yearData.id)
-        .is("deleted_at", null),
-      supabase
-        .from("co_so_giao_duc")
-        .select("loai_hinh")
-        .eq("id", profile.co_so_id)
-        .maybeSingle(),
-    ]);
+    const { data: evidenceData } = await supabase
+      .from("minh_chung")
+      .select("*")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", yearData.id)
+      .is("deleted_at", null);
 
     const { data: criterionData } = await supabase
-      .from("tieu_chi")
-      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
-      .eq("loai_hinh_ap_dung", schoolData?.loai_hinh ?? "mam_non")
+      .from("v_tieu_chi_nam_hoc")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", yearData.id)
       .order("ma", { ascending: true });
 
     const rows = (evidenceData ?? []) as Evidence[];
@@ -126,8 +97,8 @@ export function EvidenceHealth() {
 
     const links = (linkData ?? []) as unknown as EvidenceCriterionLink[];
     const today = todayIsoDate();
-    setExpired(rows.filter((item) => item.ngay_het_gia_tri && item.ngay_het_gia_tri < today));
-    setOrphans(rows.filter((item) => !links.some((link) => link.minh_chung_id === item.id)));
+    const expiredRows = rows.filter((item) => item.ngay_het_gia_tri && item.ngay_het_gia_tri < today);
+    const orphanRows = rows.filter((item) => !links.some((link) => link.minh_chung_id === item.id));
 
     const hashMap = new Map<string, Evidence[]>();
     for (const item of rows) {
@@ -138,25 +109,41 @@ export function EvidenceHealth() {
       hashMap.set(item.hash_tep, [...(hashMap.get(item.hash_tep) ?? []), item]);
     }
 
-    setDuplicateGroups([...hashMap.values()].filter((group) => group.length > 1));
+    const duplicateRows = [...hashMap.values()].filter((group) => group.length > 1);
 
     const linkedCriterionIds = new Set(links.map((link) => link.tieu_chi_id));
-    setEmptyCriteria(
-      ((criterionData ?? []) as unknown as Criterion[])
-        .filter((criterion) => !linkedCriterionIds.has(criterion.id))
-        .map((criterion) => enrichCriterionLabel(criterion, schoolData?.loai_hinh ?? "mam_non")),
-    );
+    const emptyCriterionRows = ((criterionData ?? []) as unknown as (Criterion & {
+      tieu_chuan_so_thu_tu: number;
+      tieu_chuan_ten: string;
+    })[])
+      .filter((criterion) => !linkedCriterionIds.has(criterion.id))
+      .map((criterion) => ({
+        ...criterion,
+        tieu_chuan: {
+          so_thu_tu: criterion.tieu_chuan_so_thu_tu,
+          ten: criterion.tieu_chuan_ten,
+        },
+      }));
 
-    await supabase.from("nhat_ky_truy_cap").insert({
-      co_so_id: profile.co_so_id,
-      nguoi_dung_id: profile.id,
-      hanh_dong: "EVIDENCE_HEALTH_READ",
-      doi_tuong: "minh_chung",
-      du_lieu_moi: {
+    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
+      p_hanh_dong: "EVIDENCE_HEALTH_READ",
+      p_doi_tuong_id: null,
+      p_du_lieu_moi: {
         nam_hoc_id: yearData.id,
         so_minh_chung: rows.length,
       },
     });
+
+    if (auditError) {
+      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
+      return;
+    }
+
+    setYear(yearData as SchoolYear);
+    setExpired(expiredRows);
+    setOrphans(orphanRows);
+    setDuplicateGroups(duplicateRows);
+    setEmptyCriteria(emptyCriterionRows);
   }, [router, supabase]);
 
   useEffect(() => {

@@ -1,5 +1,4 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   CapHoc,
   KetQuaTieuChi,
@@ -28,7 +27,6 @@ export type CriterionForAssessment = {
   ma: string;
   ten: string;
   la_bat_buoc: boolean;
-  loai_hinh_ap_dung: string;
 };
 
 export type EvidenceCodeLink = {
@@ -43,19 +41,15 @@ export async function docDuLieuTinhMuc(
   capHoc: CapHoc,
 ) {
   const [
-    { data: schoolData, error: schoolError },
     { data: criteriaData, error: criteriaError },
     { data: assessmentData, error: assessmentError },
   ] =
     await Promise.all([
       supabase
-        .from("co_so_giao_duc")
-        .select("loai_hinh")
-        .eq("id", coSoId)
-        .maybeSingle(),
-      supabase
-        .from("tieu_chi")
-        .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung")
+        .from("v_tieu_chi_nam_hoc")
+        .select("id, ma, ten, la_bat_buoc")
+        .eq("co_so_id", coSoId)
+        .eq("nam_hoc_id", namHocId)
         .order("ma", { ascending: true }),
       supabase
         .from("tu_danh_gia")
@@ -64,10 +58,6 @@ export async function docDuLieuTinhMuc(
         .eq("nam_hoc_id", namHocId)
         .eq("cap_hoc", capHoc),
     ]);
-
-  if (schoolError) {
-    throw schoolError;
-  }
 
   if (criteriaError) {
     throw criteriaError;
@@ -78,26 +68,39 @@ export async function docDuLieuTinhMuc(
   }
 
   const { data: evidenceData, error: evidenceError } = await supabase
-    .from("minh_chung")
-    .select("id, ma, minh_chung_tieu_chi(tieu_chi_id)")
+    .from("v_minh_chung_hop_le_danh_gia")
+    .select("id, ma")
     .eq("co_so_id", coSoId)
     .eq("nam_hoc_id", namHocId)
-    .is("deleted_at", null);
+    .order("ma", { ascending: true });
 
   if (evidenceError) {
     throw evidenceError;
   }
 
   const evidenceByCriterion = new Map<string, string[]>();
+  const evidenceIds = (evidenceData ?? []).map((item) => item.id);
+  const { data: evidenceLinks, error: evidenceLinkError } = evidenceIds.length
+    ? await supabase
+        .from("minh_chung_tieu_chi")
+        .select("minh_chung_id, tieu_chi_id")
+        .in("minh_chung_id", evidenceIds)
+    : { data: [], error: null };
 
-  for (const item of evidenceData ?? []) {
-    const links = (item.minh_chung_tieu_chi ?? []) as { tieu_chi_id: string }[];
+  if (evidenceLinkError) {
+    throw evidenceLinkError;
+  }
 
-    for (const link of links) {
-      const current = evidenceByCriterion.get(link.tieu_chi_id) ?? [];
-      current.push(item.ma);
-      evidenceByCriterion.set(link.tieu_chi_id, current);
-    }
+  const evidenceCodeById = new Map((evidenceData ?? []).map((item) => [item.id, item.ma]));
+
+  for (const link of evidenceLinks ?? []) {
+    const evidenceCode = evidenceCodeById.get(link.minh_chung_id);
+
+    if (!evidenceCode) continue;
+
+    const current = evidenceByCriterion.get(link.tieu_chi_id) ?? [];
+    current.push(evidenceCode);
+    evidenceByCriterion.set(link.tieu_chi_id, current);
   }
 
   const assessments = ((assessmentData ?? []) as TuDanhGiaRow[]).reduce(
@@ -105,21 +108,15 @@ export async function docDuLieuTinhMuc(
     new Map<string, TuDanhGiaRow>(),
   );
 
-  // TT57 có 3 phụ lục riêng; engine chỉ tính trên bộ tiêu chí đúng loại hình của cơ sở.
-  const criteriaForSchool = ((criteriaData ?? []) as CriterionForAssessment[]).filter(
-    (criterion) => criterion.loai_hinh_ap_dung === (schoolData?.loai_hinh ?? "mam_non"),
-  );
-
-  const ketQuaTieuChi = criteriaForSchool.map<KetQuaTieuChi>(
+  const ketQuaTieuChi = ((criteriaData ?? []) as CriterionForAssessment[]).map<KetQuaTieuChi>(
     (criterion) => {
       const row = assessments.get(criterion.id);
-      const reference = getTT57CriterionReference(schoolData?.loai_hinh, criterion.ma);
 
       return {
         id: criterion.id,
         ma: criterion.ma,
-        ten: reference?.ten ?? criterion.ten,
-        laBatBuoc: reference?.la_bat_buoc ?? criterion.la_bat_buoc,
+        ten: criterion.ten,
+        laBatBuoc: criterion.la_bat_buoc,
         mucDat: row?.muc_dat ?? 0,
         moTaMuc1: row?.mo_ta_muc_1 ?? "",
         moTaMuc2: row?.mo_ta_muc_2 ?? "",

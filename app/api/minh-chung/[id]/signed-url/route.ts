@@ -65,13 +65,18 @@ export async function POST(
     );
   }
 
-  await supabase.rpc("fn_log_audit", {
+  const { error: auditError } = await supabase.rpc("fn_log_user_access", {
     p_hanh_dong: "EVIDENCE_FILE_SIGNED_URL_CREATED",
-    p_doi_tuong: "minh_chung",
     p_doi_tuong_id: evidence.id,
-    p_du_lieu_cu: null,
     p_du_lieu_moi: { expires_in: 600 },
   });
+
+  if (auditError) {
+    return NextResponse.json(
+      { error: "Không ghi được nhật ký truy cập tệp. Vui lòng thử lại." },
+      { status: 500 },
+    );
+  }
 
   return NextResponse.json({ signedUrl: signedUrlData.signedUrl });
 }

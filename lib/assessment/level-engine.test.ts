@@ -69,7 +69,9 @@ describe("xacDinhMucTuKetQua", () => {
     const result = xacDinhMucTuKetQua(ketQua);
 
     expect(result.mucDat).toBe("Không đạt Mức 1");
-    expect(result.chanLenMucTiepTheo).toContain("1.3 chưa đạt Mức 1");
+    expect(result.chanLenMucTiepTheo).toContain(
+      "Bộ tiêu chuẩn của năm học chưa đủ cấu trúc 4-15-8.",
+    );
   });
 
   it("không tính đạt khi thiếu mã minh chứng dù đã bật cờ đạt", () => {

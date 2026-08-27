@@ -7,7 +7,6 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
-import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   Criterion,
   Evidence,
@@ -36,26 +35,6 @@ type Filters = {
   trangThai: string;
 };
 
-function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
-  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
-
-  if (!reference) {
-    return criterion;
-  }
-
-  return {
-    ...criterion,
-    ten: reference.ten,
-    la_bat_buoc: reference.la_bat_buoc,
-    tieu_chuan: criterion.tieu_chuan
-      ? {
-          ...criterion.tieu_chuan,
-          ten: reference.tieu_chuan.ten,
-        }
-      : criterion.tieu_chuan,
-  };
-}
-
 export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" }) {
   const router = useRouter();
   const supabase = useMemo(() => {
@@ -66,7 +45,6 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
     return createBrowserSupabaseClient();
   }, []);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [schoolType, setSchoolType] = useState("mam_non");
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [evidence, setEvidence] = useState<EvidenceWithCriteria[]>([]);
@@ -121,35 +99,53 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
 
     setProfile(profileData);
 
-    const [{ data: yearData }, { data: schoolData }] = await Promise.all([
-      supabase
-        .from("nam_hoc")
-        .select("id, ten, trang_thai")
-        .eq("co_so_id", profileData.co_so_id)
-        .order("ngay_bat_dau", { ascending: false }),
-      supabase
-        .from("co_so_giao_duc")
-        .select("loai_hinh")
-        .eq("id", profileData.co_so_id)
-        .maybeSingle(),
-    ]);
+    const { data: yearData } = await supabase
+      .from("nam_hoc")
+      .select("id, ten, trang_thai")
+      .eq("co_so_id", profileData.co_so_id)
+      .order("ngay_bat_dau", { ascending: false });
 
-    const { data: criterionData } = await supabase
-      .from("tieu_chi")
-      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten)")
-      .eq("loai_hinh_ap_dung", schoolData?.loai_hinh ?? "mam_non")
-      .order("ma", { ascending: true });
-
-    const loadedSchoolType = schoolData?.loai_hinh ?? "mam_non";
-    const enrichedCriteria = ((criterionData ?? []) as unknown as Criterion[]).map((criterion) =>
-      enrichCriterionLabel(criterion, loadedSchoolType),
-    );
-
-    setSchoolType(loadedSchoolType);
     setYears((yearData ?? []) as SchoolYear[]);
-    setCriteria(enrichedCriteria);
     setLoading(false);
   }, [router, supabase]);
+
+  const loadCriteria = useCallback(async () => {
+    if (!supabase || !profile || !selectedYearId) return;
+
+    const { data, error } = await supabase
+      .from("v_tieu_chi_nam_hoc")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", selectedYearId)
+      .order("ma", { ascending: true });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    setCriteria(((data ?? []) as {
+      id: string;
+      ma: string;
+      ten: string;
+      la_bat_buoc: boolean;
+      loai_hinh_ap_dung: string;
+      tieu_chuan_id: string;
+      tieu_chuan_so_thu_tu: number;
+      tieu_chuan_ten: string;
+    }[]).map((criterion) => ({
+      id: criterion.id,
+      ma: criterion.ma,
+      ten: criterion.ten,
+      la_bat_buoc: criterion.la_bat_buoc,
+      loai_hinh_ap_dung: criterion.loai_hinh_ap_dung,
+      tieu_chuan_id: criterion.tieu_chuan_id,
+      tieu_chuan: {
+        so_thu_tu: criterion.tieu_chuan_so_thu_tu,
+        ten: criterion.tieu_chuan_ten,
+      },
+    })));
+  }, [profile, selectedYearId, supabase]);
 
   const loadEvidence = useCallback(async () => {
     if (!supabase || !profile) {
@@ -202,7 +198,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
           .filter((link) => link.minh_chung_id === item.id)
           .map((link) => link.tieu_chi)
           .filter(Boolean)
-          .map((criterion) => enrichCriterionLabel(criterion as Criterion, schoolType)) as Criterion[],
+          .map((criterion) => criterion as Criterion) as Criterion[],
       }))
       .filter((item) => {
         if (
@@ -222,20 +218,24 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
         return true;
       });
 
-    setEvidence(rows);
-
-    await supabase.from("nhat_ky_truy_cap").insert({
-      co_so_id: profile.co_so_id,
-      nguoi_dung_id: profile.id,
-      hanh_dong: "EVIDENCE_LIST_READ",
-      doi_tuong: "minh_chung",
-      du_lieu_moi: {
+    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
+      p_hanh_dong: "EVIDENCE_LIST_READ",
+      p_doi_tuong_id: null,
+      p_du_lieu_moi: {
         nam_hoc_id: selectedYearId,
         bo_loc: filters,
         so_dong: rows.length,
       },
     });
-  }, [filters, profile, schoolType, selectedYearId, supabase]);
+
+    if (auditError) {
+      setEvidence([]);
+      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
+      return;
+    }
+
+    setEvidence(rows);
+  }, [filters, profile, selectedYearId, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -244,6 +244,14 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
 
     return () => window.clearTimeout(timer);
   }, [loadData]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadCriteria();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadCriteria]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

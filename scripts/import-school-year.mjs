@@ -222,26 +222,24 @@ async function main() {
     throw new Error(yearError?.message ?? "Chưa có năm học đang hoạt động.");
   }
 
-  const { data: school, error: schoolError } = await supabase
-    .from("co_so_giao_duc")
-    .select("loai_hinh")
-    .eq("id", profile.co_so_id)
-    .maybeSingle();
+  const { data: criteria, error: criteriaError } = await supabase
+    .from("v_tieu_chi_nam_hoc")
+    .select("id, ma, tieu_chuan_id, tieu_chuan_so_thu_tu")
+    .eq("co_so_id", profile.co_so_id)
+    .eq("nam_hoc_id", activeYear.id)
+    .order("ma");
 
-  if (schoolError || !school) {
-    throw new Error(schoolError?.message ?? "Không tìm thấy loại hình của cơ sở giáo dục.");
+  if (criteriaError) {
+    throw new Error(criteriaError.message);
   }
 
-  const [{ data: criteria }, { data: standards }] = await Promise.all([
-    supabase
-      .from("tieu_chi")
-      .select("id, ma, tieu_chuan_id")
-      .eq("loai_hinh_ap_dung", school.loai_hinh)
-      .order("ma"),
-    supabase.from("tieu_chuan").select("id, so_thu_tu").order("so_thu_tu"),
-  ]);
   const criterionByCode = new Map((criteria ?? []).map((item) => [item.ma, item]));
-  const standardByNumber = new Map((standards ?? []).map((item) => [String(item.so_thu_tu), item]));
+  const standardByNumber = new Map(
+    (criteria ?? []).map((item) => [
+      String(item.tieu_chuan_so_thu_tu),
+      { id: item.tieu_chuan_id, so_thu_tu: item.tieu_chuan_so_thu_tu },
+    ]),
+  );
   const stats = {
     evidence: 0,
     assessment: 0,

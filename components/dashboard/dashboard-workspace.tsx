@@ -36,10 +36,6 @@ type PendingCounts = {
 
 const managerRoles = new Set(["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY", "SYSTEM_ADMIN"]);
 
-function first<T>(value: T | T[] | null | undefined) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
 export function DashboardWorkspace() {
   const { activeYear, loading, message, profile, school, setMessage, supabase } = useAppContext();
   const [roles, setRoles] = useState<RoleLabel[]>([]);
@@ -85,9 +81,10 @@ export function DashboardWorkspace() {
     setRoles((roleData ?? []) as RoleLabel[]);
 
     const { data: criterionData, error: criterionError } = await supabase
-      .from("tieu_chi")
-      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung")
-      .eq("loai_hinh_ap_dung", school.loai_hinh)
+      .from("v_tieu_chi_nam_hoc")
+      .select("id, ma, ten, la_bat_buoc")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", activeYear.id)
       .order("ma", { ascending: true });
 
     if (criterionError) {
@@ -99,7 +96,7 @@ export function DashboardWorkspace() {
     const loadedCriteria = (criterionData ?? []) as Criterion[];
     const criterionIds = loadedCriteria.map((criterion) => criterion.id);
 
-    const [{ data: assessmentData }, { data: linkData }, { count: evidenceCount }, { count: assessmentCount }, { count: reportCount }] =
+    const [{ data: assessmentData }, { data: validEvidenceData }, { count: evidenceCount }, { count: assessmentCount }, { count: reportCount }] =
       await Promise.all([
         supabase
           .from("tu_danh_gia")
@@ -107,12 +104,11 @@ export function DashboardWorkspace() {
           .eq("co_so_id", profile.co_so_id)
           .eq("nam_hoc_id", activeYear.id)
           .eq("cap_hoc", selectedCapHoc),
-        criterionIds.length > 0
-          ? supabase
-              .from("minh_chung_tieu_chi")
-              .select("tieu_chi_id, minh_chung:minh_chung_id(nam_hoc_id, deleted_at)")
-              .in("tieu_chi_id", criterionIds)
-          : { data: [] },
+        supabase
+          .from("v_minh_chung_hop_le_danh_gia")
+          .select("id")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", activeYear.id),
         supabase
           .from("minh_chung")
           .select("id", { count: "exact", head: true })
@@ -135,16 +131,17 @@ export function DashboardWorkspace() {
       ]);
 
     const nextEvidenceByCriterion = new Set<string>();
+    const validEvidenceIds = (validEvidenceData ?? []).map((item) => item.id);
+    const { data: linkData } = validEvidenceIds.length && criterionIds.length
+      ? await supabase
+          .from("minh_chung_tieu_chi")
+          .select("minh_chung_id, tieu_chi_id")
+          .in("minh_chung_id", validEvidenceIds)
+          .in("tieu_chi_id", criterionIds)
+      : { data: [] };
 
-    for (const link of (linkData ?? []) as {
-      tieu_chi_id: string;
-      minh_chung?: { nam_hoc_id: string; deleted_at: string | null } | { nam_hoc_id: string; deleted_at: string | null }[] | null;
-    }[]) {
-      const evidence = first(link.minh_chung);
-
-      if (evidence?.nam_hoc_id === activeYear.id && evidence.deleted_at === null) {
-        nextEvidenceByCriterion.add(link.tieu_chi_id);
-      }
+    for (const link of linkData ?? []) {
+      nextEvidenceByCriterion.add(link.tieu_chi_id);
     }
 
     setCriteria(loadedCriteria);

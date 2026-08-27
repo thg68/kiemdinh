@@ -1,6 +1,6 @@
 # Changelog
 
-Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-6.
+Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-8.
 
 ## Sprint 0 - Nền dự án
 
@@ -70,3 +70,22 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Engine tính mức luôn chuẩn hóa đủ 15 tiêu chí; tiêu chí bị thiếu khỏi dữ liệu đầu vào được tính là chưa đạt.
 - Bổ sung giới hạn 25MB và danh sách định dạng cho tệp minh chứng; tự dọn tệp Storage nếu giao dịch tạo minh chứng thất bại.
 - Bổ sung migration `016` sửa lỗi biên dịch hàm tạo năm học và kế thừa tự đánh giá `ke_thua_cho_cap_nhat`.
+
+## Sprint 7 - Bảo mật P0
+
+- Khóa đường dẫn tệp minh chứng theo đúng cặp đơn vị/năm học và siết policy Supabase Storage để ngăn truy cập chéo đơn vị.
+- Không cho client gọi trực tiếp hàm sinh mã minh chứng hoặc hàm ghi nhật ký tổng quát; các lượt đọc nhạy cảm đi qua RPC có danh sách hành động cho phép.
+- Nhật ký chỉ đọc được khi người dùng thuộc đúng đơn vị và có quyền `audit.read`; ứng dụng không còn chèn trực tiếp vào bảng nhật ký.
+- Loại bỏ quyền quản trị hệ thống sửa báo cáo nghiệp vụ của đơn vị và chuẩn hóa `search_path` cho toàn bộ hàm `SECURITY DEFINER`.
+- Bổ sung CSP, HSTS và các HTTP security header; không phát hành header nhận diện Next.js.
+- Migration `017` chỉ được áp dụng sau khi bộ kiểm thử tấn công RLS trong `supabase/tests/017_security_p0_test.sql` chạy đạt trên Supabase thử nghiệm hoặc PostgreSQL cục bộ.
+
+## Sprint 8 - Khóa phiên bản bộ tiêu chuẩn
+
+- Mỗi năm học bắt buộc khóa vào đúng một `bo_tieu_chuan_id`; không được đổi phiên bản sau khi năm học đã phát sinh dữ liệu nghiệp vụ.
+- Runtime chỉ đọc tiêu chí, nội dung Mức 1/Mức 2 và cờ bắt buộc từ PostgreSQL qua `v_tieu_chi_nam_hoc`; JSON TT57 chỉ còn là nguồn tạo seed và fixture kiểm tra.
+- Các bảng tự đánh giá, phân công, kế hoạch cải tiến và liên kết minh chứng bị chặn nếu tham chiếu tiêu chí ngoài phiên bản của năm học.
+- Chỉ minh chứng đã xác minh, chưa hết hiệu lực và thuộc đúng năm học/phiên bản mới được tính vào tự đánh giá và báo cáo.
+- Hiệu lực minh chứng của năm học cũ được xét tại ngày kết thúc năm học để báo cáo lịch sử không thay đổi theo ngày hiện tại.
+- Tạo năm học kế thừa ánh xạ tự đánh giá sang tiêu chí cùng mã trong phiên bản mới, giữ trạng thái `ke_thua_cho_cap_nhat` và không tự kế thừa minh chứng cũ.
+- Migration `018` được kiểm chứng bằng 15 assertion trong `supabase/tests/018_standard_versioning_test.sql` trên Supabase staging sau một lần reset đầy đủ.

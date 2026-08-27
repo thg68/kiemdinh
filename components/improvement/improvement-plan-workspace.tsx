@@ -78,7 +78,7 @@ function toneForStatus(status: PlanStatus) {
 }
 
 export function ImprovementPlanWorkspace() {
-  const { activeYear, loading, message, profile, school, setMessage, supabase, years } = useAppContext();
+  const { activeYear, loading, message, profile, setMessage, supabase, years } = useAppContext();
   const [selectedYearId, setSelectedYearId] = useState("");
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -99,19 +99,21 @@ export function ImprovementPlanWorkspace() {
   const effectiveYearId = selectedYearId || activeYear?.id || "";
 
   const loadReferenceData = useCallback(async () => {
-    if (!supabase || !school || !profile) {
+    if (!supabase || !profile || !effectiveYearId) {
       return;
     }
 
     setLoadingData(true);
     setMessage("");
 
-    const [{ data: standardData, error: standardError }, { data: userData, error: userError }] =
+    const [{ data: criterionData, error: criterionError }, { data: userData, error: userError }] =
       await Promise.all([
         supabase
-          .from("tieu_chuan")
-          .select("id, so_thu_tu, ten, bo_tieu_chuan:bo_id(loai_hinh, trang_thai)")
-          .order("so_thu_tu", { ascending: true }),
+          .from("v_tieu_chi_nam_hoc")
+          .select("id, ma, ten, tieu_chuan_id, la_bat_buoc")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", effectiveYearId)
+          .order("ma", { ascending: true }),
         supabase
           .from("nguoi_dung")
           .select("id, ho_ten, email")
@@ -120,28 +122,8 @@ export function ImprovementPlanWorkspace() {
           .order("ho_ten", { ascending: true }),
       ]);
 
-    if (standardError || userError) {
-      setMessage(standardError?.message ?? userError?.message ?? "Không tải được dữ liệu tham chiếu.");
-      setLoadingData(false);
-      return;
-    }
-
-    const filteredStandards = ((standardData ?? []) as unknown as (Standard & {
-      bo_tieu_chuan?: { loai_hinh: string; trang_thai: string } | { loai_hinh: string; trang_thai: string }[] | null;
-    })[]).filter((item) => first(item.bo_tieu_chuan)?.loai_hinh === school.loai_hinh);
-
-    const standardIds = filteredStandards.map((standard) => standard.id);
-    const { data: criterionData, error: criterionError } =
-      standardIds.length > 0
-        ? await supabase
-            .from("tieu_chi")
-            .select("id, ma, ten, tieu_chuan_id, la_bat_buoc")
-            .in("tieu_chuan_id", standardIds)
-            .order("ma", { ascending: true })
-        : { data: [], error: null };
-
-    if (criterionError) {
-      setMessage(criterionError.message);
+    if (criterionError || userError) {
+      setMessage(criterionError?.message ?? userError?.message ?? "Không tải được dữ liệu tham chiếu.");
       setLoadingData(false);
       return;
     }
@@ -150,7 +132,7 @@ export function ImprovementPlanWorkspace() {
     setUsers((userData ?? []) as User[]);
     setSelectedCriterionId((current) => current || ((criterionData ?? []) as Criterion[])[0]?.id || "");
     setLoadingData(false);
-  }, [profile, school, setMessage, supabase]);
+  }, [effectiveYearId, profile, setMessage, supabase]);
 
   const loadPlans = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {

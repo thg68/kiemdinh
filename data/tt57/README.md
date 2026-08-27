@@ -8,7 +8,7 @@
 - `tt57-all.json` - Gộp cả 3 loại hình.
 - `validation.json` - Kết quả kiểm tra số lượng bản ghi.
 
-Gói nguồn thật nằm trong `tt57_seed/`. Thư mục `data/tt57/` là bản dữ liệu app dùng trực tiếp và phải giữ đồng bộ byte-for-byte với các file JSON tương ứng trong `tt57_seed/`.
+Gói nguồn thật nằm trong `tt57_seed/`. Thư mục `data/tt57/` chỉ dùng làm dữ liệu nguồn để sinh migration và kiểm tra tính toàn vẹn; ứng dụng khi chạy chỉ đọc phiên bản bộ tiêu chuẩn đã khóa trong PostgreSQL.
 
 Migration dùng trong project này: `supabase/migrations/011_seed_tt57_reference_data.sql`.
 
@@ -52,4 +52,4 @@ Migration cập nhật các bản ghi khung đã có theo khóa nghiệp vụ, k
 
 ## Khuyến nghị
 
-Dùng 3 file JSON làm source-of-truth trong repository và coi migration SQL là artifact nạp DB. Khi văn bản được đính chính/sửa đổi, tạo version seed mới thay vì sửa lịch sử dữ liệu cũ.
+Dùng 3 file JSON làm nguồn nhập liệu có kiểm soát trong repository và coi migration SQL là artifact nạp DB. PostgreSQL là nguồn sự thật duy nhất ở runtime. Khi văn bản được đính chính/sửa đổi, tạo version seed mới thay vì sửa lịch sử dữ liệu cũ.

@@ -7,7 +7,6 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
-import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
   CapHoc,
   KetQuaTieuChi,
@@ -181,7 +180,7 @@ export function AssessmentWorkspace() {
 
     setProfile(profileData as Profile);
 
-    const [{ data: schoolData }, { data: yearData }, { data: criterionData }] =
+    const [{ data: schoolData }, { data: yearData }] =
       await Promise.all([
         supabase
           .from("co_so_giao_duc")
@@ -193,38 +192,52 @@ export function AssessmentWorkspace() {
           .select("id, ten, trang_thai")
           .eq("co_so_id", profileData.co_so_id)
           .order("ngay_bat_dau", { ascending: false }),
-        supabase
-          .from("tieu_chi")
-          .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, muc_tieu_chi(muc, noi_dung_yeu_cau), minh_chung_goi_y(mo_ta)")
-          .order("ma", { ascending: true }),
       ]);
 
     const loadedSchool = schoolData as School | null;
-    const loadedCriteria = ((criterionData ?? []) as Criterion[]).filter(
-      (criterion) => criterion.loai_hinh_ap_dung === (loadedSchool?.loai_hinh ?? "mam_non"),
-    ).map((criterion) => {
-      const reference = getTT57CriterionReference(loadedSchool?.loai_hinh, criterion.ma);
+    const loadedYears = (yearData ?? []) as SchoolYear[];
+    const loadedActiveYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
+    const { data: criterionData, error: criterionError } = loadedActiveYear
+      ? await supabase
+          .from("v_tieu_chi_nam_hoc")
+          .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, muc_1, muc_2, minh_chung_goi_y")
+          .eq("co_so_id", profileData.co_so_id)
+          .eq("nam_hoc_id", loadedActiveYear.id)
+          .order("ma", { ascending: true })
+      : { data: [], error: null };
 
-      if (!reference) {
-        return criterion;
-      }
+    if (criterionError) {
+      setMessage(criterionError.message);
+      setLoading(false);
+      return;
+    }
 
-      return {
-        ...criterion,
-        ten: reference.ten,
-        la_bat_buoc: reference.la_bat_buoc,
-        muc_tieu_chi: [
-          { muc: 1 as const, noi_dung_yeu_cau: reference.muc_1 },
-          { muc: 2 as const, noi_dung_yeu_cau: reference.muc_2 },
-        ],
-        minh_chung_goi_y: reference.minh_chung_goi_y
-          ? [{ mo_ta: reference.minh_chung_goi_y }]
-          : criterion.minh_chung_goi_y,
-      };
-    });
+    const loadedCriteria = ((criterionData ?? []) as {
+      id: string;
+      ma: string;
+      ten: string;
+      la_bat_buoc: boolean;
+      loai_hinh_ap_dung: string;
+      muc_1: string | null;
+      muc_2: string | null;
+      minh_chung_goi_y: string | null;
+    }[]).map<Criterion>((criterion) => ({
+      id: criterion.id,
+      ma: criterion.ma,
+      ten: criterion.ten,
+      la_bat_buoc: criterion.la_bat_buoc,
+      loai_hinh_ap_dung: criterion.loai_hinh_ap_dung,
+      muc_tieu_chi: [
+        { muc: 1, noi_dung_yeu_cau: criterion.muc_1 ?? "" },
+        { muc: 2, noi_dung_yeu_cau: criterion.muc_2 ?? "" },
+      ],
+      minh_chung_goi_y: criterion.minh_chung_goi_y
+        ? [{ mo_ta: criterion.minh_chung_goi_y }]
+        : [],
+    }));
 
     setSchool(loadedSchool);
-    setYears((yearData ?? []) as SchoolYear[]);
+    setYears(loadedYears);
     setCriteria(loadedCriteria);
     setSelectedCriterionId((current) => current || loadedCriteria[0]?.id || "");
     setWhatIfCriterionId((current) => current || loadedCriteria[0]?.id || "");
@@ -250,11 +263,10 @@ export function AssessmentWorkspace() {
           .eq("nam_hoc_id", activeYear.id)
           .eq("cap_hoc", selectedCapHoc),
         supabase
-          .from("minh_chung")
-          .select("id, ma, ten, minh_chung_tieu_chi(tieu_chi_id)")
+          .from("v_minh_chung_hop_le_danh_gia")
+          .select("id, ma, ten")
           .eq("co_so_id", profile.co_so_id)
           .eq("nam_hoc_id", activeYear.id)
-          .is("deleted_at", null)
           .order("ma", { ascending: true }),
       ]);
 
@@ -264,17 +276,27 @@ export function AssessmentWorkspace() {
     }
 
     setAssessments((assessmentData ?? []) as AssessmentRow[]);
+    const evidenceIds = (evidenceData ?? []).map((item) => item.id);
+    const { data: linkData, error: linkError } = evidenceIds.length
+      ? await supabase
+          .from("minh_chung_tieu_chi")
+          .select("minh_chung_id, tieu_chi_id")
+          .in("minh_chung_id", evidenceIds)
+      : { data: [], error: null };
+
+    if (linkError) {
+      setMessage(linkError.message);
+      return;
+    }
+
     setEvidence(
-      ((evidenceData ?? []) as {
-        id: string;
-        ma: string;
-        ten: string;
-        minh_chung_tieu_chi?: { tieu_chi_id: string }[];
-      }[]).map((item) => ({
+      ((evidenceData ?? []) as { id: string; ma: string; ten: string }[]).map((item) => ({
         id: item.id,
         ma: item.ma,
         ten: item.ten,
-        tieuChiIds: (item.minh_chung_tieu_chi ?? []).map((link) => link.tieu_chi_id),
+        tieuChiIds: (linkData ?? [])
+          .filter((link) => link.minh_chung_id === item.id)
+          .map((link) => link.tieu_chi_id),
       })),
     );
   }, [activeYear, profile, selectedCapHoc, supabase]);

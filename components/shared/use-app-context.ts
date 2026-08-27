@@ -25,6 +25,7 @@ export type AppSchoolYear = {
   id: string;
   ten: string;
   trang_thai: string;
+  bo_tieu_chuan_id: string;
 };
 
 export function useAppContext() {
@@ -82,7 +83,7 @@ export function useAppContext() {
           .maybeSingle(),
         supabase
           .from("nam_hoc")
-          .select("id, ten, trang_thai")
+          .select("id, ten, trang_thai, bo_tieu_chuan_id")
           .eq("co_so_id", profileData.co_so_id)
           .order("ngay_bat_dau", { ascending: false }),
       ]);

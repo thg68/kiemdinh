@@ -157,7 +157,6 @@ export function SchoolYearSetup() {
       { data: roleData },
       { data: canManage },
       { data: canManageAssignment },
-      { data: criterionData },
     ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
@@ -185,21 +184,12 @@ export function SchoolYearSetup() {
       supabase.rpc("fn_can_manage_assignment", {
         p_co_so_id: profileData.co_so_id,
       }),
-      supabase
-        .from("tieu_chi")
-        .select("id, ma, ten, loai_hinh_ap_dung")
-        .order("ma", { ascending: true }),
     ]);
 
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
     setUsers((userData ?? []) as unknown as ManagedUser[]);
     setRoles((roleData ?? []) as Role[]);
-    setCriteria(
-      ((criterionData ?? []) as Criterion[]).filter(
-        (criterion) => criterion.loai_hinh_ap_dung === (schoolData?.loai_hinh ?? "mam_non"),
-      ),
-    );
     setCanManageUsers(Boolean(canManage));
     setCanManageAssignments(Boolean(canManageAssignment));
 
@@ -207,15 +197,25 @@ export function SchoolYearSetup() {
     const loadedActiveYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
 
     if (loadedActiveYear) {
-      const { data: assignmentData } = await supabase
-        .from("phan_cong_tieu_chi")
-        .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, vai_tro_trong_tieu_chi")
-        .eq("co_so_id", profileData.co_so_id)
-        .eq("nam_hoc_id", loadedActiveYear.id);
+      const [{ data: assignmentData }, { data: criterionData }] = await Promise.all([
+        supabase
+          .from("phan_cong_tieu_chi")
+          .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, vai_tro_trong_tieu_chi")
+          .eq("co_so_id", profileData.co_so_id)
+          .eq("nam_hoc_id", loadedActiveYear.id),
+        supabase
+          .from("v_tieu_chi_nam_hoc")
+          .select("id, ma, ten, loai_hinh_ap_dung")
+          .eq("co_so_id", profileData.co_so_id)
+          .eq("nam_hoc_id", loadedActiveYear.id)
+          .order("ma", { ascending: true }),
+      ]);
 
       setAssignments((assignmentData ?? []) as Assignment[]);
+      setCriteria((criterionData ?? []) as Criterion[]);
     } else {
       setAssignments([]);
+      setCriteria([]);
     }
 
     setLoading(false);

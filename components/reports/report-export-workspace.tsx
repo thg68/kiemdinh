@@ -8,7 +8,6 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { CapHoc } from "@/lib/assessment/level-engine";
-import { getTT57StandardReference } from "@/lib/tt57/reference-data";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -39,14 +38,6 @@ type Standard = {
   id: string;
   so_thu_tu: number;
   ten: string;
-};
-
-type CriterionWithStandard = {
-  id?: string;
-  ma?: string;
-  ten?: string;
-  loai_hinh_ap_dung: string;
-  tieu_chuan?: Standard | Standard[] | null;
 };
 
 type CriterionSummary = {
@@ -157,7 +148,7 @@ export function ReportExportWorkspace() {
 
     setProfile(profileData as Profile);
 
-    const [{ data: schoolData }, { data: yearData }, { data: criterionData }] = await Promise.all([
+    const [{ data: schoolData }, { data: yearData }] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
         .select("id, ten, loai_hinh, cap_hoc")
@@ -168,49 +159,13 @@ export function ReportExportWorkspace() {
         .select("id, ten, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
-      supabase
-        .from("tieu_chi")
-        .select("id, ma, ten, loai_hinh_ap_dung, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
-        .order("ma", { ascending: true }),
     ]);
 
     const loadedSchool = schoolData as School | null;
     const loadedYears = (yearData ?? []) as SchoolYear[];
     const activeYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
-    const standardsById = new Map<string, Standard>();
-    const filteredCriteria: CriterionSummary[] = [];
-
-    for (const criterion of (criterionData ?? []) as CriterionWithStandard[]) {
-      if (criterion.loai_hinh_ap_dung !== (loadedSchool?.loai_hinh ?? "mam_non")) {
-        continue;
-      }
-
-      if (criterion.id && criterion.ma && criterion.ten) {
-        filteredCriteria.push({
-          id: criterion.id,
-          ma: criterion.ma,
-          ten: criterion.ten,
-        });
-      }
-
-      const standard = Array.isArray(criterion.tieu_chuan)
-        ? criterion.tieu_chuan[0]
-        : criterion.tieu_chuan;
-
-      if (standard) {
-        const reference = getTT57StandardReference(loadedSchool?.loai_hinh, standard.so_thu_tu);
-
-        standardsById.set(standard.id, {
-          ...standard,
-          ten: reference?.ten ?? standard.ten,
-        });
-      }
-    }
-
     setSchool(loadedSchool);
     setYears(loadedYears);
-    setCriteria(filteredCriteria.sort((a, b) => a.ma.localeCompare(b.ma, "vi")));
-    setStandards([...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu));
     setSelectedYearId((current) => current || activeYear?.id || "");
 
     if (loadedSchool?.cap_hoc?.[0]) {
@@ -219,6 +174,43 @@ export function ReportExportWorkspace() {
 
     setLoading(false);
   }, [router, supabase]);
+
+  const loadBoundStandard = useCallback(async () => {
+    if (!supabase || !profile || !selectedYearId) return;
+
+    const { data, error } = await supabase
+      .from("v_tieu_chi_nam_hoc")
+      .select("id, ma, ten, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", selectedYearId)
+      .order("ma", { ascending: true });
+
+    if (error) {
+      setMessage(error.message);
+      return;
+    }
+
+    const standardsById = new Map<string, Standard>();
+    const loadedCriteria = ((data ?? []) as {
+      id: string;
+      ma: string;
+      ten: string;
+      tieu_chuan_id: string;
+      tieu_chuan_so_thu_tu: number;
+      tieu_chuan_ten: string;
+    }[]).map<CriterionSummary>((criterion) => {
+      standardsById.set(criterion.tieu_chuan_id, {
+        id: criterion.tieu_chuan_id,
+        so_thu_tu: criterion.tieu_chuan_so_thu_tu,
+        ten: criterion.tieu_chuan_ten,
+      });
+
+      return { id: criterion.id, ma: criterion.ma, ten: criterion.ten };
+    });
+
+    setCriteria(loadedCriteria);
+    setStandards([...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu));
+  }, [profile, selectedYearId, supabase]);
 
   const loadStandardNotes = useCallback(async () => {
     if (!supabase || !profile || !selectedYearId || !selectedCapHoc) {
@@ -269,7 +261,7 @@ export function ReportExportWorkspace() {
     const criterionIds = criteria.map((criterion) => criterion.id);
     const [
       { data: assessmentData, error: assessmentError },
-      { data: linkData, error: linkError },
+      { data: validEvidenceData, error: evidenceError },
       { data: noteData, error: noteError },
       { data: councilData, error: councilError },
     ] = await Promise.all([
@@ -281,9 +273,10 @@ export function ReportExportWorkspace() {
         .eq("cap_hoc", selectedCapHoc)
         .in("tieu_chi_id", criterionIds),
       supabase
-        .from("minh_chung_tieu_chi")
-        .select("tieu_chi_id, minh_chung:minh_chung_id(nam_hoc_id, deleted_at)")
-        .in("tieu_chi_id", criterionIds),
+        .from("v_minh_chung_hop_le_danh_gia")
+        .select("id")
+        .eq("co_so_id", profile.co_so_id)
+        .eq("nam_hoc_id", selectedYearId),
       supabase
         .from("nhan_xet_tieu_chuan")
         .select("tieu_chuan_id, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien")
@@ -299,12 +292,12 @@ export function ReportExportWorkspace() {
         .maybeSingle(),
     ]);
 
-    if (assessmentError || linkError || noteError || councilError) {
+    if (assessmentError || evidenceError || noteError || councilError) {
       setReadinessItems([
         {
           id: "readiness-error",
           label: "Không kiểm tra được mức sẵn sàng",
-          detail: assessmentError?.message ?? linkError?.message ?? noteError?.message ?? councilError?.message,
+          detail: assessmentError?.message ?? evidenceError?.message ?? noteError?.message ?? councilError?.message,
           status: "warning",
         },
       ]);
@@ -319,16 +312,27 @@ export function ReportExportWorkspace() {
     }[];
     const assessmentByCriterion = new Map(assessments.map((row) => [row.tieu_chi_id, row]));
     const evidenceCriterionIds = new Set<string>();
+    const validEvidenceIds = (validEvidenceData ?? []).map((item) => item.id);
+    const { data: linkData, error: linkError } = validEvidenceIds.length
+      ? await supabase
+          .from("minh_chung_tieu_chi")
+          .select("minh_chung_id, tieu_chi_id")
+          .in("minh_chung_id", validEvidenceIds)
+          .in("tieu_chi_id", criterionIds)
+      : { data: [], error: null };
 
-    for (const link of (linkData ?? []) as {
-      tieu_chi_id: string;
-      minh_chung?: { nam_hoc_id: string; deleted_at: string | null } | { nam_hoc_id: string; deleted_at: string | null }[] | null;
-    }[]) {
-      const evidence = Array.isArray(link.minh_chung) ? link.minh_chung[0] : link.minh_chung;
+    if (linkError) {
+      setReadinessItems([{
+        id: "readiness-error",
+        label: "Không kiểm tra được mức sẵn sàng",
+        detail: linkError.message,
+        status: "warning",
+      }]);
+      return;
+    }
 
-      if (evidence?.nam_hoc_id === selectedYearId && evidence.deleted_at === null) {
-        evidenceCriterionIds.add(link.tieu_chi_id);
-      }
+    for (const link of linkData ?? []) {
+      evidenceCriterionIds.add(link.tieu_chi_id);
     }
 
     const missingAssessment = criteria.filter((criterion) => !assessmentByCriterion.has(criterion.id));
@@ -357,8 +361,8 @@ export function ReportExportWorkspace() {
     setReadinessItems([
       {
         id: "criteria-count",
-        label: "Bộ tiêu chí theo loại hình",
-        detail: `${criteria.length}/15 tiêu chí đã tải cho loại hình của đơn vị.`,
+        label: "Bộ tiêu chí theo phiên bản năm học",
+        detail: `${criteria.length}/15 tiêu chí thuộc phiên bản đã khóa cho năm học.`,
         status: criteria.length === 15 ? "ready" : "blocked",
       },
       {
@@ -401,6 +405,14 @@ export function ReportExportWorkspace() {
 
     return () => window.clearTimeout(timer);
   }, [loadData]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadBoundStandard();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadBoundStandard]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

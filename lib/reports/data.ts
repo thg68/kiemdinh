@@ -1,9 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { CapHoc, KetQuaTieuChi, xacDinhMucTuKetQua } from "@/lib/assessment/level-engine";
-import {
-  getTT57CriterionReference,
-  getTT57StandardReference,
-} from "@/lib/tt57/reference-data";
 
 export type ReportSupabaseClient = ReturnType<typeof createRequestSupabaseClient>;
 
@@ -29,6 +25,7 @@ export type ReportSchoolYear = {
   ngay_bat_dau: string;
   ngay_ket_thuc: string;
   trang_thai: string;
+  bo_tieu_chuan_id: string;
 };
 
 export type ReportStandard = {
@@ -188,7 +185,6 @@ export async function collectReportData(
     { data: schoolData, error: schoolError },
     { data: yearData, error: yearError },
     { data: criterionData, error: criterionError },
-    { data: levelData, error: levelError },
     { data: assessmentData, error: assessmentError },
     { data: evidenceData, error: evidenceError },
     { data: planData, error: planError },
@@ -202,15 +198,16 @@ export async function collectReportData(
       .maybeSingle(),
     supabase
       .from("nam_hoc")
-      .select("id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai")
+      .select("id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai, bo_tieu_chuan_id")
       .eq("id", namHocId)
       .eq("co_so_id", profile.co_so_id)
       .maybeSingle(),
     supabase
-      .from("tieu_chi")
-      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten)")
+      .from("v_tieu_chi_nam_hoc")
+      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten, muc_1, muc_2")
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", namHocId)
       .order("ma", { ascending: true }),
-    supabase.from("muc_tieu_chi").select("tieu_chi_id, muc, noi_dung_yeu_cau"),
     supabase
       .from("tu_danh_gia")
       .select("id, tieu_chi_id, cap_hoc, mo_ta_muc_1, dat_muc_1, mo_ta_muc_2, dat_muc_2, muc_dat")
@@ -218,11 +215,10 @@ export async function collectReportData(
       .eq("nam_hoc_id", namHocId)
       .eq("cap_hoc", capHoc),
     supabase
-      .from("minh_chung")
-      .select("id, ma, ten, loai_tep, duong_dan, storage_path, hash_tep, kich_thuoc, ngay_ban_hanh, ngay_het_gia_tri, ghi_chu, minh_chung_tieu_chi(tieu_chi_id)")
+      .from("v_minh_chung_hop_le_danh_gia")
+      .select("id, ma, ten, loai_tep, duong_dan, storage_path, hash_tep, kich_thuoc, ngay_ban_hanh, ngay_het_gia_tri, ghi_chu")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
-      .is("deleted_at", null)
       .order("ma", { ascending: true }),
     supabase
       .from("ke_hoach_cai_tien")
@@ -248,7 +244,6 @@ export async function collectReportData(
     schoolError ??
     yearError ??
     criterionError ??
-    levelError ??
     assessmentError ??
     evidenceError ??
     planError ??
@@ -262,46 +257,24 @@ export async function collectReportData(
     throw new Error("Không tìm thấy cơ sở giáo dục hoặc năm học để xuất báo cáo.");
   }
 
-  const levelByCriterion = new Map<string, { muc_1: string; muc_2: string }>();
-
-  for (const level of (levelData ?? []) as { tieu_chi_id: string; muc: 1 | 2; noi_dung_yeu_cau: string }[]) {
-    const current = levelByCriterion.get(level.tieu_chi_id) ?? { muc_1: "", muc_2: "" };
-
-    if (level.muc === 1) {
-      current.muc_1 = level.noi_dung_yeu_cau;
-    } else {
-      current.muc_2 = level.noi_dung_yeu_cau;
-    }
-
-    levelByCriterion.set(level.tieu_chi_id, current);
-  }
-
-  const criteria = ((criterionData ?? []) as (Omit<ReportCriterion, "muc_1" | "muc_2" | "tieu_chuan"> & {
-    tieu_chuan?: ReportStandard | ReportStandard[] | null;
-  })[])
-    .filter((criterion) => criterion.loai_hinh_ap_dung === (schoolData as ReportSchool).loai_hinh)
-    .map((criterion) => {
-      const levels = levelByCriterion.get(criterion.id) ?? { muc_1: "", muc_2: "" };
-      const reference = getTT57CriterionReference((schoolData as ReportSchool).loai_hinh, criterion.ma);
-      const standard = firstArrayItem(criterion.tieu_chuan) ?? undefined;
-      const standardReference = standard
-        ? getTT57StandardReference((schoolData as ReportSchool).loai_hinh, standard.so_thu_tu)
-        : null;
-
-      return {
-        ...criterion,
-        ten: reference?.ten ?? criterion.ten,
-        la_bat_buoc: reference?.la_bat_buoc ?? criterion.la_bat_buoc,
-        tieu_chuan: standard
-          ? {
-              ...standard,
-              ten: standardReference?.ten ?? standard.ten,
-            }
-          : undefined,
-        muc_1: reference?.muc_1 ?? levels.muc_1,
-        muc_2: reference?.muc_2 ?? levels.muc_2,
-      };
-    });
+  const criteria = ((criterionData ?? []) as (Omit<ReportCriterion, "tieu_chuan"> & {
+    tieu_chuan_so_thu_tu: number;
+    tieu_chuan_ten: string;
+  })[]).map((criterion) => ({
+    id: criterion.id,
+    ma: criterion.ma,
+    ten: criterion.ten,
+    la_bat_buoc: criterion.la_bat_buoc,
+    loai_hinh_ap_dung: criterion.loai_hinh_ap_dung,
+    tieu_chuan_id: criterion.tieu_chuan_id,
+    muc_1: criterion.muc_1 ?? "",
+    muc_2: criterion.muc_2 ?? "",
+    tieu_chuan: {
+      id: criterion.tieu_chuan_id,
+      so_thu_tu: criterion.tieu_chuan_so_thu_tu,
+      ten: criterion.tieu_chuan_ten,
+    },
+  }));
   const standardsById = new Map<string, ReportStandard>();
 
   for (const criterion of criteria) {
@@ -310,11 +283,23 @@ export async function collectReportData(
     }
   }
 
-  const evidence = ((evidenceData ?? []) as (Omit<ReportEvidence, "tieuChiIds"> & {
-    minh_chung_tieu_chi?: { tieu_chi_id: string }[];
-  })[]).map((item) => ({
+  const evidenceIds = (evidenceData ?? []).map((item) => item.id);
+  const { data: evidenceLinkData, error: evidenceLinkError } = evidenceIds.length
+    ? await supabase
+        .from("minh_chung_tieu_chi")
+        .select("minh_chung_id, tieu_chi_id")
+        .in("minh_chung_id", evidenceIds)
+    : { data: [], error: null };
+
+  if (evidenceLinkError) {
+    throw new Error(evidenceLinkError.message);
+  }
+
+  const evidence = ((evidenceData ?? []) as Omit<ReportEvidence, "tieuChiIds">[]).map((item) => ({
     ...item,
-    tieuChiIds: (item.minh_chung_tieu_chi ?? []).map((link) => link.tieu_chi_id),
+    tieuChiIds: (evidenceLinkData ?? [])
+      .filter((link) => link.minh_chung_id === item.id)
+      .map((link) => link.tieu_chi_id),
   }));
 
   const assessments = (assessmentData ?? []) as ReportAssessment[];

@@ -7,35 +7,13 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
-import { getTT57CriterionReference } from "@/lib/tt57/reference-data";
 import {
-  Criterion,
   Evidence,
   EvidenceCriterionLink,
   formatEvidenceStatus,
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
 import { LoadingState } from "@/components/ui/loading-state";
-
-function enrichCriterionLabel(criterion: Criterion, loaiHinh: string): Criterion {
-  const reference = getTT57CriterionReference(loaiHinh, criterion.ma);
-
-  if (!reference) {
-    return criterion;
-  }
-
-  return {
-    ...criterion,
-    ten: reference.ten,
-    la_bat_buoc: reference.la_bat_buoc,
-    tieu_chuan: criterion.tieu_chuan
-      ? {
-          ...criterion.tieu_chuan,
-          ten: reference.tieu_chuan.ten,
-        }
-      : criterion.tieu_chuan,
-  };
-}
 
 export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
   const router = useRouter();
@@ -63,33 +41,16 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       return;
     }
 
-    const { data: profileData } = await supabase
-      .from("nguoi_dung")
-      .select("id, co_so_id, ho_ten")
-      .eq("auth_user_id", userData.user.id)
+    const { data: evidenceData, error } = await supabase
+      .from("minh_chung")
+      .select("*")
+      .eq("id", evidenceId)
       .maybeSingle();
-
-    const [{ data: evidenceData, error }, { data: schoolData }] = await Promise.all([
-      supabase
-        .from("minh_chung")
-        .select("*")
-        .eq("id", evidenceId)
-        .maybeSingle(),
-      profileData
-        ? supabase
-            .from("co_so_giao_duc")
-            .select("loai_hinh")
-            .eq("id", profileData.co_so_id)
-            .maybeSingle()
-        : Promise.resolve({ data: null }),
-    ]);
 
     if (error || !evidenceData) {
       setMessage(error?.message ?? "Không tìm thấy minh chứng.");
       return;
     }
-
-    setEvidence(evidenceData as Evidence);
 
     const { data: linkData } = await supabase
       .from("minh_chung_tieu_chi")
@@ -98,24 +59,21 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       )
       .eq("minh_chung_id", evidenceId);
 
-    setLinks(
-      ((linkData ?? []) as unknown as EvidenceCriterionLink[]).map((link) => ({
-        ...link,
-        tieu_chi: link.tieu_chi
-          ? enrichCriterionLabel(link.tieu_chi, schoolData?.loai_hinh ?? "mam_non")
-          : link.tieu_chi,
-      })),
-    );
+    const enrichedLinks = (linkData ?? []) as unknown as EvidenceCriterionLink[];
 
-    if (profileData) {
-      await supabase.from("nhat_ky_truy_cap").insert({
-        co_so_id: profileData.co_so_id,
-        nguoi_dung_id: profileData.id,
-        hanh_dong: "EVIDENCE_DETAIL_READ",
-        doi_tuong: "minh_chung",
-        doi_tuong_id: evidenceId,
-      });
+    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
+      p_hanh_dong: "EVIDENCE_DETAIL_READ",
+      p_doi_tuong_id: evidenceId,
+      p_du_lieu_moi: null,
+    });
+
+    if (auditError) {
+      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
+      return;
     }
+
+    setEvidence(evidenceData as Evidence);
+    setLinks(enrichedLinks);
   }, [evidenceId, router, supabase]);
 
   useEffect(() => {

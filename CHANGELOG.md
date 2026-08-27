@@ -89,3 +89,4 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Hiệu lực minh chứng của năm học cũ được xét tại ngày kết thúc năm học để báo cáo lịch sử không thay đổi theo ngày hiện tại.
 - Tạo năm học kế thừa ánh xạ tự đánh giá sang tiêu chí cùng mã trong phiên bản mới, giữ trạng thái `ke_thua_cho_cap_nhat` và không tự kế thừa minh chứng cũ.
 - Migration `018` được kiểm chứng bằng 15 assertion trong `supabase/tests/018_standard_versioning_test.sql` trên Supabase staging sau một lần reset đầy đủ.
+- Migration `019` đồng bộ luồng thiết lập đơn vị ban đầu với ràng buộc phiên bản và được kiểm chứng bằng tài khoản Auth chưa thuộc đơn vị.

@@ -65,6 +65,7 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 
 ## Tài Liệu Sprint 6
 
+- `artifacts/HO-SO-DU-AN-VA-HUONG-DAN-SU-DUNG-KIEMDINH.docx`: hồ sơ dự án, mô hình dữ liệu và hướng dẫn sử dụng nhanh trong một file Word.
 - `docs/huong-dan-hieu-truong.md`: hướng dẫn sử dụng cho Hiệu trưởng.
 - `docs/huong-dan-thu-ky-hoi-dong.md`: hướng dẫn sử dụng cho Thư ký hội đồng.
 - `docs/huong-dan-giao-vien.md`: hướng dẫn sử dụng cho Giáo viên.

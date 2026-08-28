@@ -105,7 +105,7 @@ export function LoginForm() {
       return;
     }
 
-    setMessage("Tài khoản đã được tạo. Hãy đăng nhập để thiết lập đơn vị.");
+    setMessage("Tài khoản đã được tạo. Hãy xác nhận email rồi đăng nhập để nhận lời mời tham gia đơn vị.");
     setMessageTone("success");
     setMode("dang_nhap");
   }
@@ -115,13 +115,13 @@ export function LoginForm() {
       <div>
         <h2 className="section-title text-2xl">Tài khoản</h2>
         <p className="muted mt-2 text-sm">
-          Dùng email được cấp cho nhà trường hoặc tạo tài khoản thiết lập ban đầu.
+          Dùng email công việc của bạn để đăng nhập hoặc tạo tài khoản tham gia đơn vị.
         </p>
       </div>
 
       {mode === "dang_ky" ? (
         <Alert className="mt-4" tone="info">
-          Đăng ký chỉ tạo tài khoản đăng nhập. Vai trò như Hiệu trưởng, Thư ký hoặc Giáo viên sẽ do tài khoản có quyền quản lý phân công sau.
+          Đăng ký chỉ tạo tài khoản đăng nhập, không tự cấp vai trò. Đơn vị sẽ gửi lời mời đến email này và phân công vai trò phù hợp.
         </Alert>
       ) : null}
 
@@ -140,7 +140,7 @@ export function LoginForm() {
           className={`segmented-option ${mode === "dang_ky" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
           onClick={() => setMode("dang_ky")}
         >
-          Tạo tài khoản đơn vị
+          Tạo tài khoản
         </button>
       </div>
 
@@ -197,7 +197,7 @@ export function LoginForm() {
             ? "Đang xử lý…"
             : mode === "dang_nhap"
               ? "Đăng nhập"
-              : "Tạo tài khoản đơn vị"}
+              : "Tạo tài khoản"}
         </button>
       </form>
 

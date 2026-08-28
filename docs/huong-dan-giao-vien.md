@@ -2,13 +2,15 @@
 
 Trang này dành cho giáo viên được phân công cung cấp minh chứng trong công việc hằng ngày.
 
-## 1. Đăng nhập
+## 1. Tạo tài khoản và tham gia đơn vị
 
-1. Mở ứng dụng.
-2. Chọn **Đăng nhập**.
-3. Nhập email và mật khẩu được nhà trường cấp.
+1. Mở ứng dụng và chọn **Tạo tài khoản**.
+2. Đăng ký bằng email công việc của bạn, sau đó xác nhận email.
+3. Đăng nhập và mở **Thiết lập**.
+4. Nếu nhà trường đã gửi lời mời, kiểm tra tên đơn vị và vai trò rồi chọn **Tham gia đơn vị**.
+5. Nếu chưa có lời mời, gửi đúng email đã đăng ký cho Hiệu trưởng hoặc người quản lý của trường. Không tự tạo đơn vị mới.
 
-[CHÈN ẢNH: Màn hình đăng nhập]
+[CHÈN ẢNH: Màn hình lời mời tham gia đơn vị]
 
 ## 2. Nộp minh chứng từ công việc thường ngày
 

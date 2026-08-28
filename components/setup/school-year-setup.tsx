@@ -20,6 +20,7 @@ type School = {
   id: string;
   ten: string;
   loai_hinh: string;
+  ma_truong?: string | null;
 };
 
 type SchoolYear = {
@@ -63,6 +64,14 @@ type ManagedUser = {
   nguoi_dung_vai_tro?: UserRole[];
 };
 
+type PendingInvitation = {
+  id: string;
+  co_so_id: string;
+  ten_co_so: string;
+  ten_vai_tro: string;
+  het_han_luc: string;
+};
+
 const assignableRoleCodes = [
   "SELF_ASSESSMENT_CHAIR",
   "SECRETARY",
@@ -99,13 +108,16 @@ export function SchoolYearSetup() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [canManageUsers, setCanManageUsers] = useState(false);
   const [canManageAssignments, setCanManageAssignments] = useState(false);
+  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
+  const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
 
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
   const [loaiHinh, setLoaiHinh] = useState("mam_non");
   const [capHoc, setCapHoc] = useState<string[]>(["mam_non"]);
-  const [hoTen, setHoTen] = useState("");
+  const [emailHieuTruong, setEmailHieuTruong] = useState("");
+  const [hoTenHieuTruong, setHoTenHieuTruong] = useState("");
   const [tenNamHoc, setTenNamHoc] = useState("2026-2027");
   const [ngayBatDau, setNgayBatDau] = useState("2026-09-01");
   const [ngayKetThuc, setNgayKetThuc] = useState("2027-05-31");
@@ -128,6 +140,9 @@ export function SchoolYearSetup() {
       return;
     }
 
+    const { data: systemAdminData } = await supabase.rpc("fn_la_quan_tri_he_thong");
+    setIsSystemAdmin(Boolean(systemAdminData));
+
     const { data: profileData, error: profileError } = await supabase
       .from("nguoi_dung")
       .select("id, co_so_id, ho_ten")
@@ -141,10 +156,13 @@ export function SchoolYearSetup() {
     }
 
     if (!profileData) {
-      setHoTen(
-        String(sessionData.user.user_metadata?.ho_ten ?? "") ||
-          String(sessionData.user.email ?? ""),
+      const { data: invitationData, error: invitationError } = await supabase.rpc(
+        "fn_danh_sach_loi_moi_cua_toi",
       );
+      setPendingInvitations((invitationData ?? []) as PendingInvitation[]);
+      if (invitationError) {
+        setMessage(toUserMessage(invitationError, "Không tải được lời mời tham gia đơn vị."));
+      }
       setLoading(false);
       return;
     }
@@ -161,7 +179,7 @@ export function SchoolYearSetup() {
     ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
-        .select("id, ten, loai_hinh")
+        .select("id, ten, loai_hinh, ma_truong")
         .eq("id", profileData.co_so_id)
         .maybeSingle(),
       supabase
@@ -240,7 +258,7 @@ export function SchoolYearSetup() {
 
     setMessage("");
 
-    const { error } = await supabase.rpc("fn_khoi_tao_co_so_va_nam_hoc", {
+    const { error } = await supabase.rpc("fn_quan_tri_tao_co_so_va_nam_hoc", {
       p_ten_co_so: tenCoSo,
       p_ma_truong: maTruong,
       p_loai_hinh: loaiHinh,
@@ -248,7 +266,8 @@ export function SchoolYearSetup() {
       p_nam_hoc_ten: tenNamHoc,
       p_ngay_bat_dau: ngayBatDau,
       p_ngay_ket_thuc: ngayKetThuc,
-      p_ho_ten: hoTen,
+      p_email_hieu_truong: emailHieuTruong,
+      p_ho_ten_hieu_truong: hoTenHieuTruong,
     });
 
     if (error) {
@@ -256,7 +275,24 @@ export function SchoolYearSetup() {
       return;
     }
 
-    setMessage("Đã tạo cơ sở giáo dục và năm học đang hoạt động.");
+    setMessage("Đã tạo đơn vị, năm học và gửi lời mời nhận vai trò Hiệu trưởng.");
+    setEmailHieuTruong("");
+    setHoTenHieuTruong("");
+    await loadData();
+  }
+
+  async function respondToInvitation(invitationId: string, accept: boolean) {
+    if (!supabase) return;
+    setMessage("");
+    const { error } = await supabase.rpc(
+      accept ? "fn_chap_nhan_loi_moi" : "fn_tu_choi_loi_moi",
+      { p_loi_moi_id: invitationId },
+    );
+    if (error) {
+      setMessage(toUserMessage(error));
+      return;
+    }
+    setMessage(accept ? "Đã tham gia đơn vị." : "Đã từ chối lời mời.");
     await loadData();
   }
 
@@ -329,90 +365,11 @@ export function SchoolYearSetup() {
 
   if (!profile) {
     return (
-      <form
-        className="surface-card grid gap-5 p-6"
-        onSubmit={handleCreateSchool}
-      >
-        <h2 className="section-title text-xl">
-          Thiết lập cơ sở giáo dục
-        </h2>
-
-        <label className="text-sm font-medium">
-          Tên cơ sở giáo dục
-          <input
-            className="form-control mt-2"
-            value={tenCoSo}
-            onChange={(event) => setTenCoSo(event.target.value)}
-            required
-          />
-        </label>
-
-        <label className="text-sm font-medium">
-          Mã trường
-          <input
-            className="form-control mt-2"
-            value={maTruong}
-            onChange={(event) => setMaTruong(event.target.value)}
-          />
-        </label>
-
-        <label className="text-sm font-medium">
-          Loại hình
-          <select
-            className="form-control mt-2"
-            value={loaiHinh}
-            onChange={(event) => setLoaiHinh(event.target.value)}
-          >
-            <option value="mam_non">Mầm non</option>
-            <option value="pho_thong">Phổ thông</option>
-            <option value="gdtx">GDTX</option>
-          </select>
-        </label>
-
-        <fieldset className="grid gap-2 text-sm font-medium">
-          <legend>Cấp học</legend>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {capHocOptions.map((option) => (
-              <label
-                className="surface-card flex items-center gap-2 px-3 py-3"
-                key={option.value}
-              >
-                <input
-                  type="checkbox"
-                  checked={capHoc.includes(option.value)}
-                  onChange={() => toggleCapHoc(option.value)}
-                />
-                {option.label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <label className="text-sm font-medium">
-          Họ tên người phụ trách
-          <input
-            className="form-control mt-2"
-            value={hoTen}
-            onChange={(event) => setHoTen(event.target.value)}
-            required
-          />
-        </label>
-
-        <YearFields
-          tenNamHoc={tenNamHoc}
-          ngayBatDau={ngayBatDau}
-          ngayKetThuc={ngayKetThuc}
-          setTenNamHoc={setTenNamHoc}
-          setNgayBatDau={setNgayBatDau}
-          setNgayKetThuc={setNgayKetThuc}
-        />
-
-        <button className="button-primary">
-          Tạo đơn vị và năm học
-        </button>
-
-        {message ? <Message text={message} /> : null}
-      </form>
+      <PendingInvitationPanel
+        invitations={pendingInvitations}
+        message={message}
+        onRespond={respondToInvitation}
+      />
     );
   }
 
@@ -421,13 +378,43 @@ export function SchoolYearSetup() {
       <SetupTabs activePanel={setupPanel} onChange={setSetupPanel} />
       {message ? <Message text={message} /> : null}
       <section className={`featured-card ${setupPanel === "school" ? "" : "hidden"}`}>
-        <p className="text-sm text-white/70">Cơ sở giáo dục</p>
-        <h2 className="mt-1 text-2xl font-semibold text-white">
-          {school?.ten ?? "Chưa tải được tên đơn vị"}
-        </h2>
-        <p className="mt-2 text-sm text-white/70">
-          Người dùng: {profile.ho_ten}
-        </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-wider text-white/60">
+              Cơ sở giáo dục
+            </span>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
+              {school?.ten ?? "Chưa tải được tên đơn vị"}
+            </h2>
+          </div>
+
+          {school?.ma_truong ? (
+            <div className="inline-flex items-center gap-2 self-start rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-medium text-white backdrop-blur-md border border-white/20 shadow-sm sm:self-auto">
+              <svg className="h-3.5 w-3.5 text-white/80" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+              <span className="text-white/70">Mã trường:</span>
+              <code className="rounded bg-white/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-white">
+                {school.ma_truong}
+              </code>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/10 pt-4 text-xs text-white/75">
+          <div className="flex items-center gap-1.5">
+            <svg className="h-4 w-4 text-white/60" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            <span>Tài khoản: <strong className="font-semibold text-white">{profile.ho_ten}</strong></span>
+          </div>
+          {school?.loai_hinh ? (
+            <div className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-white/40" />
+              <span>Loại hình: <strong className="font-semibold text-white">{school.loai_hinh === "mam_non" ? "Mầm non" : school.loai_hinh === "pho_thong" ? "Phổ thông" : "GDTX"}</strong></span>
+            </div>
+          ) : null}
+        </div>
       </section>
 
       <section className={`surface-card surface-card-pad ${setupPanel === "school" ? "" : "hidden"}`}>
@@ -482,6 +469,35 @@ export function SchoolYearSetup() {
         </button>
       </form>
 
+      {isSystemAdmin && setupPanel === "school" ? (
+        <form className="surface-card grid gap-5 p-6" onSubmit={handleCreateSchool}>
+          <div>
+            <h2 className="section-title text-xl">Tạo đơn vị mới</h2>
+            <p className="muted mt-1 text-sm">Chỉ Quản trị hệ thống thực hiện. Hiệu trưởng sẽ nhận lời mời qua đúng email bên dưới.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="text-sm font-medium">Tên cơ sở giáo dục<input className="form-control mt-2" value={tenCoSo} onChange={(event) => setTenCoSo(event.target.value)} required /></label>
+            <label className="text-sm font-medium">Mã trường<input className="form-control mt-2" value={maTruong} onChange={(event) => setMaTruong(event.target.value)} /></label>
+            <label className="text-sm font-medium">Loại hình<select className="form-control mt-2" value={loaiHinh} onChange={(event) => setLoaiHinh(event.target.value)}><option value="mam_non">Mầm non</option><option value="pho_thong">Phổ thông</option><option value="gdtx">GDTX</option></select></label>
+            <label className="text-sm font-medium">Email Hiệu trưởng<input className="form-control mt-2" type="email" value={emailHieuTruong} onChange={(event) => setEmailHieuTruong(event.target.value)} required /></label>
+            <label className="text-sm font-medium md:col-span-2">Họ và tên Hiệu trưởng<input className="form-control mt-2" value={hoTenHieuTruong} onChange={(event) => setHoTenHieuTruong(event.target.value)} required /></label>
+          </div>
+          <fieldset className="grid gap-2 text-sm font-medium">
+            <legend>Cấp học</legend>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {capHocOptions.map((option) => (
+                <label className="surface-card flex items-center gap-2 px-3 py-3" key={option.value}>
+                  <input type="checkbox" checked={capHoc.includes(option.value)} onChange={() => toggleCapHoc(option.value)} />
+                  {option.label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <YearFields tenNamHoc={tenNamHoc} ngayBatDau={ngayBatDau} ngayKetThuc={ngayKetThuc} setTenNamHoc={setTenNamHoc} setNgayBatDau={setNgayBatDau} setNgayKetThuc={setNgayKetThuc} />
+          <button className="button-primary justify-self-start">Tạo đơn vị và gửi lời mời</button>
+        </form>
+      ) : null}
+
       {setupPanel === "users" ? (
       <UserRoleManager
         canManageUsers={canManageUsers}
@@ -511,6 +527,49 @@ export function SchoolYearSetup() {
     </div>
   );
 }
+
+function PendingInvitationPanel({
+  invitations,
+  message,
+  onRespond,
+}: {
+  invitations: PendingInvitation[];
+  message: string;
+  onRespond: (invitationId: string, accept: boolean) => Promise<void>;
+}) {
+  return (
+    <section className="surface-card overflow-hidden">
+      <div className="border-b border-[var(--color-border)] p-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-electric-cobalt)]">Tài khoản đã sẵn sàng</p>
+        <h2 className="section-title mt-2 text-2xl">Tham gia đơn vị của bạn</h2>
+        <p className="muted mt-2 max-w-2xl text-sm leading-6">Đơn vị sẽ xuất hiện tại đây sau khi Hiệu trưởng hoặc Quản trị hệ thống gửi lời mời đến đúng email bạn đã đăng ký.</p>
+      </div>
+      {invitations.length === 0 ? (
+        <div className="p-6">
+          <Alert tone="info">Hiện chưa có lời mời nào. Bạn không cần tạo đơn vị mới; hãy gửi email đăng ký cho người quản lý của trường.</Alert>
+        </div>
+      ) : (
+        <div className="divide-y divide-[var(--color-border)]">
+          {invitations.map((invitation) => (
+            <div className="grid gap-4 p-6 sm:grid-cols-[1fr_auto] sm:items-center" key={invitation.id}>
+              <div>
+                <h3 className="font-semibold text-[var(--color-ink-navy)]">{invitation.ten_co_so}</h3>
+                <p className="muted mt-1 text-sm">Vai trò được mời: {invitation.ten_vai_tro}</p>
+                <p className="muted mt-1 text-xs">Có hiệu lực đến {new Date(invitation.het_han_luc).toLocaleDateString("vi-VN")}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="button-primary" type="button" onClick={() => void onRespond(invitation.id, true)}>Tham gia đơn vị</button>
+                <button className="button-secondary" type="button" onClick={() => void onRespond(invitation.id, false)}>Từ chối</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {message ? <div className="border-t border-[var(--color-border)] p-6"><Message text={message} /></div> : null}
+    </section>
+  );
+}
+
 
 function SetupTabs({
   activePanel,
@@ -587,7 +646,7 @@ function UserRoleManager(props: {
     setEmail("");
     setHoTen("");
     setRoleCode("TEACHER");
-    props.onMessage("Đã thêm người dùng vào đơn vị và gán vai trò.");
+    props.onMessage("Đã gửi lời mời tham gia đơn vị.");
     await props.onChanged();
   }
 
@@ -621,7 +680,7 @@ function UserRoleManager(props: {
       <div className="border-b border-[var(--color-border)] px-5 py-4">
         <h2 className="section-title text-xl">Người dùng và phân quyền</h2>
         <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
-          Người dùng cần tạo tài khoản ở trang đăng nhập trước. Sau đó Hiệu trưởng nhập email ở đây để đưa vào đơn vị và gán vai trò.
+          Nhập email người nhận và chọn vai trò. Người nhận có thể tạo tài khoản sau; lời mời sẽ chờ họ xác nhận tham gia đơn vị.
         </p>
       </div>
 
@@ -661,7 +720,7 @@ function UserRoleManager(props: {
           </label>
           <div className="flex items-end">
             <button className="button-primary w-full" disabled={saving === "invite"}>
-              {saving === "invite" ? "Đang thêm…" : "Thêm người"}
+              {saving === "invite" ? "Đang gửi…" : "Gửi lời mời"}
             </button>
           </div>
         </form>

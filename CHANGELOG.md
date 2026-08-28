@@ -111,3 +111,11 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Điều hướng theo vai trò để giảm nhiễu; RLS/RPC tiếp tục là nguồn authorization duy nhất.
 - Kiểm tra responsive 320-1440 px, keyboard, focus, form labels, loading và disabled states.
 - Tách Cloudflare/Supabase staging, thêm CI deploy staging, production approval gate và rollback.
+
+## Onboarding thành viên và đơn vị
+
+- Đăng ký Auth không còn tự tạo hồ sơ đơn vị hoặc tự cấp vai trò Hiệu trưởng.
+- Bổ sung lời mời thành viên theo email, có thời hạn và trạng thái chấp nhận hoặc từ chối.
+- Người nhận chỉ được tạo hồ sơ `nguoi_dung` và nhận vai trò sau khi chấp nhận lời mời bằng đúng email đã xác nhận.
+- Chỉ Quản trị hệ thống được tạo đơn vị mới; Hiệu trưởng đầu tiên được thiết lập qua lời mời riêng.
+- Mọi thao tác mời và chấp nhận đi qua RPC `SECURITY DEFINER`, có kiểm tra quyền và ghi nhật ký.

@@ -81,3 +81,16 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 - Không nhập nội dung thay cho minh chứng. Nếu chưa có minh chứng, hệ thống sẽ cảnh báo.
 - Không dùng dữ liệu `[DEMO]` làm báo cáo chính thức.
 - Dữ liệu nhạy cảm của học sinh chỉ lưu dạng chỉ mục, không nhập nội dung chi tiết vào ứng dụng.
+
+## 7. Mời giáo viên và thành viên vào đơn vị
+
+1. Vào **Thiết lập** rồi chọn **Người dùng và vai trò**.
+2. Nhập email người nhận, họ và tên, sau đó chọn vai trò ban đầu.
+3. Chọn **Gửi lời mời**. Người nhận có thể đăng ký tài khoản sau bằng đúng email này.
+4. Người nhận đăng nhập, mở **Thiết lập** và chọn **Tham gia đơn vị**.
+5. Sau khi họ tham gia, cập nhật thêm vai trò hoặc phân công tiêu chí nếu cần.
+
+Tài khoản mới không tự nhận vai trò Hiệu trưởng. Đơn vị mới và Hiệu trưởng đầu tiên do Quản trị hệ thống thiết lập.
+
+[CHÈN ẢNH: Gửi lời mời trong màn hình Người dùng và vai trò]
+[CHÈN ẢNH: Thành viên đã tham gia đơn vị]

@@ -7,19 +7,28 @@ select plan(24);
 insert into auth.users(id, email, aud, role, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000020001', 'sprint9@transaction.test', 'authenticated', 'authenticated', now(), now());
 
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000020001', true);
-select set_config('request.jwt.claim.role', 'authenticated', true);
+insert into public.co_so_giao_duc(id, ten, ma_truong, loai_hinh, cap_hoc)
+values ('00000000-0000-0000-0000-000000020010', 'Sprint 9 Transaction School', 'SPRINT9-020', 'mam_non', array['mam_non']::public.cap_hoc[]);
 
-select lives_ok(
-  $$select * from public.fn_khoi_tao_co_so_va_nam_hoc(
-    'Sprint 9 Transaction School', 'SPRINT9-020', 'mam_non', array['mam_non']::public.cap_hoc[],
-    '2098-2099', '2098-08-01', '2099-05-31', 'Sprint 9 Principal'
-  )$$,
-  'Tao fixture tenant bang luong thiet lap that'
+insert into public.nam_hoc(id, co_so_id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai, bo_tieu_chuan_id)
+select '00000000-0000-0000-0000-000000020011', '00000000-0000-0000-0000-000000020010',
+  '2098-2099', '2098-08-01', '2099-05-31', 'dang_hoat_dong', btc.id
+from public.bo_tieu_chuan btc
+where btc.loai_hinh = 'mam_non' and btc.trang_thai = 'dang_ap_dung'
+order by btc.version desc limit 1;
+
+insert into public.nguoi_dung(id, auth_user_id, co_so_id, ho_ten, email)
+values ('00000000-0000-0000-0000-000000020012', '00000000-0000-0000-0000-000000020001', '00000000-0000-0000-0000-000000020010', 'Sprint 9 Principal', 'sprint9@transaction.test');
+
+insert into public.nguoi_dung_vai_tro(nguoi_dung_id, vai_tro_id, co_so_id)
+select '00000000-0000-0000-0000-000000020012', vt.id, '00000000-0000-0000-0000-000000020010'
+from public.vai_tro vt where vt.ma = 'PRINCIPAL';
+
+select is(
+  (select count(*) from public.nguoi_dung_vai_tro where nguoi_dung_id = '00000000-0000-0000-0000-000000020012'),
+  1::bigint,
+  'Tao fixture tenant giao dich voi vai tro Hieu truong'
 );
-
-reset role;
 
 insert into public.minh_chung(
   id, co_so_id, nam_hoc_id, ma, ten, trang_thai_xac_minh, nguoi_tai_len, nguoi_xac_minh, ngay_xac_minh

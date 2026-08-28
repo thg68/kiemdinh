@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CapHoc, KetQuaTieuChi, xacDinhMucTuKetQua } from "@/lib/assessment/level-engine";
@@ -88,7 +89,7 @@ export function DashboardWorkspace() {
       .order("ma", { ascending: true });
 
     if (criterionError) {
-      setMessage(criterionError.message);
+      setMessage(toUserMessage(criterionError, "Không tải được danh sách tiêu chí. Vui lòng thử lại."));
       setLoadingData(false);
       return;
     }
@@ -164,7 +165,7 @@ export function DashboardWorkspace() {
   }, [loadDashboard]);
 
   if (loading || loadingData) {
-    return <LoadingState label="Đang tải tổng quan dữ liệu thật..." />;
+    return <LoadingState label="Đang tải tổng quan dữ liệu thật…" />;
   }
 
   if (!profile || !school || !activeYear) {

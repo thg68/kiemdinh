@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -173,7 +174,7 @@ export function AssessmentWorkspace() {
       .maybeSingle();
 
     if (profileError || !profileData) {
-      setMessage(profileError?.message ?? "Bạn cần thiết lập cơ sở giáo dục trước.");
+      setMessage(toUserMessage(profileError, "Bạn cần thiết lập cơ sở giáo dục trước."));
       setLoading(false);
       return;
     }
@@ -207,7 +208,7 @@ export function AssessmentWorkspace() {
       : { data: [], error: null };
 
     if (criterionError) {
-      setMessage(criterionError.message);
+      setMessage(toUserMessage(criterionError, "Không tải được danh sách tiêu chí. Vui lòng thử lại."));
       setLoading(false);
       return;
     }
@@ -271,7 +272,7 @@ export function AssessmentWorkspace() {
       ]);
 
     if (assessmentError || evidenceError) {
-      setMessage(assessmentError?.message ?? evidenceError?.message ?? "Không tải được dữ liệu tự đánh giá.");
+      setMessage(toUserMessage(assessmentError ?? evidenceError, "Không tải được dữ liệu tự đánh giá. Vui lòng thử lại."));
       return;
     }
 
@@ -285,7 +286,7 @@ export function AssessmentWorkspace() {
       : { data: [], error: null };
 
     if (linkError) {
-      setMessage(linkError.message);
+      setMessage(toUserMessage(linkError, "Không tải được liên kết minh chứng. Vui lòng thử lại."));
       return;
     }
 
@@ -318,7 +319,7 @@ export function AssessmentWorkspace() {
   }, [loadAssessmentData]);
 
   if (loading) {
-    return <LoadingState label="Đang tải tự đánh giá..." />;
+    return <LoadingState label="Đang tải tự đánh giá…" />;
   }
 
   if (!profile || !activeYear) {
@@ -606,7 +607,7 @@ function CriterionAssessmentForm(props: {
     });
 
     setSaving(false);
-    await props.onDone(error ? error.message : "Đã lưu tự đánh giá cho tiêu chí.");
+    await props.onDone(error ? toUserMessage(error) : "Đã lưu tự đánh giá cho tiêu chí.");
   }
 
   async function updateStatus(status: "cho_duyet" | "da_duyet" | "dang_ra_soat") {
@@ -624,7 +625,7 @@ function CriterionAssessmentForm(props: {
 
     await props.onDone(
       error
-        ? error.message
+        ? toUserMessage(error)
         : status === "cho_duyet"
           ? "Đã gửi tiêu chí sang trạng thái chờ duyệt."
           : status === "da_duyet"
@@ -741,7 +742,7 @@ function CriterionAssessmentForm(props: {
         className="button-primary"
         disabled={saving}
       >
-        {saving ? "Đang lưu..." : "Lưu tự đánh giá"}
+        {saving ? "Đang lưu…" : "Lưu tự đánh giá"}
       </button>
 
       <div className="grid gap-2 border-t border-[var(--color-border)] pt-4 sm:grid-cols-3">

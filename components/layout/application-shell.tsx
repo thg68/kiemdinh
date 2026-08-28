@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
-import { CurrentUserRoles } from "@/components/layout/current-user-roles";
-
-type ActiveNav =
-  | "dashboard"
-  | "work"
-  | "standards"
-  | "evidence"
-  | "assessment"
-  | "improvement"
-  | "council"
-  | "reports"
-  | "legal"
-  | "audit"
-  | "settings";
+import {
+  CurrentUserRoles,
+  type RoleLabel,
+} from "@/components/layout/current-user-roles";
+import { Alert } from "@/components/ui/alert";
+import {
+  navigationForRoles,
+  type ActiveNav,
+} from "@/lib/auth/navigation";
+import { toUserMessage } from "@/lib/errors/user-message";
+import {
+  createBrowserSupabaseClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/client";
 
 type ApplicationShellProps = {
   active: ActiveNav;
@@ -25,34 +25,72 @@ type ApplicationShellProps = {
   title: string;
 };
 
-const primaryNav: { key: ActiveNav; label: string; href: string }[] = [
-  { key: "dashboard", label: "Tổng quan", href: "/dashboard" },
-  { key: "work", label: "Việc của tôi", href: "/viec-cua-toi" },
-  { key: "standards", label: "Bộ tiêu chuẩn", href: "/bo-tieu-chuan" },
-  { key: "evidence", label: "Minh chứng", href: "/minh-chung" },
-  { key: "assessment", label: "Tự đánh giá", href: "/tu-danh-gia" },
-  { key: "improvement", label: "Kế hoạch cải tiến", href: "/ke-hoach-cai-tien" },
-  { key: "council", label: "Hội đồng TĐG", href: "/hoi-dong-tu-danh-gia" },
-  { key: "reports", label: "Báo cáo", href: "/bao-cao" },
-  { key: "legal", label: "Văn bản liên quan", href: "/van-ban-lien-quan" },
-  { key: "audit", label: "Nhật ký", href: "/nhat-ky" },
-  { key: "settings", label: "Cài đặt", href: "/thiet-lap" },
-];
-
 export function ApplicationShell({
   active,
   children,
   description,
   title,
 }: ApplicationShellProps) {
+  const configured = isSupabaseConfigured();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [roles, setRoles] = useState<RoleLabel[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(configured);
+  const [roleMessage, setRoleMessage] = useState(
+    configured ? "" : "Chưa cấu hình kết nối hệ thống.",
+  );
+  const supabase = useMemo(
+    () => (configured ? createBrowserSupabaseClient() : null),
+    [configured],
+  );
+  const navigation = navigationForRoles(roles.map((role) => role.ma));
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
+  useEffect(() => {
+    if (!supabase) return;
+
+    const client = supabase;
+    let activeRequest = true;
+
+    async function loadRoles() {
+      const { data, error } = await client.rpc("fn_user_role_labels");
+
+      if (!activeRequest) return;
+
+      if (error) {
+        setRoleMessage(toUserMessage(error, "Không tải được vai trò. Vui lòng tải lại trang."));
+      } else {
+        setRoles((data ?? []) as RoleLabel[]);
+      }
+      setRolesLoading(false);
+    }
+
+    void loadRoles();
+
+    return () => {
+      activeRequest = false;
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") closeMenu();
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [menuOpen]);
+
   return (
     <div className="app-layout">
+      <a className="skip-link" href="#noi-dung-chinh">
+        Bỏ qua điều hướng
+      </a>
+
       <div className="app-mobile-header">
         <Link className="text-base font-bold text-[var(--color-ink-navy)]" href="/" onClick={closeMenu}>
           PDT Quality
@@ -85,6 +123,7 @@ export function ApplicationShell({
 
       <div className="app-frame">
         <aside
+          aria-hidden={!menuOpen && undefined}
           className={`app-sidebar ${menuOpen ? "app-sidebar-open" : ""}`}
           id="app-sidebar"
         >
@@ -95,32 +134,47 @@ export function ApplicationShell({
             Quản trị chất lượng nhà trường từ vận hành hằng ngày.
           </p>
 
-          <nav className="mt-8 grid gap-1" aria-label="Điều hướng nghiệp vụ">
-            {primaryNav.map((item) => {
-              const isActive = active === item.key;
+          <nav
+            aria-busy={rolesLoading || undefined}
+            aria-label="Điều hướng nghiệp vụ"
+            className="mt-8 grid gap-1"
+          >
+            {rolesLoading ? (
+              <span className="muted px-3 py-2 text-sm" role="status">
+                Đang tải quyền truy cập…
+              </span>
+            ) : navigation.length > 0 ? (
+              navigation.map((item) => {
+                const isActive = active === item.key;
 
-              return (
-                <Link
-                  aria-current={isActive ? "page" : undefined}
-                  className={`app-nav-link ${isActive ? "app-nav-link-active" : ""}`}
-                  href={item.href}
-                  key={item.key}
-                  onClick={closeMenu}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    aria-current={isActive ? "page" : undefined}
+                    className={`app-nav-link ${isActive ? "app-nav-link-active" : ""}`}
+                    href={item.href}
+                    key={item.key}
+                    onClick={closeMenu}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })
+            ) : (
+              <p className="muted px-3 py-2 text-sm">
+                Tài khoản chưa được cấp vai trò sử dụng.
+              </p>
+            )}
           </nav>
 
-          <CurrentUserRoles />
+          {roleMessage ? <Alert className="mt-4" tone="warning">{roleMessage}</Alert> : null}
+          <CurrentUserRoles roles={roles} />
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
             <LogoutButton />
           </div>
         </aside>
 
-        <main className="app-main">
+        <main className="app-main" id="noi-dung-chinh" tabIndex={-1}>
           <div className="mx-auto grid w-full max-w-[var(--container-width)] gap-8">
             <header className="page-header">
               <h1 className="page-title">{title}</h1>

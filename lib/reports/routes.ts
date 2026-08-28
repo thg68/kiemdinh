@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CapHoc } from "@/lib/assessment/level-engine";
+import { toUserMessage } from "@/lib/errors/user-message";
+import { logServerError } from "@/lib/observability/logger";
 import { collectReportData, createRequestSupabaseClient } from "./data";
 import { sanitizeFileName } from "./format";
 
@@ -50,18 +52,25 @@ export async function withReportData(
 
     return handler({ data, supabase });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Không xuất được báo cáo.";
-    const normalized = message.toLocaleLowerCase("vi");
+    const normalized = error instanceof Error ? error.message.toLocaleLowerCase("vi") : "";
     const status = normalized.includes("cần đăng nhập")
       ? 401
       : normalized.includes("chưa có quyền") || normalized.includes("không có quyền")
         ? 403
         : 500;
+    const message = status === 401
+      ? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử lại."
+      : status === 403
+        ? "Bạn không có quyền xuất báo cáo này. Hãy kiểm tra vai trò hoặc phạm vi đơn vị."
+        : toUserMessage(error, "Không xuất được báo cáo. Vui lòng thử lại.");
 
-    return NextResponse.json(
-      { error: message },
-      { status },
-    );
+    logServerError("report_api_error", error, {
+      operation: "export_report",
+      route: request.nextUrl.pathname,
+      status,
+    });
+
+    return NextResponse.json({ error: message }, { status });
   }
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -96,7 +97,7 @@ export function MyWorkWorkspace() {
       .order("created_at", { ascending: true });
 
     if (assignmentError) {
-      setMessage(assignmentError.message);
+      setMessage(toUserMessage(assignmentError, "Không tải được việc được phân công. Vui lòng thử lại."));
       setLoadingWork(false);
       return;
     }
@@ -180,7 +181,7 @@ export function MyWorkWorkspace() {
   }, [loadWork]);
 
   if (loading || loadingWork) {
-    return <LoadingState label="Đang tải việc của bạn..." />;
+    return <LoadingState label="Đang tải việc của bạn…" />;
   }
 
   if (!profile || !activeYear) {

@@ -99,7 +99,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onConfirm}
           >
-            {isWorking ? "Đang xử lý..." : confirmLabel}
+            {isWorking ? "Đang xử lý…" : confirmLabel}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -62,7 +63,7 @@ export function ApprovedReportsWorkspace() {
       .order("ngay_phe_duyet", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       setLoadingRows(false);
       return;
     }
@@ -95,7 +96,7 @@ export function ApprovedReportsWorkspace() {
     setDownloadingId("");
 
     if (error || !data?.signedUrl) {
-      setMessage(error?.message ?? "Không tạo được liên kết tải báo cáo.");
+      setMessage(toUserMessage(error, "Không tạo được liên kết tải báo cáo. Vui lòng thử lại."));
       return;
     }
 
@@ -103,7 +104,7 @@ export function ApprovedReportsWorkspace() {
   }
 
   if (loading || loadingRows) {
-    return <LoadingState label="Đang tải báo cáo đã phê duyệt..." />;
+    return <LoadingState label="Đang tải báo cáo đã phê duyệt…" />;
   }
 
   if (!profile || !activeYear) {
@@ -192,7 +193,7 @@ export function ApprovedReportsWorkspace() {
                       type="button"
                       onClick={() => void downloadApprovedReport(row)}
                     >
-                      {downloadingId === row.id ? "Đang tạo liên kết..." : "Tải file đã phê duyệt"}
+                      {downloadingId === row.id ? "Đang tạo liên kết…" : "Tải file đã phê duyệt"}
                     </button>
                   ) : (
                     <Link className="button-secondary" href="/bao-cao">

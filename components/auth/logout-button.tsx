@@ -36,7 +36,7 @@ export function LogoutButton() {
       onClick={handleLogout}
       type="button"
     >
-      {isSigningOut ? "Đang đăng xuất..." : "Đăng xuất"}
+      {isSigningOut ? "Đang đăng xuất…" : "Đăng xuất"}
     </button>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -85,7 +86,7 @@ export function CouncilWorkspace() {
       ]);
 
     if (userError || councilError) {
-      setMessage(userError?.message ?? councilError?.message ?? "Không tải được dữ liệu hội đồng.");
+      setMessage(toUserMessage(userError ?? councilError, "Không tải được dữ liệu hội đồng. Vui lòng thử lại."));
       setLoadingData(false);
       return;
     }
@@ -105,7 +106,7 @@ export function CouncilWorkspace() {
         .order("thu_tu", { ascending: true });
 
       if (memberError) {
-        setMessage(memberError.message);
+        setMessage(toUserMessage(memberError, "Không tải được thành viên hội đồng. Vui lòng thử lại."));
         setLoadingData(false);
         return;
       }
@@ -148,7 +149,7 @@ export function CouncilWorkspace() {
       setSaving(false);
 
       if (error) {
-        setMessage(error.message);
+        setMessage(toUserMessage(error));
         return null;
       }
 
@@ -172,7 +173,7 @@ export function CouncilWorkspace() {
     setSaving(false);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return null;
     }
 
@@ -210,7 +211,7 @@ export function CouncilWorkspace() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -231,7 +232,7 @@ export function CouncilWorkspace() {
     const { error } = await supabase.from("thanh_vien_hoi_dong").delete().eq("id", memberId);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -240,7 +241,7 @@ export function CouncilWorkspace() {
   }
 
   if (loading || loadingData) {
-    return <LoadingState label="Đang tải hội đồng tự đánh giá..." />;
+    return <LoadingState label="Đang tải hội đồng tự đánh giá…" />;
   }
 
   if (!profile || !activeYear) {
@@ -299,7 +300,7 @@ export function CouncilWorkspace() {
           </label>
           <div className="flex items-end">
             <button className="button-primary w-full" disabled={saving}>
-              {saving ? "Đang lưu..." : council ? "Lưu hội đồng" : "Tạo hội đồng"}
+              {saving ? "Đang lưu…" : council ? "Lưu hội đồng" : "Tạo hội đồng"}
             </button>
           </div>
         </div>

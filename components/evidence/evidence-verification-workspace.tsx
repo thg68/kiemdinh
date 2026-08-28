@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -81,7 +82,7 @@ export function EvidenceVerificationWorkspace() {
     const { data, error } = await query;
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       setLoadingRows(false);
       return;
     }
@@ -115,7 +116,7 @@ export function EvidenceVerificationWorkspace() {
     setUpdatingId("");
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -134,7 +135,7 @@ export function EvidenceVerificationWorkspace() {
   }
 
   if (loading || loadingRows) {
-    return <LoadingState label="Đang tải hàng đợi xác minh..." />;
+    return <LoadingState label="Đang tải hàng đợi xác minh…" />;
   }
 
   if (!profile || !activeYear) {
@@ -238,7 +239,7 @@ export function EvidenceVerificationWorkspace() {
                       type="button"
                       onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "tu_choi" })}
                     >
-                      {updatingId === row.id ? "Đang lưu..." : "Từ chối"}
+                      {updatingId === row.id ? "Đang lưu…" : "Từ chối"}
                     </button>
                     <button
                       className="button-primary"
@@ -246,7 +247,7 @@ export function EvidenceVerificationWorkspace() {
                       type="button"
                       onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "da_xac_minh" })}
                     >
-                      {updatingId === row.id ? "Đang lưu..." : "Xác minh"}
+                      {updatingId === row.id ? "Đang lưu…" : "Xác minh"}
                     </button>
                   </div>
                 </article>

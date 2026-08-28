@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -83,7 +84,7 @@ export function StandardsWorkspace() {
       .maybeSingle();
 
     if (setError || !setData) {
-      setMessage(setError?.message ?? "Chưa có bộ tiêu chuẩn cho loại hình của đơn vị.");
+      setMessage(toUserMessage(setError, "Chưa có bộ tiêu chuẩn cho loại hình của đơn vị."));
       setLoadingStandards(false);
       return;
     }
@@ -95,7 +96,7 @@ export function StandardsWorkspace() {
       .order("so_thu_tu", { ascending: true });
 
     if (standardError) {
-      setMessage(standardError.message);
+      setMessage(toUserMessage(standardError, "Không tải được danh sách tiêu chuẩn. Vui lòng thử lại."));
       setLoadingStandards(false);
       return;
     }
@@ -113,7 +114,7 @@ export function StandardsWorkspace() {
         : { data: [], error: null };
 
     if (criterionError) {
-      setMessage(criterionError.message);
+      setMessage(toUserMessage(criterionError, "Không tải được danh sách tiêu chí. Vui lòng thử lại."));
       setLoadingStandards(false);
       return;
     }
@@ -151,7 +152,7 @@ export function StandardsWorkspace() {
   }, [criteria, filter, keyword, selectedStandard]);
 
   if (loading || loadingStandards) {
-    return <LoadingState label="Đang tải bộ tiêu chuẩn TT57..." />;
+    return <LoadingState label="Đang tải bộ tiêu chuẩn TT57…" />;
   }
 
   return (

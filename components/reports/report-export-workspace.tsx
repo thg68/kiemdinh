@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -151,7 +152,7 @@ export function ReportExportWorkspace() {
       .maybeSingle();
 
     if (profileError || !profileData) {
-      setMessage(profileError?.message ?? "Bạn cần thiết lập cơ sở giáo dục trước.");
+      setMessage(toUserMessage(profileError, "Bạn cần thiết lập cơ sở giáo dục trước."));
       setLoading(false);
       return;
     }
@@ -196,7 +197,7 @@ export function ReportExportWorkspace() {
       .order("ma", { ascending: true });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -232,7 +233,7 @@ export function ReportExportWorkspace() {
       .eq("cap_hoc", selectedCapHoc);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -252,7 +253,7 @@ export function ReportExportWorkspace() {
       .order("version", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -275,7 +276,7 @@ export function ReportExportWorkspace() {
       setReadinessItems([{
         id: "readiness-error",
         label: "Không kiểm tra được mức sẵn sàng",
-        detail: error?.message ?? "Cơ sở dữ liệu không trả về kết quả.",
+        detail: toUserMessage(error, "Cơ sở dữ liệu không trả về kết quả. Vui lòng thử lại."),
         status: "warning",
       }]);
       return;
@@ -419,7 +420,7 @@ export function ReportExportWorkspace() {
       .upsert(rows, { onConflict: "co_so_id,nam_hoc_id,tieu_chuan_id,cap_hoc" });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -532,7 +533,7 @@ export function ReportExportWorkspace() {
 
       if (uploadError) {
         setDownloading("");
-        setMessage(`Không lưu được file báo cáo đã phê duyệt: ${uploadError.message}`);
+        setMessage(toUserMessage(uploadError, "Không lưu được tệp báo cáo đã phê duyệt. Vui lòng thử lại."));
         return;
       }
     }
@@ -560,7 +561,7 @@ export function ReportExportWorkspace() {
       }
 
       setDownloading("");
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -578,7 +579,7 @@ export function ReportExportWorkspace() {
   }
 
   if (loading) {
-    return <LoadingState label="Đang tải dữ liệu xuất báo cáo..." />;
+    return <LoadingState label="Đang tải dữ liệu xuất báo cáo…" />;
   }
 
   if (!profile || years.length === 0) {
@@ -731,7 +732,7 @@ function ReportExportCard(props: {
         type="button"
         onClick={props.onDownload}
       >
-        {props.isDownloading ? "Đang tạo file..." : "Xuất file"}
+        {props.isDownloading ? "Đang tạo file…" : "Xuất file"}
       </button>
       <div className="grid gap-2 sm:grid-cols-3">
         <button className="button-secondary" type="button" onClick={() => setPendingStatus("nhap")}>

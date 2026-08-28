@@ -51,10 +51,10 @@ export default function Home() {
             <a href="#bao-mat">Bảo mật</a>
           </nav>
           <div className="flex items-center gap-2">
-            <Link className="button-secondary hidden sm:inline-flex" href="/login">
+            <Link className="button-secondary" href="/login">
               Đăng nhập
             </Link>
-            <a className="button-primary" href="#quy-trinh">
+            <a className="button-primary hidden sm:inline-flex" href="#quy-trinh">
               Xem cách hoạt động
             </a>
           </div>

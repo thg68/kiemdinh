@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -52,7 +53,7 @@ export function RelatedDocumentsWorkspace() {
       .order("ngay_ban_hanh", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       setLoadingRows(false);
       return;
     }
@@ -96,7 +97,7 @@ export function RelatedDocumentsWorkspace() {
     setSaving(false);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -113,7 +114,7 @@ export function RelatedDocumentsWorkspace() {
   }
 
   if (loading || loadingRows) {
-    return <LoadingState label="Đang tải văn bản liên quan..." />;
+    return <LoadingState label="Đang tải văn bản liên quan…" />;
   }
 
   if (!profile || !activeYear) {
@@ -192,7 +193,7 @@ export function RelatedDocumentsWorkspace() {
           </label>
         </div>
         <button className="button-primary" disabled={saving}>
-          {saving ? "Đang lưu..." : "Thêm văn bản"}
+          {saving ? "Đang lưu…" : "Thêm văn bản"}
         </button>
       </form>
 

@@ -61,7 +61,7 @@ describe("API xuất báo cáo", () => {
     const response = await withReportData(request(), vi.fn());
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "Không xuất được báo cáo." });
+    expect(await response.json()).toEqual({ error: "Không xuất được báo cáo. Vui lòng thử lại." });
   });
 
   it("truyền dữ liệu theo năm học và cấp học vào handler", async () => {

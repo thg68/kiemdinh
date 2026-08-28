@@ -34,6 +34,12 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -89,6 +95,23 @@ a {
   cursor: pointer;
 }
 
+.skip-link {
+  background: var(--color-paper);
+  border: 2px solid var(--color-electric-cobalt);
+  border-radius: var(--radius-card);
+  color: var(--color-ink-navy);
+  left: 16px;
+  padding: 10px 14px;
+  position: fixed;
+  top: 16px;
+  transform: translateY(-160%);
+  transition: transform 120ms ease;
+  z-index: 100;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
 button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
@@ -166,7 +189,7 @@ button:disabled {
 .landing-heading {
   color: var(--color-charcoal);
   font-family: var(--font-noto-serif), Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 4vw, 3.8rem);
+  font-size: 3.8rem;
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1;
@@ -283,7 +306,7 @@ button:disabled {
 .page-title {
   color: var(--color-charcoal);
   font-family: var(--font-noto-serif), Georgia, "Times New Roman", serif;
-  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  font-size: 3rem;
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1.02;
@@ -823,6 +846,7 @@ button:disabled {
 
   .app-sidebar {
     display: block;
+    visibility: visible;
     min-height: 100vh;
     position: sticky;
     top: 0;
@@ -846,7 +870,7 @@ button:disabled {
 
   .button-primary,
   .button-secondary {
-    width: 100%;
+    max-width: 100%;
   }
 
   .landing-section {
@@ -872,12 +896,14 @@ button:disabled {
     top: 0;
     transform: translateX(-105%);
     transition: transform 180ms ease;
+    visibility: hidden;
     width: 100%;
     z-index: 60;
   }
 
   .app-sidebar-open {
     transform: translateX(0);
+    visibility: visible;
   }
 
   .app-main {
@@ -893,5 +919,52 @@ button:disabled {
 
   .landing-section > .content-wrap {
     animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .landing-heading {
+    font-size: 2.5rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+    line-height: 1.08;
+  }
+
+  .landing-nav .content-wrap {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 374px) {
+  .app-main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .landing-section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .surface-card-pad,
+  .featured-card {
+    padding: 16px;
+  }
+
+  .button-primary,
+  .button-secondary {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

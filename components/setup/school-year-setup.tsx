@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -134,7 +135,7 @@ export function SchoolYearSetup() {
       .maybeSingle();
 
     if (profileError) {
-      setMessage(profileError.message);
+      setMessage(toUserMessage(profileError, "Không tải được hồ sơ người dùng. Vui lòng thử lại."));
       setLoading(false);
       return;
     }
@@ -251,7 +252,7 @@ export function SchoolYearSetup() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -272,7 +273,7 @@ export function SchoolYearSetup() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -297,7 +298,7 @@ export function SchoolYearSetup() {
     });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -323,7 +324,7 @@ export function SchoolYearSetup() {
   }
 
   if (loading) {
-    return <LoadingState label="Đang tải dữ liệu thiết lập..." />;
+    return <LoadingState label="Đang tải dữ liệu thiết lập…" />;
   }
 
   if (!profile) {
@@ -579,7 +580,7 @@ function UserRoleManager(props: {
     setSaving("");
 
     if (error) {
-      props.onMessage(error.message);
+      props.onMessage(toUserMessage(error));
       return;
     }
 
@@ -607,7 +608,7 @@ function UserRoleManager(props: {
     setSaving("");
 
     if (error) {
-      props.onMessage(error.message);
+      props.onMessage(toUserMessage(error));
       return;
     }
 
@@ -660,7 +661,7 @@ function UserRoleManager(props: {
           </label>
           <div className="flex items-end">
             <button className="button-primary w-full" disabled={saving === "invite"}>
-              {saving === "invite" ? "Đang thêm..." : "Thêm người"}
+              {saving === "invite" ? "Đang thêm…" : "Thêm người"}
             </button>
           </div>
         </form>
@@ -759,7 +760,7 @@ function UserRoleRow(props: {
           type="button"
           onClick={() => props.onSave(selectedRoleCodes)}
         >
-          {props.isSaving ? "Đang lưu..." : "Lưu vai trò"}
+          {props.isSaving ? "Đang lưu…" : "Lưu vai trò"}
         </button>
       </div>
     </article>
@@ -823,7 +824,7 @@ function AssignmentManager(props: {
     setSaving(false);
 
     if (error) {
-      props.onMessage(error.message);
+      props.onMessage(toUserMessage(error));
       return;
     }
 
@@ -882,7 +883,7 @@ function AssignmentManager(props: {
                 type="button"
                 onClick={saveAssignments}
               >
-                {saving ? "Đang lưu..." : "Lưu phân công"}
+                {saving ? "Đang lưu…" : "Lưu phân công"}
               </button>
             </div>
           </div>

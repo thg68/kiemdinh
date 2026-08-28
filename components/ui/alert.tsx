@@ -1,8 +1,6 @@
 type AlertTone = "info" | "success" | "warning" | "danger";
 
-type AlertProps = {
-  children: React.ReactNode;
-  className?: string;
+type AlertProps = React.HTMLAttributes<HTMLDivElement> & {
   tone?: AlertTone;
 };
 
@@ -13,12 +11,18 @@ const toneClassName: Record<AlertTone, string> = {
   warning: "alert-warning",
 };
 
-export function Alert({ children, className = "", tone = "info" }: AlertProps) {
+export function Alert({
+  children,
+  className = "",
+  tone = "info",
+  ...props
+}: AlertProps) {
   return (
     <div
       className={`app-alert ${toneClassName[tone]} ${className}`}
       role={tone === "danger" ? "alert" : "status"}
       aria-live={tone === "danger" ? "assertive" : "polite"}
+      {...props}
     >
       {children}
     </div>

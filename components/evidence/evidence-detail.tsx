@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -48,7 +49,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       .maybeSingle();
 
     if (error || !evidenceData) {
-      setMessage(error?.message ?? "Không tìm thấy minh chứng.");
+      setMessage(toUserMessage(error, "Không tìm thấy minh chứng hoặc bạn không có quyền xem."));
       return;
     }
 
@@ -117,7 +118,7 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
   }
 
   if (!evidence) {
-    return message ? <Alert tone="warning">{message}</Alert> : <LoadingState label="Đang tải minh chứng..." />;
+    return message ? <Alert tone="warning">{message}</Alert> : <LoadingState label="Đang tải minh chứng…" />;
   }
 
   return (

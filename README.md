@@ -27,6 +27,10 @@ npm run deploy
 
 Trước khi triển khai, chạy `npm run test`, `npm run lint`, `npm run build` và `npx supabase db lint --linked --level warning`. Không đưa `.env.local`, `.dev.vars` hoặc khóa Supabase `service_role` vào Git.
 
+## Môi Trường Staging
+
+Staging dùng Worker `kiemdinh-app-staging` và một project Supabase riêng. Sao chép `.env.staging.example` để biết danh sách biến, sau đó cấu hình secret trong GitHub Environment `staging`; không dùng database production cho E2E. Quy trình deploy, production gate, observability và rollback nằm tại `docs/SPRINT-11-OPERATIONS.md`.
+
 ## Kiểm Thử
 
 ```bash

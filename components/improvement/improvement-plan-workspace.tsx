@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -158,7 +159,7 @@ export function ImprovementPlanWorkspace() {
       ]);
 
     if (criterionError || userError) {
-      setMessage(criterionError?.message ?? userError?.message ?? "Không tải được dữ liệu tham chiếu.");
+      setMessage(toUserMessage(criterionError ?? userError, "Không tải được dữ liệu tham chiếu. Vui lòng thử lại."));
       setLoadingData(false);
       return;
     }
@@ -184,7 +185,7 @@ export function ImprovementPlanWorkspace() {
       .order("created_at", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -205,7 +206,7 @@ export function ImprovementPlanWorkspace() {
       .maybeSingle();
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -253,7 +254,7 @@ export function ImprovementPlanWorkspace() {
       { onConflict: "co_so_id,nam_hoc_id,cap_hoc" },
     );
     setSavingSections(false);
-    setMessage(error ? error.message : "Đã lưu nội dung tám phần của Mẫu 2.");
+    setMessage(error ? toUserMessage(error) : "Đã lưu nội dung tám phần của Mẫu 2.");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -294,7 +295,7 @@ export function ImprovementPlanWorkspace() {
     setSaving(false);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -323,7 +324,7 @@ export function ImprovementPlanWorkspace() {
       .eq("id", planId);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -332,7 +333,7 @@ export function ImprovementPlanWorkspace() {
   }
 
   if (loading || loadingData) {
-    return <LoadingState label="Đang tải kế hoạch cải tiến..." />;
+    return <LoadingState label="Đang tải kế hoạch cải tiến…" />;
   }
 
   if (!profile || !activeYear) {
@@ -395,7 +396,7 @@ export function ImprovementPlanWorkspace() {
           <TextArea label="8. Cơ chế đánh giá và báo cáo" value={reportSections.co_che_danh_gia_bao_cao} onChange={(value) => setReportSections((current) => ({ ...current, co_che_danh_gia_bao_cao: value }))} />
         </div>
         <button className="button-primary justify-self-start" disabled={savingSections} type="button" onClick={saveReportSections}>
-          {savingSections ? "Đang lưu..." : "Lưu nội dung Mẫu 2"}
+          {savingSections ? "Đang lưu…" : "Lưu nội dung Mẫu 2"}
         </button>
       </section>
 
@@ -452,7 +453,7 @@ export function ImprovementPlanWorkspace() {
         </div>
 
         <button className="button-primary" disabled={saving}>
-          {saving ? "Đang lưu..." : "Thêm vào kế hoạch"}
+          {saving ? "Đang lưu…" : "Thêm vào kế hoạch"}
         </button>
       </form>
 

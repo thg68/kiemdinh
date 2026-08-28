@@ -1,0 +1,83 @@
+name: Production release and rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Thao tác cần thực hiện
+        required: true
+        type: choice
+        options:
+          - deploy
+          - rollback
+      backup_confirmed:
+        description: Đã sao lưu và xác nhận phương án khôi phục dữ liệu
+        required: true
+        type: boolean
+        default: false
+      reason:
+        description: Mã phiên bản hoặc lý do thao tác
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate-release:
+    if: inputs.action == 'deploy' && inputs.backup_confirmed
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.PRODUCTION_APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  deploy-production:
+    if: inputs.action == 'deploy' && inputs.backup_confirmed
+    needs: [validate-release]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PRODUCTION_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.PRODUCTION_APP_URL }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run deploy:production
+
+  rollback-production:
+    if: inputs.action == 'rollback'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run rollback:production

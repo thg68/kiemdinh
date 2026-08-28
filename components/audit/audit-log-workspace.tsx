@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -104,7 +105,7 @@ export function AuditLogWorkspace() {
       .limit(120);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       setLoadingRows(false);
       return;
     }
@@ -141,7 +142,7 @@ export function AuditLogWorkspace() {
   }, [keyword, objectFilter, rows]);
 
   if (loading || loadingRows) {
-    return <LoadingState label="Đang tải nhật ký thao tác..." />;
+    return <LoadingState label="Đang tải nhật ký thao tác…" />;
   }
 
   if (!profile) {

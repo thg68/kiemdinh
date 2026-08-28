@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -69,7 +70,7 @@ export function useAppContext() {
       .maybeSingle();
 
     if (profileError || !profileData) {
-      setMessage(profileError?.message ?? "Bạn cần thuộc một cơ sở giáo dục trước khi dùng chức năng này.");
+      setMessage(toUserMessage(profileError, "Bạn cần thuộc một cơ sở giáo dục trước khi dùng chức năng này."));
       setLoading(false);
       return;
     }
@@ -89,7 +90,7 @@ export function useAppContext() {
       ]);
 
     if (schoolError || yearError) {
-      setMessage(schoolError?.message ?? yearError?.message ?? "Không tải được thông tin đơn vị.");
+      setMessage(toUserMessage(schoolError ?? yearError, "Không tải được thông tin đơn vị. Vui lòng thử lại."));
       setLoading(false);
       return;
     }

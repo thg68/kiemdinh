@@ -103,3 +103,11 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Snapshot báo cáo tăng version, bất biến sau phê duyệt và phải trỏ tới object thật trong bucket `reports` cùng MIME, kích thước và SHA-256.
 - Mẫu 2 có đủ nơi nhập sáu phần thuyết minh; thông tin chung và bảng kế hoạch lấy từ dữ liệu năm học để tạo đủ tám phần.
 - JSON năm học mang metadata phiên bản và lịch sử snapshot; gói minh chứng ZIP được nén theo stream từ signed URL thay vì giữ toàn bộ tệp trong RAM.
+
+## Sprint 11 - UI/UX và vận hành
+
+- Dùng singleton Supabase browser client; chuẩn hóa lỗi tiếng Việt và chặn lộ PostgREST, SQLSTATE, JWT hoặc stack trace.
+- Bổ sung error boundary, Workers Logs có cấu trúc và quy tắc không ghi secret/dữ liệu cá nhân.
+- Điều hướng theo vai trò để giảm nhiễu; RLS/RPC tiếp tục là nguồn authorization duy nhất.
+- Kiểm tra responsive 320-1440 px, keyboard, focus, form labels, loading và disabled states.
+- Tách Cloudflare/Supabase staging, thêm CI deploy staging, production approval gate và rollback.

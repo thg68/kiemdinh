@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
@@ -82,7 +83,7 @@ export function AssessmentApprovalWorkspace() {
       .order("ngay_cap_nhat", { ascending: false });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       setLoadingRows(false);
       return;
     }
@@ -118,7 +119,7 @@ export function AssessmentApprovalWorkspace() {
     setUpdatingId("");
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -137,7 +138,7 @@ export function AssessmentApprovalWorkspace() {
   }
 
   if (loading || loadingRows) {
-    return <LoadingState label="Đang tải tiêu chí chờ duyệt..." />;
+    return <LoadingState label="Đang tải tiêu chí chờ duyệt…" />;
   }
 
   if (!profile || !activeYear) {
@@ -234,7 +235,7 @@ export function AssessmentApprovalWorkspace() {
                       type="button"
                       onClick={() => setPendingAction({ row, status: "dang_ra_soat" })}
                     >
-                      {updatingId === row.id ? "Đang lưu..." : "Trả về rà soát"}
+                      {updatingId === row.id ? "Đang lưu…" : "Trả về rà soát"}
                     </button>
                     <button
                       className="button-danger"
@@ -242,7 +243,7 @@ export function AssessmentApprovalWorkspace() {
                       type="button"
                       onClick={() => setPendingAction({ row, status: "da_duyet" })}
                     >
-                      {updatingId === row.id ? "Đang lưu..." : "Chốt mức"}
+                      {updatingId === row.id ? "Đang lưu…" : "Chốt mức"}
                     </button>
                   </div>
                 </article>

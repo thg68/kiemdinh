@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import {
@@ -57,7 +58,7 @@ export function PasswordResetForm() {
     setIsSubmitting(false);
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -104,7 +105,7 @@ export function PasswordResetForm() {
       </p>
 
       {step === "request" ? (
-        <form className="mt-6 space-y-4" onSubmit={requestReset}>
+        <form aria-describedby={message ? "password-reset-status" : undefined} className="mt-6 space-y-4" onSubmit={requestReset}>
           <label className="block text-sm font-medium text-[var(--color-charcoal)]">
             Email
             <input
@@ -120,11 +121,11 @@ export function PasswordResetForm() {
             disabled={isSubmitting}
             type="submit"
           >
-            {isSubmitting ? "Đang gửi..." : "Gửi liên kết đặt lại"}
+            {isSubmitting ? "Đang gửi…" : "Gửi liên kết đặt lại"}
           </button>
         </form>
       ) : (
-        <form className="mt-6 space-y-4" onSubmit={updatePassword}>
+        <form aria-describedby={message ? "password-reset-status" : undefined} className="mt-6 space-y-4" onSubmit={updatePassword}>
           <label className="block text-sm font-medium text-[var(--color-charcoal)]">
             Mật khẩu mới
             <input
@@ -141,12 +142,12 @@ export function PasswordResetForm() {
             disabled={isSubmitting}
             type="submit"
           >
-            {isSubmitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+            {isSubmitting ? "Đang cập nhật…" : "Cập nhật mật khẩu"}
           </button>
         </form>
       )}
 
-      {message ? <Alert className="mt-4" tone={message.includes("đã") || message.includes("Đã") ? "success" : "warning"}>{message}</Alert> : null}
+      {message ? <Alert className="mt-4" id="password-reset-status" tone={message.includes("đã") || message.includes("Đã") ? "success" : "warning"}>{message}</Alert> : null}
 
       <Link
         className="mt-5 inline-flex text-sm font-semibold text-[var(--color-electric-cobalt)]"

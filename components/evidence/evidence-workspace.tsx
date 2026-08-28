@@ -1,5 +1,6 @@
 "use client";
 
+import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
@@ -92,7 +93,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       .maybeSingle();
 
     if (profileError || !profileData) {
-      setMessage(profileError?.message ?? "Bạn cần thiết lập cơ sở giáo dục trước.");
+      setMessage(toUserMessage(profileError, "Bạn cần thiết lập cơ sở giáo dục trước."));
       setLoading(false);
       return;
     }
@@ -120,7 +121,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       .order("ma", { ascending: true });
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -175,7 +176,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
     const { data: evidenceData, error } = await query;
 
     if (error) {
-      setMessage(error.message);
+      setMessage(toUserMessage(error));
       return;
     }
 
@@ -262,7 +263,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
   }, [loadEvidence]);
 
   if (loading) {
-    return <LoadingState label="Đang tải kho minh chứng..." />;
+    return <LoadingState label="Đang tải kho minh chứng…" />;
   }
 
   return (
@@ -445,7 +446,7 @@ function EvidenceCreateForm(props: {
       });
 
       setSubmitting(false);
-      await props.onDone(error ? error.message : "Đã gắn thêm tiêu chí cho minh chứng có sẵn.");
+      await props.onDone(error ? toUserMessage(error) : "Đã gắn thêm tiêu chí cho minh chứng có sẵn.");
       return;
     }
 
@@ -495,7 +496,7 @@ function EvidenceCreateForm(props: {
 
       if (uploadError) {
         setSubmitting(false);
-        await props.onDone(uploadError.message);
+        await props.onDone(toUserMessage(uploadError, "Không tải được tệp minh chứng. Vui lòng thử lại."));
         return;
       }
     }
@@ -521,7 +522,7 @@ function EvidenceCreateForm(props: {
         await props.supabase.storage.from("evidence").remove([storagePath]);
       }
 
-      await props.onDone(error.message);
+      await props.onDone(toUserMessage(error));
       return;
     }
 
@@ -659,7 +660,7 @@ function EvidenceCreateForm(props: {
           className="button-primary w-full"
           disabled={submitting}
         >
-          {submitting ? "Đang lưu..." : mode === "new" ? "Tải lên và gắn tiêu chí" : "Gắn tiêu chí cho mã có sẵn"}
+          {submitting ? "Đang lưu…" : mode === "new" ? "Tải lên và gắn tiêu chí" : "Gắn tiêu chí cho mã có sẵn"}
         </button>
       </form>
     </section>

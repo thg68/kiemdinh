@@ -144,7 +144,7 @@ export function LoginForm() {
         </button>
       </div>
 
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+      <form aria-describedby={message ? "login-status" : undefined} className="mt-6 space-y-4" onSubmit={handleSubmit}>
         {mode === "dang_ky" ? (
           <label className="block text-sm font-medium text-[var(--color-charcoal)]">
             Họ và tên
@@ -194,14 +194,14 @@ export function LoginForm() {
           disabled={isSubmitting}
         >
           {isSubmitting
-            ? "Đang xử lý..."
+            ? "Đang xử lý…"
             : mode === "dang_nhap"
               ? "Đăng nhập"
               : "Tạo tài khoản đơn vị"}
         </button>
       </form>
 
-      {message ? <Alert className="mt-4" tone={messageTone}>{message}</Alert> : null}
+      {message ? <Alert className="mt-4" id="login-status" tone={messageTone}>{message}</Alert> : null}
     </div>
   );
 }

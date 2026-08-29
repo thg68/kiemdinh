@@ -1,8 +1,26 @@
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
+
 const environment = process.argv[2];
 
 if (!["staging", "production"].includes(environment)) {
   console.error("Cách dùng: node scripts/validate-deployment-env.mjs <staging|production>");
   process.exit(1);
+}
+
+// Script Node thuần không tự nạp file môi trường như Next.js.
+// Nạp file ưu tiên cao trước vì process.loadEnvFile không ghi đè biến đã có.
+for (const envFile of [
+  `.env.${environment}.local`,
+  ".env.local",
+  `.env.${environment}`,
+  ".env",
+]) {
+  const envPath = resolve(process.cwd(), envFile);
+
+  if (existsSync(envPath)) {
+    process.loadEnvFile(envPath);
+  }
 }
 
 const required = [

@@ -34,7 +34,18 @@ Khi dùng lại minh chứng, hệ thống không cấp mã mới. Đây là cá
 
 [CHÈN ẢNH: Chế độ dùng lại minh chứng]
 
-## 4. Cập nhật tự đánh giá từng tiêu chí
+## 4. Xác minh minh chứng
+
+1. Vào **Minh chứng**, chọn **Xác minh minh chứng**.
+2. Chọn **Tất cả** để xem toàn bộ minh chứng của năm học.
+3. Bấm **Xem chi tiết** tại minh chứng cần kiểm tra.
+4. Đối chiếu tên tiêu chí, nội dung yêu cầu Mức 1/Mức 2 và thông tin tệp.
+5. Bấm **Mở tệp đính kèm** để xem tệp bằng liên kết tạm thời 10 phút, hoặc mở liên kết điện tử.
+6. Chỉ bấm **Xác minh** khi nội dung tệp phù hợp; nếu chưa phù hợp, bấm **Từ chối**.
+
+[CHÈN ẢNH: Chi tiết tiêu chí và tệp tại màn hình xác minh minh chứng]
+
+## 5. Cập nhật tự đánh giá từng tiêu chí
 
 1. Vào **Tự đánh giá**.
 2. Chọn tiêu chí trên Gap Board.
@@ -47,7 +58,7 @@ Nếu chưa có mô tả hoặc chưa gắn mã minh chứng, hệ thống sẽ 
 
 [CHÈN ẢNH: Form tự đánh giá một tiêu chí]
 
-## 5. Nhập nhận xét để xuất Mẫu 1
+## 6. Nhập nhận xét để xuất Mẫu 1
 
 1. Vào **Xuất báo cáo**.
 2. Nhập nhận xét cho từng tiêu chuẩn:
@@ -58,7 +69,7 @@ Nếu chưa có mô tả hoặc chưa gắn mã minh chứng, hệ thống sẽ 
 
 [CHÈN ẢNH: Form nhận xét theo tiêu chuẩn]
 
-## 6. Xuất và kiểm tra file
+## 7. Xuất và kiểm tra file
 
 1. Xuất **Mẫu 1** để kiểm tra báo cáo tự đánh giá.
 2. Xuất **Mẫu 2** nếu đã có kế hoạch cải tiến.

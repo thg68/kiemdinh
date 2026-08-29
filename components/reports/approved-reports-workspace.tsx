@@ -1,62 +1,50 @@
 "use client";
 
-import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAppContext } from "@/components/shared/use-app-context";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { useAppContext } from "@/components/shared/use-app-context";
+import { toUserMessage } from "@/lib/errors/user-message";
+import {
+  ApprovedReportRow,
+  formatApprovedAt,
+  reportOwnerLabel,
+  reportTypeLabel,
+  reportTypeLabels,
+  schoolLevelLabel,
+} from "@/lib/reports/approved-report";
 
-type ReportRow = {
-  id: string;
-  loai_bao_cao: string;
-  version: number;
-  trang_thai: string;
-  storage_path: string | null;
-  ngay_phe_duyet: string | null;
-  nguoi_tao?: {
-    ho_ten: string | null;
-    email: string | null;
-  } | null;
-  nguoi_phe_duyet?: {
-    ho_ten: string | null;
-    email: string | null;
-  } | null;
-};
-
-const reportTypeLabels: Record<string, string> = {
-  mau_1_tu_danh_gia: "Mẫu 1 - Báo cáo tự đánh giá",
-  mau_2_ke_hoach_cai_tien: "Mẫu 2 - Kế hoạch cải tiến",
-  danh_muc_minh_chung: "Danh mục minh chứng",
-  goi_minh_chung: "Gói minh chứng",
-  du_lieu_nam_hoc_json: "Dữ liệu đầy đủ năm học",
-};
+const reportSelect = [
+  "id", "loai_bao_cao", "cap_hoc", "version", "trang_thai", "storage_path",
+  "ten_tep_goc", "mime_type", "kich_thuoc", "sha256", "export_metadata",
+  "ngay_phe_duyet", "created_at",
+  "nguoi_tao:nguoi_tao(ho_ten, email)",
+  "nguoi_phe_duyet:nguoi_phe_duyet(ho_ten, email)",
+].join(", ");
 
 export function ApprovedReportsWorkspace() {
   const { activeYear, loading, message, profile, setMessage, supabase, years } = useAppContext();
   const [selectedYearId, setSelectedYearId] = useState("");
-  const [rows, setRows] = useState<ReportRow[]>([]);
+  const [selectedType, setSelectedType] = useState("all");
+  const [rows, setRows] = useState<ApprovedReportRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [downloadingId, setDownloadingId] = useState("");
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
 
   const loadRows = useCallback(async () => {
-    if (!supabase || !profile || !effectiveYearId) {
-      return;
-    }
+    if (!supabase || !profile || !effectiveYearId) return;
 
     setLoadingRows(true);
     setMessage("");
 
     const { data, error } = await supabase
       .from("bao_cao")
-      .select(
-        "id, loai_bao_cao, version, trang_thai, storage_path, ngay_phe_duyet, nguoi_tao:nguoi_tao(ho_ten, email), nguoi_phe_duyet:nguoi_phe_duyet(ho_ten, email)",
-      )
+      .select(reportSelect)
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", effectiveYearId)
       .eq("trang_thai", "da_phe_duyet")
@@ -64,35 +52,33 @@ export function ApprovedReportsWorkspace() {
 
     if (error) {
       setMessage(toUserMessage(error));
-      setLoadingRows(false);
-      return;
+      setRows([]);
+    } else {
+      setRows((data ?? []) as unknown as ApprovedReportRow[]);
     }
 
-    setRows((data ?? []) as unknown as ReportRow[]);
     setLoadingRows(false);
   }, [effectiveYearId, profile, setMessage, supabase]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      void loadRows();
-    }, 0);
-
+    const timer = window.setTimeout(() => void loadRows(), 0);
     return () => window.clearTimeout(timer);
   }, [loadRows]);
 
-  async function downloadApprovedReport(row: ReportRow) {
+  const visibleRows = useMemo(
+    () => rows.filter((row) => selectedType === "all" || row.loai_bao_cao === selectedType),
+    [rows, selectedType],
+  );
+
+  async function downloadApprovedReport(row: ApprovedReportRow) {
     if (!supabase || !row.storage_path) {
-      setMessage("Báo cáo này chưa có file lưu trữ để tải xuống.");
+      setMessage("Báo cáo này chưa có tệp lưu trữ để tải xuống.");
       return;
     }
 
     setDownloadingId(row.id);
     setMessage("");
-
-    const { data, error } = await supabase.storage
-      .from("reports")
-      .createSignedUrl(row.storage_path, 60);
-
+    const { data, error } = await supabase.storage.from("reports").createSignedUrl(row.storage_path, 60);
     setDownloadingId("");
 
     if (error || !data?.signedUrl) {
@@ -103,16 +89,13 @@ export function ApprovedReportsWorkspace() {
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
-  if (loading || loadingRows) {
-    return <LoadingState label="Đang tải báo cáo đã phê duyệt…" />;
-  }
+  if (loading) return <LoadingState label="Đang tải kho báo cáo…" />;
 
   if (!profile || !activeYear) {
     return (
       <EmptyState
         title="Chưa có năm học để xem báo cáo"
-        description="Hãy thiết lập đơn vị và năm học trước khi xem báo cáo đã phê duyệt."
-        action={<Link className="button-primary" href="/thiet-lap">Thiết lập ngay</Link>}
+        description="Tài khoản cần thuộc một đơn vị có năm học đang hoạt động trước khi xem báo cáo đã phê duyệt."
       />
     );
   }
@@ -121,7 +104,7 @@ export function ApprovedReportsWorkspace() {
     <div className="grid gap-6">
       {message ? <Alert tone="warning">{message}</Alert> : null}
 
-      <section className="surface-card grid gap-3 p-5 md:grid-cols-[1fr_auto] md:items-end">
+      <section className="surface-card grid gap-4 p-5 md:grid-cols-2">
         <label className="text-sm font-medium">
           Năm học
           <select
@@ -136,70 +119,75 @@ export function ApprovedReportsWorkspace() {
             ))}
           </select>
         </label>
-        <Link className="button-secondary" href="/bao-cao">
-          Mở màn xuất báo cáo
-        </Link>
+
+        <label className="text-sm font-medium">
+          Loại báo cáo
+          <select
+            className="form-control mt-2"
+            value={selectedType}
+            onChange={(event) => setSelectedType(event.target.value)}
+          >
+            <option value="all">Tất cả loại báo cáo</option>
+            {Object.entries(reportTypeLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>
       </section>
 
       <section className="surface-card overflow-hidden">
-        <div className="border-b border-[var(--color-border)] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Báo cáo đã phê duyệt</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
-            Khách chỉ đọc chỉ nên xem các báo cáo ở trạng thái đã phê duyệt.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Kho báo cáo đã phê duyệt</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+              Các bản tại đây là snapshot chính thức, chỉ đọc và không thể ghi đè.
+            </p>
+          </div>
+          <Badge>{visibleRows.length} báo cáo</Badge>
         </div>
 
-        {rows.length === 0 ? (
+        {loadingRows ? (
+          <div className="p-5"><LoadingState label="Đang tải báo cáo…" /></div>
+        ) : visibleRows.length === 0 ? (
           <div className="p-5">
             <EmptyState
-              title="Chưa có báo cáo đã phê duyệt"
-              description="Khi Hiệu trưởng hoặc Chủ tịch hội đồng phê duyệt báo cáo, bản ghi sẽ xuất hiện tại đây."
+              title={rows.length === 0 ? "Chưa có báo cáo đã phê duyệt" : "Không có báo cáo phù hợp"}
+              description={rows.length === 0
+                ? "Báo cáo sẽ xuất hiện tại đây sau khi người có thẩm quyền phê duyệt."
+                : "Hãy chọn loại báo cáo khác để xem các bản đã phê duyệt trong năm học này."}
             />
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
-            {rows.map((row) => (
-              <article className="grid gap-4 px-5 py-4 md:grid-cols-[1fr_auto]" key={row.id}>
-                <div>
+            {visibleRows.map((row) => (
+              <article className="grid gap-4 px-5 py-5 lg:grid-cols-[1fr_auto] lg:items-center" key={row.id}>
+                <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-base font-semibold text-[var(--color-ink-navy)]">
-                      {reportTypeLabels[row.loai_bao_cao] ?? row.loai_bao_cao}
+                      {reportTypeLabel(row.loai_bao_cao)}
                     </h3>
                     <StatusBadge status={row.trang_thai} />
-                    <Badge>v{row.version}</Badge>
+                    <Badge>Phiên bản {row.version}</Badge>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--color-graphite)]/70">
-                    Người tạo: {row.nguoi_tao?.ho_ten ?? row.nguoi_tao?.email ?? "Chưa rõ"} ·
-                    {" "}Người phê duyệt: {row.nguoi_phe_duyet?.ho_ten ?? row.nguoi_phe_duyet?.email ?? "Chưa rõ"}
-                  </p>
-                  {row.storage_path ? (
-                    <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
-                      File lưu trữ: {row.storage_path}
-                    </p>
-                  ) : (
-                    <Alert className="mt-3" tone="warning">
-                      Bản ghi đã phê duyệt nhưng chưa có file lưu trữ. Hãy mở màn xuất báo cáo và xuất lại từ dữ liệu hiện tại.
-                    </Alert>
-                  )}
+                  <dl className="mt-3 grid gap-x-6 gap-y-1 text-sm leading-6 text-[var(--color-graphite)]/75 sm:grid-cols-2">
+                    <div><dt className="inline font-medium">Cấp học: </dt><dd className="inline">{schoolLevelLabel(row.cap_hoc)}</dd></div>
+                    <div><dt className="inline font-medium">Phê duyệt: </dt><dd className="inline">{formatApprovedAt(row.ngay_phe_duyet)}</dd></div>
+                    <div><dt className="inline font-medium">Người tạo: </dt><dd className="inline">{reportOwnerLabel(row.nguoi_tao)}</dd></div>
+                    <div><dt className="inline font-medium">Người phê duyệt: </dt><dd className="inline">{reportOwnerLabel(row.nguoi_phe_duyet)}</dd></div>
+                  </dl>
                 </div>
-                <div className="grid gap-3 md:justify-items-end">
-                  <time className="text-sm text-[var(--color-graphite)]/70" dateTime={row.ngay_phe_duyet ?? undefined}>
-                    {row.ngay_phe_duyet ? new Date(row.ngay_phe_duyet).toLocaleString("vi-VN") : "Chưa có ngày phê duyệt"}
-                  </time>
-                  {row.storage_path ? (
-                    <button
-                      className="button-primary"
-                      disabled={downloadingId === row.id}
-                      type="button"
-                      onClick={() => void downloadApprovedReport(row)}
-                    >
-                      {downloadingId === row.id ? "Đang tạo liên kết…" : "Tải file đã phê duyệt"}
-                    </button>
-                  ) : (
-                    <Link className="button-secondary" href="/bao-cao">
-                      Mở màn xuất file
-                    </Link>
-                  )}
+                <div className="flex flex-wrap gap-2 lg:justify-end">
+                  <Link className="button-secondary" href={`/bao-cao/da-phe-duyet/${row.id}`}>
+                    Xem chi tiết
+                  </Link>
+                  <button
+                    className="button-primary"
+                    disabled={!row.storage_path || downloadingId === row.id}
+                    type="button"
+                    onClick={() => void downloadApprovedReport(row)}
+                  >
+                    {downloadingId === row.id ? "Đang tạo liên kết…" : "Tải báo cáo"}
+                  </button>
                 </div>
               </article>
             ))}

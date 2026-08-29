@@ -8,7 +8,7 @@ export default function ApprovedReportsPage() {
     <ApplicationShell
       active="reports"
       title="Báo cáo đã phê duyệt"
-      description="Không gian chỉ đọc cho các báo cáo đã được chốt, phù hợp với vai trò khách hoặc đoàn thẩm định khi cần."
+      description="Kho chỉ đọc dành cho các snapshot báo cáo chính thức của đơn vị."
     >
       <ApprovedReportsWorkspace />
     </ApplicationShell>

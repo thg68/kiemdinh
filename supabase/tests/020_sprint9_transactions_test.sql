@@ -135,7 +135,7 @@ select is(
 );
 
 select is(
-  (select trang_thai from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
+  (select nh.trang_thai from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
     where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2099-2100'),
   'dang_hoat_dong',
   'Nam hoc duoc chon tro thanh dang hoat dong'
@@ -155,17 +155,18 @@ insert into public.minh_chung_tieu_chi(minh_chung_id, tieu_chi_id, la_tieu_chi_g
 select mc.id, vtc.id, true
 from public.v_tieu_chi_nam_hoc vtc
 join public.minh_chung mc on mc.co_so_id = vtc.co_so_id and mc.nam_hoc_id = vtc.nam_hoc_id and mc.ma = 'MC.' || vtc.ma || '.90'
-join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099';
+join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099'
+where vtc.ma <> '1.1';
 
 insert into public.tu_danh_gia(co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc, mo_ta_muc_1, dat_muc_1, muc_dat, nguoi_nhap)
-select vtc.co_so_id, vtc.nam_hoc_id, vtc.id, 'mam_non', 'Hien trang co minh chung ' || vtc.ma, true, 1, nd.id
+select vtc.co_so_id, vtc.nam_hoc_id, vtc.id, 'mam_non'::public.cap_hoc, 'Hien trang co minh chung ' || vtc.ma, true, 1, nd.id
 from public.v_tieu_chi_nam_hoc vtc
 join public.nguoi_dung nd on nd.co_so_id = vtc.co_so_id
 join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099'
 where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and vtc.ma <> '1.1';
 
 insert into public.nhan_xet_tieu_chuan(co_so_id, nam_hoc_id, tieu_chuan_id, cap_hoc, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien, nguoi_cap_nhat)
-select distinct vtc.co_so_id, vtc.nam_hoc_id, vtc.tieu_chuan_id, 'mam_non', 'Diem manh', 'Han che', 'Dinh huong', nd.id
+select distinct vtc.co_so_id, vtc.nam_hoc_id, vtc.tieu_chuan_id, 'mam_non'::public.cap_hoc, 'Diem manh', 'Han che', 'Dinh huong', nd.id
 from public.v_tieu_chi_nam_hoc vtc
 join public.nguoi_dung nd on nd.co_so_id = vtc.co_so_id
 join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099'
@@ -220,8 +221,8 @@ select is((select max(version) from public.bao_cao where trang_thai = 'da_phe_du
 
 select throws_ok(
   $$update public.bao_cao set ten_tep_goc = 'ghi-de.docx' where trang_thai = 'da_phe_duyet' and version = 1$$,
-  'P0001', 'Snapshot bao cao da phe duyet la bat bien va khong duoc ghi de.',
-  'Snapshot da phe duyet khong the ghi de'
+  '42501', null,
+  'Client khong ghi de truc tiep snapshot da phe duyet'
 );
 
 select lives_ok(

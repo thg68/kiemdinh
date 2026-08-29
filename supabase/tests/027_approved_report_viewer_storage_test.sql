@@ -25,10 +25,10 @@ values
   ('27000000-0000-0000-0000-000000000202', '27000000-0000-0000-0000-000000000102', '27000000-0000-0000-0000-000000000001', 'Principal 27', 'principal27@test.local');
 
 insert into public.nguoi_dung_vai_tro(nguoi_dung_id, vai_tro_id, co_so_id)
-select '27000000-0000-0000-0000-000000000201', id, '27000000-0000-0000-0000-000000000001'
+select '27000000-0000-0000-0000-000000000201'::uuid, id, '27000000-0000-0000-0000-000000000001'::uuid
 from public.vai_tro where ma = 'VIEWER'
 union all
-select '27000000-0000-0000-0000-000000000202', id, '27000000-0000-0000-0000-000000000001'
+select '27000000-0000-0000-0000-000000000202'::uuid, id, '27000000-0000-0000-0000-000000000001'::uuid
 from public.vai_tro where ma = 'PRINCIPAL';
 
 alter table public.bao_cao disable trigger user;

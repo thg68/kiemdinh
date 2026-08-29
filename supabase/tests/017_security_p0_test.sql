@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 
-select plan(16);
+select plan(17);
 
 insert into auth.users(id, email, aud, role, created_at, updated_at)
 values
@@ -191,9 +191,9 @@ select throws_ok(
       '00000000-0000-0000-0000-00000000a201'
     )
   $$,
-  '23514',
+  '42501',
   null,
-  'Tenant A khong gan metadata vao path Tenant B'
+  'Client khong chen truc tiep metadata minh chung'
 );
 
 reset role;
@@ -225,9 +225,14 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000a103', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
 
-update public.bao_cao
-set trang_thai = 'da_phe_duyet'
-where id = '00000000-0000-0000-0000-00000000b401';
+select throws_ok(
+  $$update public.bao_cao
+    set trang_thai = 'da_phe_duyet'
+    where id = '00000000-0000-0000-0000-00000000b401'$$,
+  '42501',
+  null,
+  'Client khong cap nhat truc tiep bao cao'
+);
 
 reset role;
 
@@ -263,7 +268,7 @@ select throws_ok(
   'Tenant A khong sinh ma minh chung cho Tenant B'
 );
 
-select lives_ok(
+select throws_ok(
   $$
     insert into public.minh_chung(
       co_so_id, nam_hoc_id, ma, ten, storage_path, nguoi_tai_len
@@ -276,7 +281,9 @@ select lives_ok(
       '00000000-0000-0000-0000-00000000a201'
     )
   $$,
-  'Tenant hop le van tao metadata trong path cua minh'
+  '42501',
+  null,
+  'Client tao minh chung qua RPC, khong chen truc tiep'
 );
 
 reset role;

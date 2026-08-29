@@ -72,6 +72,17 @@ type PendingInvitation = {
   het_han_luc: string;
 };
 
+type ManagedInvitation = {
+  id: string;
+  email: string;
+  ho_ten: string | null;
+  ma_vai_tro: string;
+  ten_vai_tro: string;
+  trang_thai: string;
+  het_han_luc: string;
+  created_at: string;
+};
+
 const assignableRoleCodes = [
   "SELF_ASSESSMENT_CHAIR",
   "SECRETARY",
@@ -110,6 +121,7 @@ export function SchoolYearSetup() {
   const [canManageAssignments, setCanManageAssignments] = useState(false);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
+  const [managedInvitations, setManagedInvitations] = useState<ManagedInvitation[]>([]);
   const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
 
   const [tenCoSo, setTenCoSo] = useState("");
@@ -140,7 +152,21 @@ export function SchoolYearSetup() {
       return;
     }
 
-    const { data: systemAdminData } = await supabase.rpc("fn_la_quan_tri_he_thong");
+    const { data: systemAdminData, error: systemAdminError } = await supabase.rpc(
+      "fn_la_quan_tri_he_thong",
+    );
+
+    if (systemAdminError) {
+      setMessage(
+        toUserMessage(
+          systemAdminError,
+          "Không kiểm tra được quyền quản trị hệ thống. Vui lòng tải lại trang.",
+        ),
+      );
+      setLoading(false);
+      return;
+    }
+
     setIsSystemAdmin(Boolean(systemAdminData));
 
     const { data: profileData, error: profileError } = await supabase
@@ -170,12 +196,13 @@ export function SchoolYearSetup() {
     setProfile(profileData);
 
     const [
-      { data: schoolData },
-      { data: yearData },
-      { data: userData },
-      { data: roleData },
-      { data: canManage },
-      { data: canManageAssignment },
+      { data: schoolData, error: schoolError },
+      { data: yearData, error: yearError },
+      { data: userData, error: userError },
+      { data: roleData, error: roleError },
+      { data: canManage, error: canManageError },
+      { data: canManageAssignment, error: canManageAssignmentError },
+      { data: managedInvitationData, error: managedInvitationError },
     ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
@@ -203,7 +230,28 @@ export function SchoolYearSetup() {
       supabase.rpc("fn_can_manage_assignment", {
         p_co_so_id: profileData.co_so_id,
       }),
+      supabase.rpc("fn_danh_sach_loi_moi_cua_co_so"),
     ]);
+
+    const loadError =
+      schoolError ??
+      yearError ??
+      userError ??
+      roleError ??
+      canManageError ??
+      canManageAssignmentError ??
+      managedInvitationError;
+
+    if (loadError) {
+      setMessage(
+        toUserMessage(
+          loadError,
+          "Không tải được dữ liệu người dùng và phân quyền. Vui lòng tải lại trang.",
+        ),
+      );
+      setLoading(false);
+      return;
+    }
 
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
@@ -211,12 +259,16 @@ export function SchoolYearSetup() {
     setRoles((roleData ?? []) as Role[]);
     setCanManageUsers(Boolean(canManage));
     setCanManageAssignments(Boolean(canManageAssignment));
+    setManagedInvitations((managedInvitationData ?? []) as ManagedInvitation[]);
 
     const loadedYears = (yearData ?? []) as SchoolYear[];
     const loadedActiveYear = loadedYears.find((year) => year.trang_thai === "dang_hoat_dong") ?? loadedYears[0];
 
     if (loadedActiveYear) {
-      const [{ data: assignmentData }, { data: criterionData }] = await Promise.all([
+      const [
+        { data: assignmentData, error: assignmentError },
+        { data: criterionData, error: criterionError },
+      ] = await Promise.all([
         supabase
           .from("phan_cong_tieu_chi")
           .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, vai_tro_trong_tieu_chi")
@@ -229,6 +281,19 @@ export function SchoolYearSetup() {
           .eq("nam_hoc_id", loadedActiveYear.id)
           .order("ma", { ascending: true }),
       ]);
+
+      const assignmentLoadError = assignmentError ?? criterionError;
+
+      if (assignmentLoadError) {
+        setMessage(
+          toUserMessage(
+            assignmentLoadError,
+            "Không tải được dữ liệu phân công tiêu chí. Vui lòng tải lại trang.",
+          ),
+        );
+        setLoading(false);
+        return;
+      }
 
       setAssignments((assignmentData ?? []) as Assignment[]);
       setCriteria((criterionData ?? []) as Criterion[]);
@@ -502,6 +567,7 @@ export function SchoolYearSetup() {
       <UserRoleManager
         canManageUsers={canManageUsers}
         currentUserId={profile.id}
+        invitations={managedInvitations}
         roles={roles}
         supabase={supabase}
         users={users}
@@ -607,6 +673,7 @@ function SetupTabs({
 function UserRoleManager(props: {
   canManageUsers: boolean;
   currentUserId: string;
+  invitations: ManagedInvitation[];
   roles: Role[];
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
   users: ManagedUser[];
@@ -647,6 +714,30 @@ function UserRoleManager(props: {
     setHoTen("");
     setRoleCode("TEACHER");
     props.onMessage("Đã gửi lời mời tham gia đơn vị.");
+    await props.onChanged();
+  }
+
+  async function cancelInvitation(invitationId: string) {
+    if (!props.supabase) {
+      props.onMessage("Chưa cấu hình Supabase.");
+      return;
+    }
+
+    setSaving(`invitation:${invitationId}`);
+    props.onMessage("");
+
+    const { error } = await props.supabase.rpc("fn_huy_loi_moi_thanh_vien", {
+      p_loi_moi_id: invitationId,
+    });
+
+    setSaving("");
+
+    if (error) {
+      props.onMessage(toUserMessage(error));
+      return;
+    }
+
+    props.onMessage("Đã hủy lời mời.");
     await props.onChanged();
   }
 
@@ -729,6 +820,60 @@ function UserRoleManager(props: {
           Bạn đang xem danh sách vai trò. Chỉ Hiệu trưởng mới được thêm người hoặc cập nhật phân quyền.
         </p>
       )}
+
+      {props.canManageUsers ? (
+        <div className="border-b border-[var(--color-border)] px-5 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-semibold text-[var(--color-ink-navy)]">
+                Lời mời đang chờ
+              </h3>
+              <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
+                Người nhận sẽ xuất hiện trong danh sách thành viên sau khi chấp nhận lời mời.
+              </p>
+            </div>
+            <span className="rounded-full bg-[var(--color-lavender-mist)] px-3 py-1 text-sm font-semibold text-[var(--color-ink-navy)]">
+              {props.invitations.length} lời mời
+            </span>
+          </div>
+
+          {props.invitations.length === 0 ? (
+            <p className="mt-4 text-sm text-[var(--color-graphite)]/70">
+              Hiện không có lời mời nào đang chờ.
+            </p>
+          ) : (
+            <div className="mt-4 divide-y divide-[var(--color-border)] rounded-[var(--radius-card)] border border-[var(--color-border)]">
+              {props.invitations.map((invitation) => (
+                <article
+                  className="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                  key={invitation.id}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-[var(--color-ink-navy)]">
+                      {invitation.ho_ten || invitation.email}
+                    </p>
+                    <p className="mt-1 break-all text-sm text-[var(--color-graphite)]/70">
+                      {invitation.email}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
+                      {invitation.ten_vai_tro} · Hết hạn ngày{" "}
+                      {new Intl.DateTimeFormat("vi-VN").format(new Date(invitation.het_han_luc))}
+                    </p>
+                  </div>
+                  <button
+                    className="button-secondary"
+                    disabled={saving === `invitation:${invitation.id}`}
+                    type="button"
+                    onClick={() => cancelInvitation(invitation.id)}
+                  >
+                    {saving === `invitation:${invitation.id}` ? "Đang hủy…" : "Hủy lời mời"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
 
       <div className="divide-y divide-[var(--color-border)]">
         {props.users.length === 0 ? (

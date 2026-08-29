@@ -86,9 +86,9 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 
 1. Vào **Thiết lập** rồi chọn **Người dùng và vai trò**.
 2. Nhập email người nhận, họ và tên, sau đó chọn vai trò ban đầu.
-3. Chọn **Gửi lời mời**. Người nhận có thể đăng ký tài khoản sau bằng đúng email này.
-4. Người nhận đăng nhập, mở **Thiết lập** và chọn **Tham gia đơn vị**.
-5. Sau khi họ tham gia, cập nhật thêm vai trò hoặc phân công tiêu chí nếu cần.
+3. Chọn **Gửi lời mời**. Lời mời sẽ xuất hiện trong mục **Lời mời đang chờ**; có thể chọn **Hủy lời mời** nếu nhập nhầm.
+4. Người nhận đăng ký hoặc đăng nhập bằng đúng email được mời, mở **Thiết lập** và chọn **Tham gia đơn vị**.
+5. Sau khi họ tham gia, tài khoản chuyển sang danh sách thành viên; cập nhật thêm vai trò hoặc phân công tiêu chí nếu cần.
 
 Tài khoản mới không tự nhận vai trò Hiệu trưởng. Đơn vị mới và Hiệu trưởng đầu tiên do Quản trị hệ thống thiết lập.
 

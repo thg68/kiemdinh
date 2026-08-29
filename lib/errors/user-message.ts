@@ -28,7 +28,7 @@ export function toUserMessage(error: unknown, fallback = DEFAULT_MESSAGE) {
     return "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử lại.";
   }
 
-  if (/42501|row-level security|permission denied|forbidden|không có quyền|chưa có quyền|403/.test(technical)) {
+  if (/42501|row-level security|permission denied|forbidden|không có quyền|chưa có quyền|khong co quyen|chua co quyen|403/.test(technical)) {
     return "Bạn không có quyền thực hiện thao tác này. Hãy kiểm tra vai trò hoặc phạm vi được phân công.";
   }
 
@@ -52,7 +52,7 @@ export function classifyError(error: unknown) {
   const technical = `${code} ${message} ${status}`;
 
   if (/jwt|session|refresh token|not authenticated|401/.test(technical)) return "authentication";
-  if (/42501|row-level security|permission denied|forbidden|không có quyền|chưa có quyền|403/.test(technical)) return "authorization";
+  if (/42501|row-level security|permission denied|forbidden|không có quyền|chưa có quyền|khong co quyen|chua co quyen|403/.test(technical)) return "authorization";
   if (/23505|duplicate|already exists|409/.test(technical)) return "conflict";
   if (/fetch|network|connection|econn|offline/.test(technical)) return "network";
   if (/timeout|timed out|57014/.test(technical)) return "timeout";

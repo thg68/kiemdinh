@@ -159,7 +159,10 @@ export function ReportExportWorkspace() {
 
     setProfile(profileData as Profile);
 
-    const [{ data: schoolData }, { data: yearData }] = await Promise.all([
+    const [
+      { data: schoolData, error: schoolError },
+      { data: yearData, error: yearError },
+    ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
         .select("id, ten, loai_hinh, cap_hoc")
@@ -171,6 +174,19 @@ export function ReportExportWorkspace() {
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
     ]);
+
+    const setupError = schoolError ?? yearError;
+
+    if (setupError) {
+      setMessage(
+        toUserMessage(
+          setupError,
+          "Không tải được thông tin đơn vị hoặc năm học. Vui lòng thử lại.",
+        ),
+      );
+      setLoading(false);
+      return;
+    }
 
     const loadedSchool = schoolData as School | null;
     const loadedYears = (yearData ?? []) as SchoolYear[];

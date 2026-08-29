@@ -17,6 +17,11 @@ describe("toUserMessage", () => {
     expect(toUserMessage({ code: "42501", message: "permission denied" })).toContain("không có quyền");
   });
 
+  it("nhận diện thông báo phân quyền không dấu từ RPC", () => {
+    expect(toUserMessage({ code: "P0001", message: "Ban khong co quyen kiem tra bao cao cua don vi." }))
+      .toContain("không có quyền");
+  });
+
   it("cho phép màn hình cung cấp lời nhắn dự phòng theo ngữ cảnh", () => {
     expect(toUserMessage(new Error("internal"), "Không tải được danh sách minh chứng. Vui lòng thử lại."))
       .toBe("Không tải được danh sách minh chứng. Vui lòng thử lại.");

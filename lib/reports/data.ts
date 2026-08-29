@@ -217,7 +217,7 @@ export async function collectReportData(
     { data: noteData, error: noteError },
     { data: improvementSectionData, error: improvementSectionError },
     { data: reportSnapshotData, error: reportSnapshotError },
-    { data: councilData },
+    { data: councilData, error: councilError },
   ] = await Promise.all([
     supabase
       .from("co_so_giao_duc")
@@ -290,7 +290,8 @@ export async function collectReportData(
     planError ??
     noteError ??
     improvementSectionError ??
-    reportSnapshotError;
+    reportSnapshotError ??
+    councilError;
 
   if (firstError) {
     throw new Error(firstError.message);

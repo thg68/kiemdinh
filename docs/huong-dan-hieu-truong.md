@@ -55,11 +55,12 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 
 1. Vào **Xuất báo cáo**.
 2. Chọn năm học và cấp học.
-3. Chọn **Mẫu 1 - Báo cáo tự đánh giá (.docx)**.
-4. Mở file Word vừa tải về.
-5. Kiểm tra các dòng cảnh báo màu đỏ. Nếu còn cảnh báo, báo cáo chưa nên dùng chính thức.
-6. Khi báo cáo đã được rà soát, chọn **Phê duyệt** để chuyển báo cáo sang trạng thái khách chỉ đọc có thể xem.
-7. Mỗi lần phê duyệt tạo một phiên bản snapshot mới; phiên bản đã phê duyệt không thể ghi đè hoặc xóa.
+3. Đọc **Mức sẵn sàng của Mẫu 1** và xử lý các mục còn thiếu.
+4. Chọn **Mẫu 1 - Báo cáo tự đánh giá (.docx)**.
+5. Mở file Word vừa tải về.
+6. Kiểm tra các dòng cảnh báo màu đỏ. Nếu còn cảnh báo, báo cáo chưa nên dùng chính thức.
+7. Khi báo cáo đã được rà soát, chọn **Phê duyệt** để chuyển báo cáo sang trạng thái khách chỉ đọc có thể xem.
+8. Mỗi lần phê duyệt tạo một phiên bản snapshot mới; phiên bản đã phê duyệt không thể ghi đè hoặc xóa.
 
 Để hoàn thiện Mẫu 2, vào **Kế hoạch cải tiến**, nhập sáu phần nội dung chung và bảng kế hoạch. Hệ thống sẽ báo rõ phần còn thiếu trước khi cho phê duyệt.
 

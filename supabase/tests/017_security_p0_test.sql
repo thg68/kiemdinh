@@ -162,7 +162,7 @@ select is(
 
 select lives_ok(
   $$select public.fn_log_user_access('EVIDENCE_LIST_READ', null, '{"source":"security-test"}'::jsonb)$$,
-  'RPC ghi nhat ky truy cap hop le'
+  'RPC truy cap cu van hop le nhung khong ghi nhat ky'
 );
 
 select throws_ok(
@@ -198,15 +198,16 @@ select throws_ok(
 
 reset role;
 
-select ok(
-  exists (
-    select 1
+select is(
+  (
+    select count(*)
     from public.nhat_ky_truy_cap
     where hanh_dong = 'EVIDENCE_LIST_READ'
       and co_so_id = '00000000-0000-0000-0000-00000000a001'
       and nguoi_dung_id = '00000000-0000-0000-0000-00000000a201'
   ),
-  'Audit RPC luu dung actor va tenant'
+  0::bigint,
+  'RPC truy cap khong luu hanh dong doc'
 );
 
 set local role authenticated;

@@ -10,7 +10,7 @@ Tài liệu này ghi lại các màn hình đã bổ sung sau đợt rà soát U
 - `/hoi-dong-tu-danh-gia`: lập hội đồng, thêm thành viên, chuẩn bị danh sách ký trong Mẫu 1.
 - `/bao-cao`: xuất file và cập nhật trạng thái báo cáo.
 - `/bao-cao/da-phe-duyet`: xem báo cáo đã chốt.
-- `/nhat-ky`: rà soát nhật ký thao tác theo RLS.
+- `/nhat-ky`: rà soát thao tác ghi và xác minh minh chứng theo RLS; thao tác xem không được lưu.
 
 ## Chủ tịch Hội đồng TĐG
 

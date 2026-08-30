@@ -241,25 +241,29 @@ export async function collectReportData(
       .select("id, tieu_chi_id, cap_hoc, mo_ta_muc_1, dat_muc_1, mo_ta_muc_2, dat_muc_2, muc_dat")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
-      .eq("cap_hoc", capHoc),
+      .eq("cap_hoc", capHoc)
+      .eq("la_du_lieu_demo", false),
     supabase
       .from("v_minh_chung_hop_le_danh_gia")
       .select("id, ma, ten, loai_tep, duong_dan, storage_path, hash_tep, kich_thuoc, ngay_ban_hanh, ngay_het_gia_tri, ghi_chu")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
+      .eq("la_du_lieu_demo", false)
       .order("ma", { ascending: true }),
     supabase
       .from("ke_hoach_cai_tien")
       .select("id, tieu_chuan_id, tieu_chi_id, noi_dung, muc_tieu, hoat_dong, chi_so_ket_qua, thoi_gian_bat_dau, thoi_gian_ket_thuc, nguon_luc, minh_chung_du_kien, muc_do_thuc_hien, ghi_chu, phu_trach:phu_trach_id(ho_ten)")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
+      .eq("la_du_lieu_demo", false)
       .order("created_at", { ascending: true }),
     supabase
       .from("nhan_xet_tieu_chuan")
       .select("id, tieu_chuan_id, cap_hoc, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
-      .eq("cap_hoc", capHoc),
+      .eq("cap_hoc", capHoc)
+      .eq("la_du_lieu_demo", false),
     supabase
       .from("noi_dung_mau_2")
       .select("can_cu_xay_dung, muc_dich_yeu_cau, tom_tat_van_de_trong_tam, theo_doi_danh_gia, to_chuc_thuc_hien, co_che_danh_gia_bao_cao")

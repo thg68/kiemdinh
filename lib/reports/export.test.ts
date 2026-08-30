@@ -126,4 +126,77 @@ describe("xuất dữ liệu năm học", () => {
 
     await expect(buildEvidenceZip(reportFixture(), supabase)).rejects.toThrow("storage denied");
   });
+
+  it("thử lại khi mạng gián đoạn trước lúc nhận tệp", async () => {
+    const createSignedUrl = vi.fn().mockResolvedValue({
+      data: { signedUrl: "https://storage.test/retry" },
+      error: null,
+    });
+    const supabase = {
+      storage: { from: vi.fn(() => ({ createSignedUrl })) },
+    } as unknown as ReportSupabaseClient;
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("network interrupted"))
+      .mockResolvedValueOnce(new Response("noi-dung-sau-khi-thu-lai", { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const stream = await buildEvidenceZip(reportFixture(), supabase);
+    const archive = await JSZip.loadAsync(await new Response(stream).arrayBuffer());
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(await archive.file("minh-chung/MC.1.1.01 - Ke hoach nam hoc.txt")?.async("text"))
+      .toBe("noi-dung-sau-khi-thu-lai");
+  });
+
+  it("không thử lại signed URL đã hết hạn trả về HTTP 403", async () => {
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({
+          createSignedUrl: vi.fn().mockResolvedValue({
+            data: { signedUrl: "https://storage.test/expired" },
+            error: null,
+          }),
+        })),
+      },
+    } as unknown as ReportSupabaseClient;
+    const fetchMock = vi.fn().mockResolvedValue(new Response("expired", { status: 403 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(buildEvidenceZip(reportFixture(), supabase)).rejects.toThrow("sau 1");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("đóng gói nhiều tệp theo stream mà không bỏ sót mục", async () => {
+    const fixture = reportFixture();
+    fixture.evidence = Array.from({ length: 100 }, (_, index) => ({
+      ...fixture.evidence[0],
+      id: `evidence-${index + 1}`,
+      ma: `MC.1.1.${String(index + 1).padStart(3, "0")}`,
+      ten: `Minh chung ${index + 1}`,
+      storage_path: `school-1/year-1/file-${index + 1}.bin`,
+    }));
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({
+          createSignedUrl: vi.fn(async (path: string) => ({
+            data: { signedUrl: `https://storage.test/${path}` },
+            error: null,
+          })),
+        })),
+      },
+    } as unknown as ReportSupabaseClient;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(() => Promise.resolve(new Response(new Uint8Array(4096), { status: 200 }))),
+    );
+
+    const stream = await buildEvidenceZip(fixture, supabase);
+    const archive = await JSZip.loadAsync(await new Response(stream).arrayBuffer());
+    const evidenceEntries = Object.keys(archive.files).filter((name) => name.startsWith("minh-chung/"));
+
+    expect(evidenceEntries).toHaveLength(100);
+    expect(archive.file("danh-muc-minh-chung.xlsx")).not.toBeNull();
+  });
+
 });

@@ -1,0 +1,130 @@
+name: Sprint 12 pilot release gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      year_id:
+        description: UUID năm học thí điểm trên staging
+        required: true
+        type: string
+      cap_hoc:
+        description: Cấp học cần kiểm tra
+        required: true
+        type: choice
+        options:
+          - mam_non
+          - tieu_hoc
+          - thcs
+          - thpt
+          - gdtx
+          - khac
+      backup_restore_authorized:
+        description: Đã được phép sao lưu và khôi phục dữ liệu staging
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  database-and-pilot-gate:
+    if: inputs.backup_restore_authorized
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: staging
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      PILOT_AUDIT_EMAIL: ${{ secrets.E2E_PRINCIPAL_EMAIL }}
+      PILOT_AUDIT_PASSWORD: ${{ secrets.E2E_PRINCIPAL_PASSWORD }}
+      STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      LOCAL_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Khởi động Supabase local và replay migration
+        run: |
+          npx supabase start
+          npx supabase db reset
+      - name: Chạy toàn bộ pgTAP
+        run: npm run test:rls
+      - name: Kiểm tra dữ liệu thí điểm qua RLS
+        run: npm run check:pilot -- --year=${{ inputs.year_id }} --cap-hoc=${{ inputs.cap_hoc }}
+      - name: Ghi số lượng bản ghi nguồn không nhạy cảm
+        run: |
+          psql "$STAGING_DATABASE_URL" -Atc "select json_build_object(
+            'schools',(select count(*) from public.co_so_giao_duc),
+            'years',(select count(*) from public.nam_hoc),
+            'users',(select count(*) from public.nguoi_dung),
+            'evidence',(select count(*) from public.minh_chung),
+            'assessments',(select count(*) from public.tu_danh_gia),
+            'reports',(select count(*) from public.bao_cao)
+          )" > /tmp/source-counts.json
+      - name: Sao lưu staging
+        run: pg_dump --format=custom --no-owner --no-privileges --dbname="$STAGING_DATABASE_URL" --file=/tmp/staging.dump
+      - name: Khôi phục vào Supabase local
+        run: |
+          pg_restore --clean --if-exists --no-owner --no-privileges --exit-on-error             --dbname="$LOCAL_DATABASE_URL" /tmp/staging.dump
+      - name: So sánh dữ liệu sau khôi phục
+        run: |
+          psql "$LOCAL_DATABASE_URL" -Atc "select json_build_object(
+            'schools',(select count(*) from public.co_so_giao_duc),
+            'years',(select count(*) from public.nam_hoc),
+            'users',(select count(*) from public.nguoi_dung),
+            'evidence',(select count(*) from public.minh_chung),
+            'assessments',(select count(*) from public.tu_danh_gia),
+            'reports',(select count(*) from public.bao_cao)
+          )" > /tmp/restore-counts.json
+          diff --strip-trailing-cr /tmp/source-counts.json /tmp/restore-counts.json
+          psql "$LOCAL_DATABASE_URL" --set ON_ERROR_STOP=1 --file=supabase/checks/production_post_migration_check.sql
+      - name: Xóa bản sao tạm
+        if: always()
+        run: rm -f /tmp/staging.dump /tmp/source-counts.json /tmp/restore-counts.json
+      - name: Dừng Supabase local
+        if: always()
+        run: npx supabase stop --no-backup
+
+  role-validation:
+    if: inputs.backup_restore_authorized
+    needs: [database-and-pilot-gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: staging
+    env:
+      CI: "true"
+      E2E_RELEASE_GATE: "true"
+      E2E_BASE_URL: ${{ secrets.STAGING_APP_URL }}
+      E2E_SYSTEM_ADMIN_EMAIL: ${{ secrets.E2E_SYSTEM_ADMIN_EMAIL }}
+      E2E_SYSTEM_ADMIN_PASSWORD: ${{ secrets.E2E_SYSTEM_ADMIN_PASSWORD }}
+      E2E_PRINCIPAL_EMAIL: ${{ secrets.E2E_PRINCIPAL_EMAIL }}
+      E2E_PRINCIPAL_PASSWORD: ${{ secrets.E2E_PRINCIPAL_PASSWORD }}
+      E2E_SELF_ASSESSMENT_CHAIR_EMAIL: ${{ secrets.E2E_SELF_ASSESSMENT_CHAIR_EMAIL }}
+      E2E_SELF_ASSESSMENT_CHAIR_PASSWORD: ${{ secrets.E2E_SELF_ASSESSMENT_CHAIR_PASSWORD }}
+      E2E_SECRETARY_EMAIL: ${{ secrets.E2E_SECRETARY_EMAIL }}
+      E2E_SECRETARY_PASSWORD: ${{ secrets.E2E_SECRETARY_PASSWORD }}
+      E2E_MEMBER_EMAIL: ${{ secrets.E2E_MEMBER_EMAIL }}
+      E2E_MEMBER_PASSWORD: ${{ secrets.E2E_MEMBER_PASSWORD }}
+      E2E_TEACHER_EMAIL: ${{ secrets.E2E_TEACHER_EMAIL }}
+      E2E_TEACHER_PASSWORD: ${{ secrets.E2E_TEACHER_PASSWORD }}
+      E2E_VIEWER_EMAIL: ${{ secrets.E2E_VIEWER_EMAIL }}
+      E2E_VIEWER_PASSWORD: ${{ secrets.E2E_VIEWER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e -- --grep "Sprint 12"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sprint12-playwright-report
+          path: playwright-report/
+          retention-days: 7

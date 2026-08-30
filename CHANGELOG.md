@@ -1,6 +1,6 @@
 # Changelog
 
-Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-9.
+Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-12.
 
 ## Sprint 0 - Nền dự án
 
@@ -119,3 +119,13 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Người nhận chỉ được tạo hồ sơ `nguoi_dung` và nhận vai trò sau khi chấp nhận lời mời bằng đúng email đã xác nhận.
 - Chỉ Quản trị hệ thống được tạo đơn vị mới; Hiệu trưởng đầu tiên được thiết lập qua lời mời riêng.
 - Mọi thao tác mời và chấp nhận đi qua RPC `SECURITY DEFINER`, có kiểm tra quyền và ghi nhật ký.
+## Sprint 12 - Cổng phát hành thí điểm
+
+- Gắn cờ `la_du_lieu_demo` tại tầng PostgreSQL và loại dữ liệu demo khỏi nguồn Mẫu 1, Mẫu 2, JSON, XLSX và ZIP.
+- Chặn phê duyệt báo cáo tại CSDL nếu năm học còn dữ liệu demo trong minh chứng, tự đánh giá, nhận xét hoặc kế hoạch cải tiến.
+- Bổ sung `fn_kiem_tra_du_lieu_thi_diem` để kiểm tra tối thiểu 100 minh chứng thật, đủ 15/15 tiêu chí, 15 mô tả Mức 1 và đủ 7 vai trò.
+- Kiểm thử kế thừa năm học mới ở trạng thái `ke_thua_cho_cap_nhat`; không sao chép liên kết minh chứng cũ.
+- ZIP minh chứng thử lại có giới hạn khi mạng lỗi hoặc máy chủ trả 5xx; URL hết hạn 4xx dừng ngay và báo lỗi rõ ràng.
+- Thêm công cụ đối chiếu Mẫu 1 với JSON nguồn, E2E đăng nhập 7 vai trò và workflow backup -> restore -> verify chỉ dành cho staging.
+- Công khai trang quyền riêng tư và tài liệu hóa lưu giữ, xóa, quyền chủ thể, phân quyền và audit.
+- Release gate chỉ được đóng sau khi dữ liệu thật, UAT Mẫu 1, 7 tài khoản staging và diễn tập phục hồi đều có bằng chứng đạt.

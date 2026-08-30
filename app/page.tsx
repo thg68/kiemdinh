@@ -332,6 +332,7 @@ export default function Home() {
             <a href="#tinh-nang">Tính năng</a>
             <a href="#quy-trinh">Quy trình</a>
             <a href="#bao-mat">Bảo mật</a>
+            <Link href="/quyen-rieng-tu">Quyền riêng tư</Link>
             <Link href="/login">Đăng nhập</Link>
           </div>
         </div>

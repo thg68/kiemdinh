@@ -30,7 +30,9 @@
     "deploy:staging:cloudflare": "npm run check:staging-env && npm run clean:cloudflare && opennextjs-cloudflare build --env=staging && opennextjs-cloudflare deploy --env=staging -- --keep-vars",
     "deploy:production": "node scripts/run-with-node22.mjs npm run deploy:production:cloudflare",
     "deploy:production:cloudflare": "npm run check:production-env && npm run clean:cloudflare && opennextjs-cloudflare build --env=production && opennextjs-cloudflare deploy --env=production -- --keep-vars",
-    "rollback:production": "node scripts/run-with-node22.mjs wrangler rollback --env production"
+    "rollback:production": "node scripts/run-with-node22.mjs wrangler rollback --env production",
+    "check:pilot": "node scripts/check-pilot-readiness.mjs",
+    "verify:mau1": "node scripts/verify-mau1.mjs"
   },
   "engines": {
     "node": ">=22 <25"

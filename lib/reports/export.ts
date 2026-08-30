@@ -34,6 +34,25 @@ function extensionFromStoragePath(path: string | null) {
   return `.${path.split(".").pop()}`;
 }
 
+async function fetchEvidenceFile(url: string, evidenceCode: string, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url);
+      if (response.ok && response.body) return response;
+
+      const canRetry = response.status >= 500 && attempt < maxAttempts;
+      if (!canRetry) {
+        throw new Error(`Không tải được tệp minh chứng ${evidenceCode}: HTTP ${response.status}`);
+      }
+    } catch (error) {
+      if (attempt >= maxAttempts || (error instanceof Error && error.message.includes("HTTP 4"))) {
+        throw new Error(`Không tải được tệp minh chứng ${evidenceCode} sau ${attempt} lần thử.`);
+      }
+    }
+  }
+
+  throw new Error(`Không tải được tệp minh chứng ${evidenceCode}.`);
+}
 export async function buildEvidenceZip(data: ReportData, supabase: ReportSupabaseClient) {
   const archive = archiver("zip", { zlib: { level: 6 } });
   const catalog = await buildEvidenceCatalogXlsx(data);
@@ -53,21 +72,10 @@ export async function buildEvidenceZip(data: ReportData, supabase: ReportSupabas
       throw new Error(`Không tạo được liên kết tạm cho minh chứng ${item.ma}: ${signedUrlError?.message ?? "không rõ lỗi"}`);
     }
 
-    const source = Readable.from(
-      (async function* streamSignedFile() {
-        const response = await fetch(signed.signedUrl);
-        if (!response.ok || !response.body) {
-          throw new Error(`Không tải được tệp minh chứng ${item.ma}: HTTP ${response.status}`);
-        }
-
-        const reader = response.body.getReader();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          yield Buffer.from(value);
-        }
-      })(),
-    );
+    // Xac nhan signed URL truoc khi gan stream vao archive de loi tai tep
+    // duoc tra ve cho request thay vi tro thanh loi ngam trong pipeline ZIP.
+    const response = await fetchEvidenceFile(signed.signedUrl, item.ma);
+    const source = Readable.fromWeb(response.body! as never);
     archive.append(source, { name: `minh-chung/${fileName}` });
   }
 

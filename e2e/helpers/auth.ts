@@ -1,6 +1,13 @@
 import { expect, type Page } from "@playwright/test";
 
-export type TestRole = "PRINCIPAL" | "SECRETARY" | "TEACHER";
+export type TestRole =
+  | "SYSTEM_ADMIN"
+  | "PRINCIPAL"
+  | "SELF_ASSESSMENT_CHAIR"
+  | "SECRETARY"
+  | "MEMBER"
+  | "TEACHER"
+  | "VIEWER";
 
 export function credentialsFor(role: TestRole) {
   return {

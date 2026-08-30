@@ -2,9 +2,13 @@ import { expect, test } from "@playwright/test";
 import { accessToken, hasCredentials, loginAs, type TestRole } from "./helpers/auth";
 
 const roleLabels: Record<TestRole, string> = {
+  SYSTEM_ADMIN: "Quản trị hệ thống",
   PRINCIPAL: "Hiệu trưởng",
+  SELF_ASSESSMENT_CHAIR: "Chủ tịch Hội đồng TĐG",
   SECRETARY: "Thư ký Hội đồng",
+  MEMBER: "Ủy viên / Tổ trưởng",
   TEACHER: "Giáo viên",
+  VIEWER: "Khách (chỉ đọc)",
 };
 
 function requireRole(role: TestRole) {

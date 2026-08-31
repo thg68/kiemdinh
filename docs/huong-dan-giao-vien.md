@@ -15,13 +15,17 @@ Trang này dành cho giáo viên được phân công cung cấp minh chứng tr
 ## 2. Nộp minh chứng từ công việc thường ngày
 
 1. Vào **Kho minh chứng**.
-2. Chọn **Mới**.
+2. Chọn dấu **+**, sau đó mở **Tạo minh chứng**.
 3. Nhập tên minh chứng dễ hiểu, ví dụ: "Biên bản sinh hoạt tổ chuyên môn tháng 9".
 4. Chọn tệp hoặc dán liên kết điện tử.
 5. Chọn tiêu chí được phân công.
 6. Bấm **Tải lên và gắn tiêu chí**.
 
 [CHÈN ẢNH: Form nộp minh chứng]
+
+Mã minh chứng do hệ thống tự cấp và tiếp tục tăng theo cùng mã tiêu chí, kể cả
+khi nhà trường chuyển sang phiên bản bộ tiêu chuẩn mới. Không tự sửa hoặc tạo
+lại mã.
 
 ## 3. Khi một minh chứng dùng cho nhiều tiêu chí
 

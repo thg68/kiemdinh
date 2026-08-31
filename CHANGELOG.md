@@ -136,3 +136,17 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Table grant chỉ cho request đi tới RLS; policy theo co_so_id và vai trò vẫn quyết định quyền trên từng dòng.
 - Role anon không có quyền ghi trên bốn nhóm dữ liệu này.
 - Bổ sung pgTAP kiểm tra CRUD hợp lệ, từ chối giáo viên sửa dữ liệu quản lý và chặn thao tác chéo đơn vị.
+
+## Sprint 14 - Ổn định mã minh chứng qua phiên bản
+
+- Chuyển bộ đếm mã minh chứng từ UUID phiên bản của tiêu chí sang khóa logic
+  `(co_so_id, ma_tieu_chi)`.
+- Hợp nhất bộ đếm trùng mã qua các phiên bản và backfill số tiếp theo từ toàn bộ
+  mã `MC.x.y.zz` đã có trong kho.
+- Hàm sinh mã đối chiếu số lớn nhất trong kho ở mỗi lần cấp mã để tránh va chạm
+  với dữ liệu lịch sử hoặc dữ liệu import.
+- RPC tạo/gắn minh chứng và phân công tiêu chí kiểm tra trước toàn bộ UUID theo
+  bộ tiêu chuẩn đã ghim cho năm học; yêu cầu sai không làm đổi bộ đếm hay xóa
+  phân công hợp lệ.
+- Bổ sung 16 test pgTAP cho sinh mã xuyên phiên bản, dữ liệu import, quyền RPC
+  và tính nguyên tử của phân công.

@@ -80,6 +80,8 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/phan-quyen-phu-luc-b.md`: mô tả phân quyền và RLS theo Phụ lục B.
 - `docs/luong-man-hinh-theo-vai-tro.md`: mapping vai trò với các màn hình thao tác chính.
 - `docs/SPRINT-14-RESULT.md`: quyết định versioning cho mã minh chứng và kết quả kiểm thử hồi quy.
+- `docs/SPRINT-15-RESULT.md`: kết quả hardening luồng tải, kiểm tra và hoàn tất minh chứng.
+- `docs/SPRINT-15-OPERATIONS.md`: thứ tự triển khai, kiểm tra và xử lý object tải lỗi.
 - `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
 
 ## Cấu Trúc Thư Mục

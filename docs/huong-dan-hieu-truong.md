@@ -36,6 +36,9 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
    - Minh chứng trùng lặp.
    - Minh chứng chưa gắn tiêu chí.
    - Tiêu chí chưa có minh chứng.
+4. Nếu có mục **Tệp tải chưa hoàn tất**, đọc số lượng rồi chọn **Dọn tệp**. Hệ thống chỉ dọn tệp đã tải quá 60 phút nhưng chưa tạo được mã minh chứng.
+
+Mục dọn tệp chỉ xuất hiện với tài khoản được phép xóa minh chứng. Tệp đã có mã hoặc đã gắn vào minh chứng không nằm trong danh sách này.
 
 [CHÈN ẢNH: Trang kiểm tra sức khỏe minh chứng]
 

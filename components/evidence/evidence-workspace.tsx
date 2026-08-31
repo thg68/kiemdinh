@@ -14,6 +14,7 @@ import {
   EvidenceCriterionLink,
   Profile,
   SchoolYear,
+  canonicalEvidenceMimeType,
   formatEvidenceStatus,
   sha256File,
   storagePathForEvidence,
@@ -470,7 +471,6 @@ function EvidenceCreateForm(props: {
 
     let storagePath: string | null = null;
     let hash: string | null = null;
-    let size: number | null = null;
     let type: string | null = null;
 
     if (file) {
@@ -484,13 +484,17 @@ function EvidenceCreateForm(props: {
 
       storagePath = storagePathForEvidence(props.profile.co_so_id, props.selectedYearId, file);
       hash = await sha256File(file);
-      size = file.size;
-      type = file.type || "application/octet-stream";
+      type = canonicalEvidenceMimeType(file);
 
       const { error: uploadError } = await props.supabase.storage
         .from("evidence")
         .upload(storagePath, file, {
           cacheControl: "3600",
+          contentType: type ?? undefined,
+          metadata: {
+            original_name: file.name,
+            sha256: hash,
+          },
           upsert: false,
         });
 
@@ -501,28 +505,62 @@ function EvidenceCreateForm(props: {
       }
     }
 
-    const { error } = await props.supabase.rpc("fn_tao_minh_chung", {
-      p_nam_hoc_id: props.selectedYearId,
-      p_tieu_chi_ids: selectedCriterionIds,
-      p_tieu_chi_goc_id: rootCriterionId,
-      p_ten: ten.trim(),
-      p_loai_tep: type,
-      p_duong_dan: hyperlink,
-      p_storage_path: storagePath,
-      p_hash_tep: hash,
-      p_kich_thuoc: size,
-      p_ngay_ban_hanh: ngayBanHanh || null,
-      p_ngay_het_gia_tri: ngayHetGiaTri || null,
-    });
+    const { data: sessionData } = await props.supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
 
-    setSubmitting(false);
-
-    if (error) {
+    if (!accessToken) {
       if (storagePath) {
         await props.supabase.storage.from("evidence").remove([storagePath]);
       }
 
-      await props.onDone(toUserMessage(error));
+      setSubmitting(false);
+      await props.onDone("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    let finalizeResponse: Response;
+
+    try {
+      finalizeResponse = await fetch("/api/minh-chung/finalize", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          duongDan: hyperlink,
+          namHocId: props.selectedYearId,
+          ngayBanHanh: ngayBanHanh || null,
+          ngayHetGiaTri: ngayHetGiaTri || null,
+          storagePath,
+          ten: ten.trim(),
+          tenTepGoc: file?.name ?? "",
+          tieuChiGocId: rootCriterionId,
+          tieuChiIds: selectedCriterionIds,
+        }),
+      });
+    } catch {
+      if (storagePath) {
+        await props.supabase.storage.from("evidence").remove([storagePath]);
+      }
+
+      setSubmitting(false);
+      await props.onDone("Mất kết nối khi hoàn tất minh chứng. Vui lòng thử lại.");
+      return;
+    }
+
+    const finalizePayload = (await finalizeResponse.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+
+    setSubmitting(false);
+
+    if (!finalizeResponse.ok) {
+      if (storagePath) {
+        await props.supabase.storage.from("evidence").remove([storagePath]);
+      }
+
+      await props.onDone(finalizePayload?.error ?? "Không thể hoàn tất minh chứng.");
       return;
     }
 

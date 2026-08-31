@@ -1,6 +1,6 @@
 # Changelog
 
-Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-12.
+Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-15.
 
 ## Sprint 0 - Nền dự án
 
@@ -150,3 +150,13 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
   phân công hợp lệ.
 - Bổ sung 16 test pgTAP cho sinh mã xuyên phiên bản, dữ liệu import, quyền RPC
   và tính nguyên tử của phân công.
+
+## Sprint 15 - An toàn kho tệp minh chứng
+
+- Giới hạn bucket private `evidence` ở 25 MiB và chỉ nhận danh sách MIME đã công bố.
+- Chuyển bước hoàn tất minh chứng qua API máy chủ: tải lại object, kiểm tra chữ ký nội dung, cấu trúc OOXML, kích thước và tự tính SHA-256.
+- RPC tạo minh chứng đối chiếu object theo chủ sở hữu, đơn vị, năm học, MIME, kích thước và hash trước khi sinh mã.
+- Từ chối tên tệp không an toàn, tệp rỗng, tệp đổi đuôi giả và ngày hết giá trị trước ngày ban hành.
+- Bổ sung API và giao diện phát hiện/dọn object tải lỗi chưa liên kết sau 60 phút; chỉ vai trò có `evidence.delete` được thao tác và mỗi đợt dọn đều có audit.
+- Script import năm học dùng cùng giới hạn định dạng/dung lượng, đường dẫn object chuẩn và không ghi đè tệp đã có.
+- Bổ sung kiểm thử route, helper và 11 assertion pgTAP cho bucket, đối chiếu object, quyền và luồng dọn tệp lỗi.

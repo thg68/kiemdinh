@@ -16,6 +16,7 @@ import {
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
 import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
+import { StorageOrphanMaintenance } from "@/components/evidence/storage-orphan-maintenance";
 
 export function EvidenceHealth() {
   const router = useRouter();
@@ -172,6 +173,8 @@ export function EvidenceHealth() {
         <Metric label="Mồ côi" value={orphans.length} />
         <Metric label="Tiêu chí rỗng" value={emptyCriteria.length} />
       </section>
+
+      <StorageOrphanMaintenance />
 
       <HealthPanel title={`Minh chứng hết hiệu lực${year ? ` - ${year.ten}` : ""}`}>
         <EvidenceList items={expired} empty="Không có minh chứng hết hiệu lực." />

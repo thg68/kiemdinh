@@ -50,44 +50,95 @@ export type EvidenceCriterionLink = {
 
 export const MAX_EVIDENCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
-const ALLOWED_EVIDENCE_MIME_TYPES = new Set([
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "text/csv",
-  "text/plain",
-]);
+export const EVIDENCE_MIME_BY_EXTENSION: Readonly<Record<string, string>> = {
+  csv: "text/csv",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  jpeg: "image/jpeg",
+  jpg: "image/jpeg",
+  pdf: "application/pdf",
+  png: "image/png",
+  txt: "text/plain",
+  webp: "image/webp",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+};
 
-const ALLOWED_EVIDENCE_EXTENSIONS = new Set([
-  "csv",
-  "doc",
-  "docx",
-  "jpeg",
-  "jpg",
-  "pdf",
-  "png",
-  "txt",
-  "webp",
-  "xls",
-  "xlsx",
-]);
+export const ALLOWED_EVIDENCE_MIME_TYPES = Object.freeze(
+  [...new Set(Object.values(EVIDENCE_MIME_BY_EXTENSION))],
+);
 
-export function validateEvidenceFile(file: File) {
-  if (file.size > MAX_EVIDENCE_FILE_SIZE_BYTES) {
-    return "Tệp minh chứng vượt quá 25MB. Hãy nén hoặc tách tệp trước khi tải lên.";
+const MIME_ALIASES_BY_EXTENSION: Readonly<Record<string, readonly string[]>> = {
+  csv: ["text/csv", "application/csv"],
+  jpeg: ["image/jpeg", "image/jpg"],
+  jpg: ["image/jpeg", "image/jpg"],
+};
+
+export function evidenceFileExtension(fileName: string) {
+  const normalizedName = fileName.trim();
+  const dotIndex = normalizedName.lastIndexOf(".");
+
+  return dotIndex > 0 ? normalizedName.slice(dotIndex + 1).toLowerCase() : "";
+}
+
+export function evidenceMimeTypeForFileName(fileName: string) {
+  return EVIDENCE_MIME_BY_EXTENSION[evidenceFileExtension(fileName)] ?? null;
+}
+
+export function validateEvidenceFileName(fileName: string) {
+  if (
+    fileName !== fileName.trim() ||
+    fileName.length === 0 ||
+    fileName.length > 180 ||
+    fileName.includes("/") ||
+    fileName.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(fileName)
+  ) {
+    return "Tên tệp không hợp lệ. Hãy bỏ đường dẫn, ký tự điều khiển và giữ tên dưới 180 ký tự.";
   }
 
-  const extension = file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() : "";
-  const hasAllowedMime = file.type ? ALLOWED_EVIDENCE_MIME_TYPES.has(file.type) : false;
-  const hasAllowedExtension = extension ? ALLOWED_EVIDENCE_EXTENSIONS.has(extension) : false;
+  if (!evidenceMimeTypeForFileName(fileName)) {
+    return "Định dạng tệp chưa được hỗ trợ. Hệ thống nhận PDF, Word, Excel, CSV, TXT và ảnh JPG/PNG/WebP.";
+  }
 
-  if (!hasAllowedMime && !hasAllowedExtension) {
-    return "Định dạng tệp chưa được hỗ trợ. Hệ thống hiện nhận PDF, Word, Excel, CSV, TXT và ảnh JPG/PNG/WebP.";
+  return null;
+}
+
+export function canonicalEvidenceMimeType(file: Pick<File, "name" | "type">) {
+  const extension = evidenceFileExtension(file.name);
+  const canonicalMime = EVIDENCE_MIME_BY_EXTENSION[extension];
+
+  if (!canonicalMime) {
+    return null;
+  }
+
+  const declaredMime = file.type.trim().toLowerCase();
+  const acceptedMimes = MIME_ALIASES_BY_EXTENSION[extension] ?? [canonicalMime];
+
+  if (declaredMime && !acceptedMimes.includes(declaredMime)) {
+    return null;
+  }
+
+  return canonicalMime;
+}
+
+export function validateEvidenceFile(file: File) {
+  const fileNameError = validateEvidenceFileName(file.name);
+
+  if (fileNameError) {
+    return fileNameError;
+  }
+
+  if (file.size <= 0) {
+    return "Tệp minh chứng đang rỗng. Hãy chọn một tệp có nội dung.";
+  }
+
+  if (file.size > MAX_EVIDENCE_FILE_SIZE_BYTES) {
+    return "Tệp minh chứng vượt quá 25 MB. Hãy nén hoặc tách tệp trước khi tải lên.";
+  }
+
+  if (!canonicalEvidenceMimeType(file)) {
+    return "Loại nội dung của tệp không khớp với phần mở rộng. Hãy chọn lại đúng tệp gốc.";
   }
 
   return null;
@@ -102,7 +153,7 @@ export async function sha256File(file: File) {
 }
 
 export function storagePathForEvidence(coSoId: string, namHocId: string, file: File) {
-  const extension = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const extension = evidenceFileExtension(file.name);
 
   return `${coSoId}/${namHocId}/${crypto.randomUUID()}.${extension}`;
 }

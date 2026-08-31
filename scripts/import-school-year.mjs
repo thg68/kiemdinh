@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import JSZip from "jszip";
 import { createClient } from "@supabase/supabase-js";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, extname, isAbsolute, resolve } from "node:path";
 
@@ -12,6 +12,20 @@ const REQUIRED_ENV = [
   "SUPABASE_IMPORT_PASSWORD",
 ];
 const SUPPORTED_TYPES = new Set(["evidence", "assessment", "standard_note", "plan"]);
+const EVIDENCE_MIME_BY_EXTENSION = new Map([
+  [".csv", "text/csv"],
+  [".doc", "application/msword"],
+  [".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  [".jpeg", "image/jpeg"],
+  [".jpg", "image/jpeg"],
+  [".pdf", "application/pdf"],
+  [".png", "image/png"],
+  [".txt", "text/plain"],
+  [".webp", "image/webp"],
+  [".xls", "application/vnd.ms-excel"],
+  [".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+]);
+const MAX_EVIDENCE_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 
 const args = Object.fromEntries(
   process.argv.slice(2).map((item) => {
@@ -57,6 +71,30 @@ function sha256(buffer) {
 
 function safeName(value) {
   return basename(value).replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+function inspectImportEvidenceFile(filePath, buffer) {
+  const originalName = basename(filePath);
+  const extension = extname(originalName).toLowerCase();
+  const mimeType = EVIDENCE_MIME_BY_EXTENSION.get(extension);
+
+  if (
+    !originalName ||
+    originalName.length > 180 ||
+    /[\u0000-\u001f\u007f]/.test(originalName)
+  ) {
+    throw new Error("Tên tệp minh chứng không hợp lệ hoặc dài quá 180 ký tự.");
+  }
+
+  if (!mimeType) {
+    throw new Error(`Định dạng tệp minh chứng ${extension || "(trống)"} chưa được hỗ trợ.`);
+  }
+
+  if (buffer.length <= 0 || buffer.length > MAX_EVIDENCE_FILE_SIZE_BYTES) {
+    throw new Error("Tệp minh chứng phải có dung lượng từ 1 byte đến 25 MB.");
+  }
+
+  return { extension, mimeType, originalName };
 }
 
 async function extractDocxText(pathValue) {
@@ -232,15 +270,29 @@ async function main() {
   for (const item of normalized) {
     if (item.type === "evidence" && item.data.file_path && item.errors.length === 0) {
       const buffer = readFileSync(item.data.file_path);
-      item.data.hash_tep = sha256(buffer);
-      item.data.kich_thuoc = String(buffer.length);
-      item.data.loai_tep ||= "application/octet-stream";
-      item.data.storage_path = `${profile.co_so_id}/${year.id}/import-staging/${batchId}/${item.rowNumber}-${safeName(item.data.file_path)}`;
-      const { error: uploadError } = await supabase.storage.from("evidence").upload(item.data.storage_path, buffer, {
-        contentType: item.data.loai_tep,
-        upsert: true,
-      });
-      if (uploadError) item.errors.push(uploadError.message);
+      let inspectedFile = null;
+
+      try {
+        inspectedFile = inspectImportEvidenceFile(item.data.file_path, buffer);
+      } catch (error) {
+        item.errors.push(error.message);
+      }
+
+      if (inspectedFile) {
+        item.data.hash_tep = sha256(buffer);
+        item.data.kich_thuoc = String(buffer.length);
+        item.data.loai_tep = inspectedFile.mimeType;
+        item.data.storage_path = `${profile.co_so_id}/${year.id}/${randomUUID()}${inspectedFile.extension}`;
+        const { error: uploadError } = await supabase.storage.from("evidence").upload(item.data.storage_path, buffer, {
+          contentType: item.data.loai_tep,
+          metadata: {
+            original_name: inspectedFile.originalName,
+            sha256: item.data.hash_tep,
+          },
+          upsert: false,
+        });
+        if (uploadError) item.errors.push(uploadError.message);
+      }
     }
     delete item.data.file_path;
     const { error } = await supabase.rpc("fn_ghi_dong_import", {

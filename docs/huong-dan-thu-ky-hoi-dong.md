@@ -78,6 +78,8 @@ Nếu chưa có mô tả hoặc chưa gắn mã minh chứng, hệ thống sẽ 
 
 [CHÈN ẢNH: Các nút xuất báo cáo]
 
+Thư ký có thể cập nhật kế hoạch cải tiến, hội đồng và văn bản liên quan của đơn vị; dữ liệu ngoài đơn vị sẽ không hiển thị và không thể chỉnh sửa.
+
 ## Lưu ý quan trọng
 
 - Không tạo mã mới cho một tệp đã có mã.

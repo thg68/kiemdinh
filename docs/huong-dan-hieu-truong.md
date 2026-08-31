@@ -64,6 +64,8 @@ Các ô màu cảnh báo là những tiêu chí cần ưu tiên xử lý. Tiêu 
 
 Để hoàn thiện Mẫu 2, vào **Kế hoạch cải tiến**, nhập sáu phần nội dung chung và bảng kế hoạch. Hệ thống sẽ báo rõ phần còn thiếu trước khi cho phê duyệt.
 
+Hiệu trưởng có thể thêm, cập nhật hoặc xóa kế hoạch cải tiến, thông tin hội đồng và văn bản liên quan của đúng đơn vị mình; hệ thống tự từ chối dữ liệu thuộc đơn vị khác.
+
 ## 6. Phân công phạm vi tiêu chí
 
 1. Vào **Thiết lập**.

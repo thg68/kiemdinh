@@ -129,3 +129,10 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Thêm công cụ đối chiếu Mẫu 1 với JSON nguồn, E2E đăng nhập 7 vai trò và workflow backup -> restore -> verify chỉ dành cho staging.
 - Công khai trang quyền riêng tư và tài liệu hóa lưu giữ, xóa, quyền chủ thể, phân quyền và audit.
 - Release gate chỉ được đóng sau khi dữ liệu thật, UAT Mẫu 1, 7 tài khoản staging và diễn tập phục hồi đều có bằng chứng đạt.
+
+## Sprint 13 - Khôi phục luồng ghi nghiệp vụ
+
+- Khôi phục quyền INSERT, UPDATE, DELETE cho kế hoạch cải tiến, hội đồng tự đánh giá, thành viên hội đồng và văn bản liên quan.
+- Table grant chỉ cho request đi tới RLS; policy theo co_so_id và vai trò vẫn quyết định quyền trên từng dòng.
+- Role anon không có quyền ghi trên bốn nhóm dữ liệu này.
+- Bổ sung pgTAP kiểm tra CRUD hợp lệ, từ chối giáo viên sửa dữ liệu quản lý và chặn thao tác chéo đơn vị.

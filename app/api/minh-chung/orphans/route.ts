@@ -6,7 +6,11 @@ import {
   apiErrors,
   databaseApiError,
 } from "@/lib/api/errors";
-import { logServerError } from "@/lib/observability/logger";
+import {
+  logOperationalAlert,
+  logServerError,
+} from "@/lib/observability/logger";
+import { getRequestContext } from "@/lib/observability/request-context";
 
 type OrphanStorageObject = {
   storage_path: string;
@@ -49,6 +53,7 @@ function parseMinimumAge(request: NextRequest) {
 }
 
 async function loadOrphans(request: NextRequest) {
+  const requestContext = getRequestContext(request);
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -88,7 +93,7 @@ async function loadOrphans(request: NextRequest) {
   if (error) {
     logServerError("evidence_orphan_list_rejected", error, {
       operation: "list_orphan_evidence_objects",
-      route: request.nextUrl.pathname,
+      ...requestContext,
       status: 403,
     });
     return {
@@ -109,6 +114,8 @@ async function loadOrphans(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const requestContext = getRequestContext(request);
+
   try {
     const result = await loadOrphans(request);
 
@@ -120,7 +127,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logServerError("evidence_orphan_list_failed", error, {
       operation: "list_orphan_evidence_objects",
-      route: request.nextUrl.pathname,
+      ...requestContext,
       status: 500,
     });
     return apiErrorResponse(
@@ -131,6 +138,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const requestContext = getRequestContext(request);
+
   try {
     const result = await loadOrphans(request);
 
@@ -156,11 +165,16 @@ export async function DELETE(request: NextRequest) {
         .remove(storagePaths);
 
       if (removeError) {
-        logServerError("evidence_orphan_cleanup_failed", removeError, {
-          operation: "cleanup_orphan_evidence_objects",
-          route: request.nextUrl.pathname,
-          status: 500,
-        });
+        logOperationalAlert(
+          "STORAGE_FAILURE",
+          "evidence_orphan_storage_cleanup_failed",
+          removeError,
+          {
+            operation: "cleanup_orphan_evidence_objects",
+            ...requestContext,
+            status: 500,
+          },
+        );
         return apiErrorResponse(
           new ApiError(
             500,
@@ -179,7 +193,7 @@ export async function DELETE(request: NextRequest) {
       if (auditError) {
         logServerError("evidence_orphan_cleanup_audit_failed", auditError, {
           operation: "cleanup_orphan_evidence_objects",
-          route: request.nextUrl.pathname,
+          ...requestContext,
           status: 500,
         });
         return apiErrorResponse(
@@ -199,7 +213,7 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logServerError("evidence_orphan_cleanup_unexpected", error, {
       operation: "cleanup_orphan_evidence_objects",
-      route: request.nextUrl.pathname,
+      ...requestContext,
       status: 500,
     });
     return apiErrorResponse(

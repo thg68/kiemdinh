@@ -135,4 +135,27 @@ describe("API signed URL minh chứng", () => {
 
     expect(response.status).toBe(500);
   });
+
+  it("phát cảnh báo Storage nhưng không ghi signed URL hoặc lỗi gốc", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    mockSupabase({
+      signedUrl: null,
+      signedUrlError: { message: "token=secret at https://storage.test/file" },
+    });
+
+    const response = await callRoute();
+    const alert = spy.mock.calls
+      .map(([entry]) => entry as Record<string, unknown>)
+      .find((entry) => entry.alertType === "STORAGE_FAILURE");
+    const serialized = JSON.stringify(alert);
+
+    expect(response.status).toBe(403);
+    expect(alert).toMatchObject({
+      event: "evidence_signed_url_storage_failed",
+      operation: "create_signed_url",
+    });
+    expect(serialized).not.toContain("storage.test");
+    expect(serialized).not.toContain("token=secret");
+    spy.mockRestore();
+  });
 });

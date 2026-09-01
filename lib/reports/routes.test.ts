@@ -21,6 +21,7 @@ vi.mock("@/lib/api/rate-limit", () => ({
 }));
 
 import { ApiError } from "@/lib/api/errors";
+import { EvidenceZipStorageError } from "./errors";
 import { downloadResponse, logReportExport, withReportData } from "./routes";
 
 const yearId = "8f6f40d1-e3fe-4eb0-a576-801367e1d9b1";
@@ -90,6 +91,54 @@ describe("API xuất báo cáo", () => {
 
     const response = await withReportData(request(), vi.fn());
     expect(response.status).toBe(500);
+  });
+
+  it("phát cảnh báo có request ID khi xuất báo cáo lỗi phía máy chủ", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    collectReportData.mockRejectedValue(new Error("database unavailable"));
+
+    const response = await withReportData(request(), vi.fn());
+    const alert = spy.mock.calls
+      .map(([entry]) => entry as Record<string, unknown>)
+      .find((entry) => entry.alertType === "REPORT_EXPORT_FAILURE");
+
+    expect(response.status).toBe(500);
+    expect(alert).toMatchObject({
+      event: "report_export_failed",
+      route: "/api/bao-cao/mau-1",
+      status: 500,
+    });
+    expect(alert?.requestId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    spy.mockRestore();
+  });
+
+  it("chỉ phát cảnh báo Storage khi ZIP lỗi tại lớp Storage", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    collectReportData.mockResolvedValue({ year: { id: yearId }, capHoc: "mam_non" });
+
+    await withReportData(
+      request(),
+      vi.fn().mockRejectedValue(new EvidenceZipStorageError("signed URL failed")),
+      { rateLimitAction: "evidence_zip" },
+    );
+
+    expect(spy.mock.calls.some(
+      ([entry]) => (entry as Record<string, unknown>).alertType === "STORAGE_FAILURE",
+    )).toBe(true);
+
+    spy.mockClear();
+    await withReportData(
+      request(),
+      vi.fn().mockRejectedValue(new Error("document generation failed")),
+      { rateLimitAction: "evidence_zip" },
+    );
+
+    expect(spy.mock.calls.some(
+      ([entry]) => (entry as Record<string, unknown>).alertType === "STORAGE_FAILURE",
+    )).toBe(false);
+    spy.mockRestore();
   });
 
   it("không làm lộ chi tiết khi nhận giá trị lỗi không chuẩn", async () => {

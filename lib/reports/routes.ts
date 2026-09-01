@@ -3,8 +3,13 @@ import { CapHoc } from "@/lib/assessment/level-engine";
 import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
 import { RateLimitAction, RateLimitClient, enforceRateLimit } from "@/lib/api/rate-limit";
 import { SchemaValidationError, capHocSchema, uuidSchema } from "@/lib/api/validation";
-import { logServerError } from "@/lib/observability/logger";
+import {
+  logOperationalAlert,
+  logServerError,
+} from "@/lib/observability/logger";
+import { getRequestContext } from "@/lib/observability/request-context";
 import { collectReportData, createRequestSupabaseClient } from "./data";
+import { EvidenceZipStorageError } from "./errors";
 import { sanitizeFileName } from "./format";
 
 export type ReportRouteContext = {
@@ -46,6 +51,8 @@ export async function withReportData(
   handler: (context: ReportRouteContext) => Promise<Response>,
   options: ReportRouteOptions = {},
 ) {
+  const requestContext = getRequestContext(request);
+
   try {
     const authorization = request.headers.get("authorization");
 
@@ -69,15 +76,34 @@ export async function withReportData(
     );
     const data = await collectReportData(supabase, parsedNamHocId, parsedCapHoc);
 
-    return handler({ data, supabase });
+    return await handler({ data, supabase });
   } catch (error) {
     const status = errorStatus(error);
-
-    logServerError("report_api_error", error, {
+    const logContext = {
       operation: "export_report",
-      route: request.nextUrl.pathname,
+      ...requestContext,
       status,
-    });
+    };
+
+    if (status >= 500) {
+      logOperationalAlert(
+        "REPORT_EXPORT_FAILURE",
+        "report_export_failed",
+        error,
+        logContext,
+      );
+
+      if (error instanceof EvidenceZipStorageError) {
+        logOperationalAlert(
+          "STORAGE_FAILURE",
+          "evidence_zip_storage_failed",
+          error,
+          logContext,
+        );
+      }
+    } else {
+      logServerError("report_api_rejected", error, logContext);
+    }
 
     return apiErrorResponse(error, "Không xuất được báo cáo. Vui lòng thử lại.");
   }

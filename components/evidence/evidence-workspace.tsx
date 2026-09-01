@@ -8,6 +8,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { reportStorageFailure } from "@/lib/observability/client-alerts";
 import {
   Criterion,
   Evidence,
@@ -446,6 +447,22 @@ function EvidenceCreateForm(props: {
     });
   }
 
+  async function cleanupStorageObject(storagePath: string) {
+    const supabase = props.supabase;
+
+    if (!supabase) {
+      return;
+    }
+
+    const { error } = await supabase.storage
+      .from("evidence")
+      .remove([storagePath]);
+
+    if (error) {
+      void reportStorageFailure("evidence_cleanup");
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -531,6 +548,7 @@ function EvidenceCreateForm(props: {
         });
 
       if (uploadError) {
+        void reportStorageFailure("evidence_upload");
         setSubmitting(false);
         await props.onDone(toUserMessage(uploadError, "Không tải được tệp minh chứng. Vui lòng thử lại."));
         return;
@@ -542,7 +560,7 @@ function EvidenceCreateForm(props: {
 
     if (!accessToken) {
       if (storagePath) {
-        await props.supabase.storage.from("evidence").remove([storagePath]);
+        await cleanupStorageObject(storagePath);
       }
 
       setSubmitting(false);
@@ -573,7 +591,7 @@ function EvidenceCreateForm(props: {
       });
     } catch {
       if (storagePath) {
-        await props.supabase.storage.from("evidence").remove([storagePath]);
+        await cleanupStorageObject(storagePath);
       }
 
       setSubmitting(false);
@@ -589,7 +607,7 @@ function EvidenceCreateForm(props: {
 
     if (!finalizeResponse.ok) {
       if (storagePath) {
-        await props.supabase.storage.from("evidence").remove([storagePath]);
+        await cleanupStorageObject(storagePath);
       }
 
       await props.onDone(finalizePayload?.error ?? "Không thể hoàn tất minh chứng.");

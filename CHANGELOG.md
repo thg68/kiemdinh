@@ -1,6 +1,6 @@
 # Changelog
 
-Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-15.
+Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua Sprint 0-17.
 
 ## Sprint 0 - Nền dự án
 
@@ -173,3 +173,19 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
   dùng chung giữa các Cloudflare Worker và trả `Retry-After` khi bị giới hạn.
 - Bổ sung index theo `co_so_id`, `nam_hoc_id`, trạng thái và thời gian cùng
   test pgTAP kiểm tra RLS, quyền gọi RPC, giới hạn và tính độc lập theo thao tác.
+
+## Sprint 17 - Vận hành production
+
+- Mỗi đơn vị chỉ có một hội đồng tự đánh giá trong một năm học; người phụ trách
+  kế hoạch cải tiến phải thuộc cùng đơn vị với kế hoạch.
+- Thu hồi `TRUNCATE`, `TRIGGER`, `REFERENCES` khỏi vai trò API và default
+  privileges của các quan hệ mới trong schema `public`.
+- Mỗi API request nhận UUID mới ở proxy và trả `x-request-id` để đối chiếu log.
+- Bổ sung `/api/health` kiểm tra Supabase Auth có timeout, không tiết lộ secret
+  hoặc nội dung lỗi từ nhà cung cấp.
+- Chuẩn hóa log object theo danh sách trường cho phép và ba tín hiệu
+  `REPORT_EXPORT_FAILURE`, `STORAGE_FAILURE`, `LOGIN_FAILURE`.
+- Log không chứa error message/stack, JWT, signed URL, tên tệp, nội dung minh
+  chứng hoặc dữ liệu cá nhân nhạy cảm.
+- Workers Logs dùng 100% sampling trong giai đoạn thí điểm; kênh nhận cảnh báo
+  được cấu hình riêng theo playbook `docs/SPRINT-17-OPERATIONS.md`.

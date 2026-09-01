@@ -87,6 +87,8 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/SPRINT-15-RESULT.md`: kết quả hardening luồng tải, kiểm tra và hoàn tất minh chứng.
 - `docs/SPRINT-15-OPERATIONS.md`: thứ tự triển khai, kiểm tra và xử lý object tải lỗi.
 - `docs/SPRINT-16-RESULT.md`: hợp đồng lỗi API, phân trang, rate limit và tối ưu xuất ZIP.
+- `docs/SPRINT-17-RESULT.md`: ràng buộc dữ liệu, request ID, health endpoint và hợp đồng cảnh báo production.
+- `docs/SPRINT-17-OPERATIONS.md`: thứ tự rollout, Saved Query, kiểm tra quyền và xử lý sự cố Sprint 17.
 - `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
 
 ## Cấu Trúc Thư Mục

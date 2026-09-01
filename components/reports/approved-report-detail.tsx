@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toUserMessage } from "@/lib/errors/user-message";
+import { reportStorageFailure } from "@/lib/observability/client-alerts";
 import {
   ApprovedReportRow,
   formatApprovedAt,
@@ -73,6 +74,7 @@ export function ApprovedReportDetail({ reportId }: { reportId: string }) {
     setDownloading(false);
 
     if (error || !data?.signedUrl) {
+      void reportStorageFailure("approved_report_signed_url");
       setMessage(toUserMessage(error, "Không tạo được liên kết tải báo cáo. Vui lòng thử lại."));
       return;
     }

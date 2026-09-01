@@ -95,6 +95,7 @@ describe("API object minh chứng mồ côi", () => {
   });
 
   it("không ghi nhật ký thành công khi Storage API xóa lỗi", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { rpc } = mockSupabase({
       removeError: { message: "Storage unavailable" },
     });
@@ -112,6 +113,11 @@ describe("API object minh chứng mồ côi", () => {
       "fn_ghi_nhat_ky_don_storage_mo_coi",
       expect.anything(),
     );
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      alertType: "STORAGE_FAILURE",
+      event: "evidence_orphan_storage_cleanup_failed",
+    }));
+    spy.mockRestore();
   });
 
   it("từ chối thời gian chờ ngoài giới hạn", async () => {

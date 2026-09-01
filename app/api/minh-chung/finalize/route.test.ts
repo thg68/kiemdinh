@@ -178,6 +178,7 @@ describe("API hoàn tất tệp minh chứng", () => {
   });
 
   it("không tạo bản ghi khi không tải lại được object", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockSupabase({
       downloadData: null,
       downloadError: { message: "Object not found" },
@@ -188,6 +189,11 @@ describe("API hoàn tất tệp minh chứng", () => {
 
     expect(response.status).toBe(404);
     expect(body.code).toBe("NOT_FOUND");
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      alertType: "STORAGE_FAILURE",
+      event: "evidence_finalize_storage_download_failed",
+    }));
+    spy.mockRestore();
   });
 
   it("ánh xạ xung đột từ mã SQLSTATE thay vì nội dung lỗi", async () => {

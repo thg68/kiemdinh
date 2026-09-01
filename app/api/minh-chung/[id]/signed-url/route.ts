@@ -3,7 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
 import { RateLimitClient, enforceRateLimit } from "@/lib/api/rate-limit";
 import { SchemaValidationError, uuidSchema } from "@/lib/api/validation";
-import { logServerError } from "@/lib/observability/logger";
+import {
+  logOperationalAlert,
+  logServerError,
+} from "@/lib/observability/logger";
+import { getRequestContext } from "@/lib/observability/request-context";
 
 function createRequestSupabaseClient(authorization: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -26,6 +30,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const requestContext = getRequestContext(request);
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -72,6 +77,17 @@ export async function POST(
       .createSignedUrl(evidence.storage_path, 600);
 
     if (signedUrlError || !signedUrlData?.signedUrl) {
+      logOperationalAlert(
+        "STORAGE_FAILURE",
+        "evidence_signed_url_storage_failed",
+        signedUrlError,
+        {
+          operation: "create_signed_url",
+          resourceId: id,
+          ...requestContext,
+          status: 403,
+        },
+      );
       throw apiErrors.forbidden(
         "Không thể mở tệp minh chứng. Hãy kiểm tra quyền truy cập rồi thử lại.",
       );
@@ -100,8 +116,8 @@ export async function POST(
         : 500;
     logServerError("evidence_signed_url_failed", error, {
       operation: "create_signed_url",
-      route: request.nextUrl.pathname,
       resourceId: rawId,
+      ...requestContext,
       status,
     });
     return apiErrorResponse(

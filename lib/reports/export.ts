@@ -1,6 +1,7 @@
 import archiver from "archiver";
 import { Readable } from "node:stream";
 import { ReportData, ReportSupabaseClient } from "./data";
+import { EvidenceZipStorageError } from "./errors";
 import { sanitizeFileName, storageOrLink } from "./format";
 import { buildEvidenceCatalogXlsx } from "./xlsx";
 
@@ -63,12 +64,14 @@ async function fetchEvidenceFile(
 
       const canRetry = response.status >= 500 && attempt < maxAttempts;
       if (!canRetry) {
-        throw new Error(`Không tải được tệp minh chứng ${evidenceCode}: HTTP ${response.status}`);
+          throw new EvidenceZipStorageError(
+            `Không tải được tệp minh chứng ${evidenceCode}: HTTP ${response.status}`,
+          );
       }
     } catch (error) {
       if (controller.signal.aborted) {
         if (attempt >= maxAttempts) {
-          throw new Error(
+          throw new EvidenceZipStorageError(
             `Tải tệp minh chứng ${evidenceCode} quá thời gian sau ${attempt} lần thử.`,
           );
         }
@@ -77,14 +80,18 @@ async function fetchEvidenceFile(
       }
 
       if (attempt >= maxAttempts || (error instanceof Error && error.message.includes("HTTP 4"))) {
-        throw new Error(`Không tải được tệp minh chứng ${evidenceCode} sau ${attempt} lần thử.`);
+        throw new EvidenceZipStorageError(
+          `Không tải được tệp minh chứng ${evidenceCode} sau ${attempt} lần thử.`,
+        );
       }
     } finally {
       clearTimeout(timeout);
     }
   }
 
-  throw new Error(`Không tải được tệp minh chứng ${evidenceCode}.`);
+  throw new EvidenceZipStorageError(
+    `Không tải được tệp minh chứng ${evidenceCode}.`,
+  );
 }
 
 function normalizedPositiveInteger(value: number | undefined, fallback: number, maximum: number) {
@@ -144,7 +151,7 @@ export async function buildEvidenceZip(
           .createSignedUrl(storagePath, 300);
 
         if (signedUrlError || !signed?.signedUrl) {
-          throw new Error(
+          throw new EvidenceZipStorageError(
             `Không tạo được liên kết tạm cho minh chứng ${item.ma}: ${signedUrlError?.message ?? "không rõ lỗi"}`,
           );
         }

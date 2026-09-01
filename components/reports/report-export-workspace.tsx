@@ -8,6 +8,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { reportStorageFailure } from "@/lib/observability/client-alerts";
 import { CapHoc } from "@/lib/assessment/level-engine";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -548,6 +549,7 @@ export function ReportExportWorkspace() {
         });
 
       if (uploadError) {
+        void reportStorageFailure("report_upload");
         setDownloading("");
         setMessage(toUserMessage(uploadError, "Không lưu được tệp báo cáo đã phê duyệt. Vui lòng thử lại."));
         return;
@@ -573,7 +575,13 @@ export function ReportExportWorkspace() {
 
     if (error) {
       if (storagePath) {
-        await supabase.storage.from("reports").remove([storagePath]);
+        const { error: cleanupError } = await supabase.storage
+          .from("reports")
+          .remove([storagePath]);
+
+        if (cleanupError) {
+          void reportStorageFailure("report_cleanup");
+        }
       }
 
       setDownloading("");

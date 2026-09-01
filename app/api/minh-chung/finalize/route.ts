@@ -11,7 +11,11 @@ import {
 } from "@/lib/api/errors";
 import { isoDateSchema, uuidSchema } from "@/lib/api/validation";
 import { inspectEvidenceBlob } from "@/lib/evidence-inspection";
-import { logServerError } from "@/lib/observability/logger";
+import {
+  logOperationalAlert,
+  logServerError,
+} from "@/lib/observability/logger";
+import { getRequestContext } from "@/lib/observability/request-context";
 
 type FinalizeEvidenceBody = {
   namHocId?: unknown;
@@ -135,6 +139,7 @@ function validateBody(body: FinalizeEvidenceBody) {
 }
 
 export async function POST(request: NextRequest) {
+  const requestContext = getRequestContext(request);
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -179,11 +184,16 @@ export async function POST(request: NextRequest) {
         .download(body.storagePath);
 
       if (downloadError || !storedBlob) {
-        logServerError("evidence_finalize_download_rejected", downloadError, {
-          operation: "finalize_evidence",
-          route: request.nextUrl.pathname,
-          status: 400,
-        });
+        logOperationalAlert(
+          "STORAGE_FAILURE",
+          "evidence_finalize_storage_download_failed",
+          downloadError,
+          {
+            operation: "finalize_evidence",
+            ...requestContext,
+            status: 404,
+          },
+        );
         return apiErrorResponse(
           apiErrors.notFound(
             "Không tìm thấy tệp vừa tải lên hoặc tệp không còn khả dụng.",
@@ -234,7 +244,7 @@ export async function POST(request: NextRequest) {
     if (createError || !evidenceId) {
       logServerError("evidence_finalize_rpc_rejected", createError, {
         operation: "finalize_evidence",
-        route: request.nextUrl.pathname,
+        ...requestContext,
         status: 400,
       });
       return apiErrorResponse(
@@ -248,7 +258,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logServerError("evidence_finalize_failed", error, {
       operation: "finalize_evidence",
-      route: request.nextUrl.pathname,
+      ...requestContext,
       status: 500,
     });
     return apiErrorResponse(

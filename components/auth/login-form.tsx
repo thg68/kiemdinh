@@ -8,6 +8,7 @@ import {
   getPublicAppUrl,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { classifyLoginFailure } from "@/lib/observability/auth-events";
 import { Alert } from "@/components/ui/alert";
 
 type AuthMode = "dang_nhap" | "dang_ky";
@@ -33,6 +34,19 @@ function authErrorMessage(message: string) {
   }
 
   return "Không xử lý được yêu cầu. Vui lòng thử lại hoặc liên hệ quản trị hệ thống.";
+}
+
+async function reportLoginFailure(message: string) {
+  try {
+    await fetch("/api/observability/auth-failure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reason: classifyLoginFailure(message) }),
+      keepalive: true,
+    });
+  } catch {
+    // Quan sát vận hành không được làm gián đoạn thông báo đăng nhập cho người dùng.
+  }
 }
 
 export function LoginForm() {
@@ -97,6 +111,7 @@ export function LoginForm() {
     if (result.error) {
       setMessage(authErrorMessage(result.error.message));
       setMessageTone("danger");
+      void reportLoginFailure(result.error.message);
       return;
     }
 

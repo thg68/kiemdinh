@@ -199,4 +199,68 @@ describe("xuất dữ liệu năm học", () => {
     expect(archive.file("danh-muc-minh-chung.xlsx")).not.toBeNull();
   });
 
+  it("tải song song có giới hạn thay vì tuần tự hoặc không giới hạn", async () => {
+    const fixture = reportFixture();
+    fixture.evidence = Array.from({ length: 8 }, (_, index) => ({
+      ...fixture.evidence[0],
+      id: `evidence-${index + 1}`,
+      ma: `MC.1.1.${String(index + 1).padStart(2, "0")}`,
+      ten: `Minh chung ${index + 1}`,
+      storage_path: `school-1/year-1/file-${index + 1}.pdf`,
+    }));
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({
+          createSignedUrl: vi.fn(async (path: string) => ({
+            data: { signedUrl: `https://storage.test/${path}` },
+            error: null,
+          })),
+        })),
+      },
+    } as unknown as ReportSupabaseClient;
+    let activeDownloads = 0;
+    let maxActiveDownloads = 0;
+
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => {
+      activeDownloads += 1;
+      maxActiveDownloads = Math.max(maxActiveDownloads, activeDownloads);
+      await new Promise((resolve) => setTimeout(resolve, 8));
+      activeDownloads -= 1;
+      return new Response("noi-dung", { status: 200 });
+    }));
+
+    const stream = await buildEvidenceZip(fixture, supabase, {
+      maxConcurrentDownloads: 2,
+    });
+    await new Response(stream).arrayBuffer();
+
+    expect(maxActiveDownloads).toBe(2);
+  });
+
+  it("hủy tải tệp bị treo khi quá thời gian", async () => {
+    const supabase = {
+      storage: {
+        from: vi.fn(() => ({
+          createSignedUrl: vi.fn().mockResolvedValue({
+            data: { signedUrl: "https://storage.test/slow" },
+            error: null,
+          }),
+        })),
+      },
+    } as unknown as ReportSupabaseClient;
+
+    vi.stubGlobal("fetch", vi.fn().mockImplementation((_url, init?: RequestInit) =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      }),
+    ));
+
+    await expect(buildEvidenceZip(reportFixture(), supabase, {
+      downloadTimeoutMs: 10,
+      maxAttempts: 1,
+    })).rejects.toThrow("quá thời gian");
+  });
+
 });

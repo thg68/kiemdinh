@@ -16,5 +16,5 @@ export async function GET(request: NextRequest) {
       `Goi-minh-chung-${data.school.ten}-${data.year.ten}.zip`,
       "application/zip",
     );
-  });
+  }, { rateLimitAction: "evidence_zip" });
 }

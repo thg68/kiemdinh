@@ -34,29 +34,92 @@ function extensionFromStoragePath(path: string | null) {
   return `.${path.split(".").pop()}`;
 }
 
-async function fetchEvidenceFile(url: string, evidenceCode: string, maxAttempts = 3) {
+type EvidenceZipOptions = {
+  downloadTimeoutMs?: number;
+  maxAttempts?: number;
+  maxConcurrentDownloads?: number;
+};
+
+const DEFAULT_DOWNLOAD_TIMEOUT_MS = 30_000;
+const DEFAULT_MAX_ATTEMPTS = 3;
+const DEFAULT_MAX_CONCURRENT_DOWNLOADS = 2;
+
+async function fetchEvidenceFile(
+  url: string,
+  evidenceCode: string,
+  options: Required<Pick<EvidenceZipOptions, "downloadTimeoutMs" | "maxAttempts">>,
+) {
+  const { downloadTimeoutMs, maxAttempts } = options;
+
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), downloadTimeoutMs);
+
     try {
-      const response = await fetch(url);
-      if (response.ok && response.body) return response;
+      const response = await fetch(url, { signal: controller.signal });
+      if (response.ok && response.body) {
+        return new Uint8Array(await response.arrayBuffer());
+      }
 
       const canRetry = response.status >= 500 && attempt < maxAttempts;
       if (!canRetry) {
         throw new Error(`Không tải được tệp minh chứng ${evidenceCode}: HTTP ${response.status}`);
       }
     } catch (error) {
+      if (controller.signal.aborted) {
+        if (attempt >= maxAttempts) {
+          throw new Error(
+            `Tải tệp minh chứng ${evidenceCode} quá thời gian sau ${attempt} lần thử.`,
+          );
+        }
+
+        continue;
+      }
+
       if (attempt >= maxAttempts || (error instanceof Error && error.message.includes("HTTP 4"))) {
         throw new Error(`Không tải được tệp minh chứng ${evidenceCode} sau ${attempt} lần thử.`);
       }
+    } finally {
+      clearTimeout(timeout);
     }
   }
 
   throw new Error(`Không tải được tệp minh chứng ${evidenceCode}.`);
 }
-export async function buildEvidenceZip(data: ReportData, supabase: ReportSupabaseClient) {
+
+function normalizedPositiveInteger(value: number | undefined, fallback: number, maximum: number) {
+  if (!Number.isInteger(value) || !value || value < 1) {
+    return fallback;
+  }
+
+  return Math.min(value, maximum);
+}
+
+export async function buildEvidenceZip(
+  data: ReportData,
+  supabase: ReportSupabaseClient,
+  options: EvidenceZipOptions = {},
+) {
   const archive = archiver("zip", { zlib: { level: 6 } });
   const catalog = await buildEvidenceCatalogXlsx(data);
+  const downloadTimeoutMs = normalizedPositiveInteger(
+    options.downloadTimeoutMs,
+    DEFAULT_DOWNLOAD_TIMEOUT_MS,
+    120_000,
+  );
+  const maxAttempts = normalizedPositiveInteger(
+    options.maxAttempts,
+    DEFAULT_MAX_ATTEMPTS,
+    5,
+  );
+  const maxConcurrentDownloads = normalizedPositiveInteger(
+    options.maxConcurrentDownloads,
+    DEFAULT_MAX_CONCURRENT_DOWNLOADS,
+    2,
+  );
   archive.append(Readable.from([new Uint8Array(catalog)]), { name: "danh-muc-minh-chung.xlsx" });
+
+  const downloadableEvidence = [];
 
   for (const item of data.evidence) {
     if (!item.storage_path) {
@@ -65,18 +128,40 @@ export async function buildEvidenceZip(data: ReportData, supabase: ReportSupabas
       continue;
     }
 
-    const storagePath = item.storage_path;
-    const fileName = `${sanitizeFileName(item.ma)} - ${sanitizeFileName(item.ten)}${extensionFromStoragePath(storagePath)}`;
-    const { data: signed, error: signedUrlError } = await supabase.storage.from("evidence").createSignedUrl(storagePath, 300);
-    if (signedUrlError || !signed?.signedUrl) {
-      throw new Error(`Không tạo được liên kết tạm cho minh chứng ${item.ma}: ${signedUrlError?.message ?? "không rõ lỗi"}`);
-    }
+    downloadableEvidence.push(item);
+  }
 
-    // Xac nhan signed URL truoc khi gan stream vao archive de loi tai tep
-    // duoc tra ve cho request thay vi tro thanh loi ngam trong pipeline ZIP.
-    const response = await fetchEvidenceFile(signed.signedUrl, item.ma);
-    const source = Readable.fromWeb(response.body! as never);
-    archive.append(source, { name: `minh-chung/${fileName}` });
+  // Mỗi đợt chỉ giữ tối đa một nhóm tệp trong bộ nhớ. Điều này giới hạn tải
+  // song song và ngăn một năm học lớn mở quá nhiều kết nối Storage cùng lúc.
+  for (let index = 0; index < downloadableEvidence.length; index += maxConcurrentDownloads) {
+    const batch = downloadableEvidence.slice(index, index + maxConcurrentDownloads);
+    const downloaded = await Promise.all(
+      batch.map(async (item) => {
+        const storagePath = item.storage_path!;
+        const fileName = `${sanitizeFileName(item.ma)} - ${sanitizeFileName(item.ten)}${extensionFromStoragePath(storagePath)}`;
+        const { data: signed, error: signedUrlError } = await supabase.storage
+          .from("evidence")
+          .createSignedUrl(storagePath, 300);
+
+        if (signedUrlError || !signed?.signedUrl) {
+          throw new Error(
+            `Không tạo được liên kết tạm cho minh chứng ${item.ma}: ${signedUrlError?.message ?? "không rõ lỗi"}`,
+          );
+        }
+
+        const content = await fetchEvidenceFile(signed.signedUrl, item.ma, {
+          downloadTimeoutMs,
+          maxAttempts,
+        });
+        return { content, fileName };
+      }),
+    );
+
+    for (const item of downloaded) {
+      archive.append(Readable.from([item.content]), {
+        name: `minh-chung/${item.fileName}`,
+      });
+    }
   }
 
   void archive.finalize();

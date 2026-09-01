@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { CapHoc } from "@/lib/assessment/level-engine";
-import { toUserMessage } from "@/lib/errors/user-message";
+import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
+import { RateLimitAction, RateLimitClient, enforceRateLimit } from "@/lib/api/rate-limit";
+import { SchemaValidationError, capHocSchema, uuidSchema } from "@/lib/api/validation";
 import { logServerError } from "@/lib/observability/logger";
 import { collectReportData, createRequestSupabaseClient } from "./data";
 import { sanitizeFileName } from "./format";
@@ -9,6 +11,16 @@ export type ReportRouteContext = {
   data: Awaited<ReturnType<typeof collectReportData>>;
   supabase: ReturnType<typeof createRequestSupabaseClient>;
 };
+
+type ReportRouteOptions = {
+  rateLimitAction?: RateLimitAction;
+};
+
+function errorStatus(error: unknown) {
+  if (error instanceof ApiError) return error.status;
+  if (error instanceof SchemaValidationError) return 422;
+  return 500;
+}
 
 export async function logReportExport(
   context: ReportRouteContext,
@@ -32,37 +44,34 @@ export async function logReportExport(
 export async function withReportData(
   request: NextRequest,
   handler: (context: ReportRouteContext) => Promise<Response>,
+  options: ReportRouteOptions = {},
 ) {
   try {
     const authorization = request.headers.get("authorization");
 
     if (!authorization) {
-      return NextResponse.json({ error: "Bạn cần đăng nhập để xuất báo cáo." }, { status: 401 });
+      throw apiErrors.unauthorized("Bạn cần đăng nhập để xuất báo cáo.");
     }
 
     const namHocId = request.nextUrl.searchParams.get("namHocId");
     const capHoc = request.nextUrl.searchParams.get("capHoc") as CapHoc | null;
 
     if (!namHocId || !capHoc) {
-      return NextResponse.json({ error: "Thiếu năm học hoặc cấp học cần xuất." }, { status: 400 });
+      throw apiErrors.badRequest("Thiếu năm học hoặc cấp học cần xuất.");
     }
 
+    const parsedNamHocId = uuidSchema.parse(namHocId, "namHocId");
+    const parsedCapHoc = capHocSchema.parse(capHoc, "capHoc") as CapHoc;
     const supabase = createRequestSupabaseClient(authorization);
-    const data = await collectReportData(supabase, namHocId, capHoc);
+    await enforceRateLimit(
+      supabase as unknown as RateLimitClient,
+      options.rateLimitAction ?? "report_export",
+    );
+    const data = await collectReportData(supabase, parsedNamHocId, parsedCapHoc);
 
     return handler({ data, supabase });
   } catch (error) {
-    const normalized = error instanceof Error ? error.message.toLocaleLowerCase("vi") : "";
-    const status = normalized.includes("cần đăng nhập")
-      ? 401
-      : normalized.includes("chưa có quyền") || normalized.includes("không có quyền")
-        ? 403
-        : 500;
-    const message = status === 401
-      ? "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại rồi thử lại."
-      : status === 403
-        ? "Bạn không có quyền xuất báo cáo này. Hãy kiểm tra vai trò hoặc phạm vi đơn vị."
-        : toUserMessage(error, "Không xuất được báo cáo. Vui lòng thử lại.");
+    const status = errorStatus(error);
 
     logServerError("report_api_error", error, {
       operation: "export_report",
@@ -70,7 +79,7 @@ export async function withReportData(
       status,
     });
 
-    return NextResponse.json({ error: message }, { status });
+    return apiErrorResponse(error, "Không xuất được báo cáo. Vui lòng thử lại.");
   }
 }
 

@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { useAppContext } from "@/components/shared/use-app-context";
 import { CapHoc } from "@/lib/assessment/level-engine";
 
@@ -112,6 +113,8 @@ export function ImprovementPlanWorkspace() {
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [planCount, setPlanCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [selectedCriterionId, setSelectedCriterionId] = useState("");
   const [noiDung, setNoiDung] = useState("");
   const [mucTieu, setMucTieu] = useState("");
@@ -175,14 +178,16 @@ export function ImprovementPlanWorkspace() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { count, data, error } = await supabase
       .from("ke_hoach_cai_tien")
       .select(
         "id, tieu_chuan_id, tieu_chi_id, noi_dung, muc_tieu, hoat_dong, chi_so_ket_qua, thoi_gian_bat_dau, thoi_gian_ket_thuc, phu_trach_id, nguon_luc, minh_chung_du_kien, muc_do_thuc_hien, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten), tieu_chi:tieu_chi_id(id, ma, ten, tieu_chuan_id, la_bat_buoc), phu_trach:phu_trach_id(id, ho_ten, email)",
+        { count: "exact" },
       )
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", effectiveYearId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE - 1);
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -190,7 +195,8 @@ export function ImprovementPlanWorkspace() {
     }
 
     setPlans((data ?? []) as unknown as Plan[]);
-  }, [effectiveYearId, profile, setMessage, supabase]);
+    setPlanCount(count ?? 0);
+  }, [effectiveYearId, page, profile, setMessage, supabase]);
 
   const loadReportSections = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -356,7 +362,10 @@ export function ImprovementPlanWorkspace() {
           <select
             className="form-control mt-2"
             value={effectiveYearId}
-            onChange={(event) => setSelectedYearId(event.target.value)}
+            onChange={(event) => {
+              setPage(1);
+              setSelectedYearId(event.target.value);
+            }}
           >
             {years.map((year) => (
               <option key={year.id} value={year.id}>
@@ -517,6 +526,11 @@ export function ImprovementPlanWorkspace() {
             })}
           </div>
         )}
+        <Pagination
+          page={page}
+          total={planCount}
+          onPageChange={setPage}
+        />
       </section>
     </div>
   );

@@ -63,6 +63,10 @@ Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
 
+Các danh sách dài hiển thị 25 mục mỗi trang. Nếu hệ thống báo thao tác quá
+nhanh khi xuất báo cáo, ZIP hoặc mở tệp, hãy đợi số giây được thông báo rồi
+thử lại; không bấm liên tục.
+
 Nội dung sáu phần thuyết minh của Mẫu 2 được nhập tại `/ke-hoach-cai-tien`; hai phần còn lại lấy từ thông tin năm học và bảng kế hoạch. Báo cáo chỉ được phê duyệt khi database xác nhận đủ điều kiện và snapshot thật đã lưu trong Storage.
 
 Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
@@ -82,6 +86,7 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/SPRINT-14-RESULT.md`: quyết định versioning cho mã minh chứng và kết quả kiểm thử hồi quy.
 - `docs/SPRINT-15-RESULT.md`: kết quả hardening luồng tải, kiểm tra và hoàn tất minh chứng.
 - `docs/SPRINT-15-OPERATIONS.md`: thứ tự triển khai, kiểm tra và xử lý object tải lỗi.
+- `docs/SPRINT-16-RESULT.md`: hợp đồng lỗi API, phân trang, rate limit và tối ưu xuất ZIP.
 - `CHANGELOG.md`: tóm tắt quyết định kiến trúc qua các sprint.
 
 ## Cấu Trúc Thư Mục

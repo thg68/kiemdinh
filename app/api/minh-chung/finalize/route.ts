@@ -4,8 +4,13 @@ import {
   evidenceMimeTypeForFileName,
   validateEvidenceFileName,
 } from "@/lib/evidence";
+import {
+  apiErrorResponse,
+  apiErrors,
+  databaseApiError,
+} from "@/lib/api/errors";
+import { isoDateSchema, uuidSchema } from "@/lib/api/validation";
 import { inspectEvidenceBlob } from "@/lib/evidence-inspection";
-import { toUserMessage } from "@/lib/errors/user-message";
 import { logServerError } from "@/lib/observability/logger";
 
 type FinalizeEvidenceBody = {
@@ -25,7 +30,7 @@ function createRequestSupabaseClient(authorization: string) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase environment is not configured.");
+    throw apiErrors.internal("Cấu hình kết nối Supabase chưa sẵn sàng.");
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {
@@ -45,45 +50,54 @@ function optionalString(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function isValidIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
-
-  const parsed = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
-}
-
 function validateBody(body: FinalizeEvidenceBody) {
-  const namHocId = optionalString(body.namHocId);
-  const tieuChiGocId = optionalString(body.tieuChiGocId);
+  const namHocId = uuidSchema.parse(body.namHocId, "namHocId");
+  const tieuChiGocId = uuidSchema.parse(body.tieuChiGocId, "tieuChiGocId");
   const ten = optionalString(body.ten);
   const storagePath = optionalString(body.storagePath);
   const tenTepGoc = optionalString(body.tenTepGoc);
   const duongDan = optionalString(body.duongDan);
-  const ngayBanHanh = optionalString(body.ngayBanHanh);
-  const ngayHetGiaTri = optionalString(body.ngayHetGiaTri);
+  const rawNgayBanHanh = optionalString(body.ngayBanHanh);
+  const rawNgayHetGiaTri = optionalString(body.ngayHetGiaTri);
+  const ngayBanHanh = rawNgayBanHanh
+    ? isoDateSchema.parse(rawNgayBanHanh, "ngayBanHanh")
+    : "";
+  const ngayHetGiaTri = rawNgayHetGiaTri
+    ? isoDateSchema.parse(rawNgayHetGiaTri, "ngayHetGiaTri")
+    : "";
   const tieuChiIds = Array.isArray(body.tieuChiIds)
-    ? [...new Set(body.tieuChiIds.filter((value): value is string => typeof value === "string" && value.length > 0))]
+    ? [
+        ...new Set(
+          body.tieuChiIds.map((value, index) =>
+            uuidSchema.parse(value, `tieuChiIds.${index}`),
+          ),
+        ),
+      ]
     : [];
 
-  if (!namHocId || !tieuChiGocId || tieuChiIds.length === 0 || !tieuChiIds.includes(tieuChiGocId)) {
-    throw new Error("Hãy chọn năm học, tiêu chí gốc và ít nhất một tiêu chí.");
+  if (tieuChiIds.length === 0 || !tieuChiIds.includes(tieuChiGocId)) {
+    throw apiErrors.unprocessable(
+      "Hãy chọn tiêu chí gốc trong ít nhất một tiêu chí được gắn.",
+    );
   }
 
   if (!ten || ten.length > 255 || /[\u0000-\u001f\u007f]/.test(ten)) {
-    throw new Error("Tên minh chứng phải có từ 1 đến 255 ký tự hợp lệ.");
+    throw apiErrors.unprocessable(
+      "Tên minh chứng phải có từ 1 đến 255 ký tự hợp lệ.",
+    );
   }
 
   if (Boolean(storagePath) === Boolean(duongDan)) {
-    throw new Error("Chỉ chọn một nguồn: tệp minh chứng hoặc liên kết điện tử.");
+    throw apiErrors.unprocessable(
+      "Chỉ chọn một nguồn: tệp minh chứng hoặc liên kết điện tử.",
+    );
   }
 
   if (storagePath) {
     const fileNameError = validateEvidenceFileName(tenTepGoc);
 
     if (fileNameError) {
-      throw new Error(fileNameError);
+      throw apiErrors.unprocessable(fileNameError);
     }
   } else {
     let url: URL;
@@ -91,24 +105,20 @@ function validateBody(body: FinalizeEvidenceBody) {
     try {
       url = new URL(duongDan);
     } catch {
-      throw new Error("Liên kết điện tử không hợp lệ.");
+      throw apiErrors.unprocessable("Liên kết điện tử không hợp lệ.");
     }
 
     if (!["http:", "https:"].includes(url.protocol) || duongDan.length > 2048) {
-      throw new Error("Liên kết điện tử phải dùng giao thức HTTP hoặc HTTPS.");
+      throw apiErrors.unprocessable(
+        "Liên kết điện tử phải dùng giao thức HTTP hoặc HTTPS.",
+      );
     }
   }
 
-  if (ngayBanHanh && !isValidIsoDate(ngayBanHanh)) {
-    throw new Error("Ngày ban hành không hợp lệ.");
-  }
-
-  if (ngayHetGiaTri && !isValidIsoDate(ngayHetGiaTri)) {
-    throw new Error("Ngày hết giá trị không hợp lệ.");
-  }
-
   if (ngayBanHanh && ngayHetGiaTri && ngayHetGiaTri < ngayBanHanh) {
-    throw new Error("Ngày hết giá trị không được trước ngày ban hành.");
+    throw apiErrors.unprocessable(
+      "Ngày hết giá trị không được trước ngày ban hành.",
+    );
   }
 
   return {
@@ -128,9 +138,8 @@ export async function POST(request: NextRequest) {
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
-    return NextResponse.json(
-      { error: "Bạn cần đăng nhập để hoàn tất tệp minh chứng." },
-      { status: 401 },
+    return apiErrorResponse(
+      apiErrors.unauthorized("Bạn cần đăng nhập để hoàn tất tệp minh chứng."),
     );
   }
 
@@ -139,9 +148,8 @@ export async function POST(request: NextRequest) {
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData.user) {
-      return NextResponse.json(
-        { error: "Phiên đăng nhập không hợp lệ hoặc đã hết hạn." },
-        { status: 401 },
+      return apiErrorResponse(
+        apiErrors.unauthorized("Phiên đăng nhập không hợp lệ hoặc đã hết hạn."),
       );
     }
 
@@ -150,9 +158,8 @@ export async function POST(request: NextRequest) {
     try {
       rawBody = (await request.json()) as FinalizeEvidenceBody;
     } catch {
-      return NextResponse.json(
-        { error: "Dữ liệu gửi lên không hợp lệ." },
-        { status: 400 },
+      return apiErrorResponse(
+        apiErrors.badRequest("Nội dung JSON gửi lên không hợp lệ."),
       );
     }
 
@@ -161,10 +168,7 @@ export async function POST(request: NextRequest) {
     try {
       body = validateBody(rawBody);
     } catch (error) {
-      return NextResponse.json(
-        { error: error instanceof Error ? error.message : "Dữ liệu minh chứng không hợp lệ." },
-        { status: 400 },
-      );
+      return apiErrorResponse(error, "Dữ liệu minh chứng không hợp lệ.");
     }
 
     let verifiedFile: Awaited<ReturnType<typeof inspectEvidenceBlob>> | null = null;
@@ -180,27 +184,32 @@ export async function POST(request: NextRequest) {
           route: request.nextUrl.pathname,
           status: 400,
         });
-        return NextResponse.json(
-          { error: "Không tìm thấy tệp vừa tải lên hoặc bạn không có quyền truy cập." },
-          { status: 400 },
+        return apiErrorResponse(
+          apiErrors.notFound(
+            "Không tìm thấy tệp vừa tải lên hoặc tệp không còn khả dụng.",
+          ),
         );
       }
 
       try {
         verifiedFile = await inspectEvidenceBlob(body.storagePath, storedBlob);
       } catch (error) {
-        return NextResponse.json(
-          { error: error instanceof Error ? error.message : "Nội dung tệp không hợp lệ." },
-          { status: 400 },
+        return apiErrorResponse(
+          apiErrors.unprocessable(
+            error instanceof Error
+              ? error.message
+              : "Nội dung tệp không hợp lệ.",
+          ),
         );
       }
 
       if (
         evidenceMimeTypeForFileName(body.tenTepGoc) !== verifiedFile.mimeType
       ) {
-        return NextResponse.json(
-          { error: "Định dạng tên tệp gốc không khớp với nội dung đã tải lên." },
-          { status: 400 },
+        return apiErrorResponse(
+          apiErrors.unprocessable(
+            "Định dạng tên tệp gốc không khớp với nội dung đã tải lên.",
+          ),
         );
       }
     }
@@ -228,9 +237,10 @@ export async function POST(request: NextRequest) {
         route: request.nextUrl.pathname,
         status: 400,
       });
-      return NextResponse.json(
-        { error: toUserMessage(createError, "Không thể hoàn tất minh chứng.") },
-        { status: 400 },
+      return apiErrorResponse(
+        createError
+          ? databaseApiError(createError, "Không thể hoàn tất minh chứng.")
+          : apiErrors.internal("Hệ thống chưa trả về mã minh chứng."),
       );
     }
 
@@ -241,9 +251,9 @@ export async function POST(request: NextRequest) {
       route: request.nextUrl.pathname,
       status: 500,
     });
-    return NextResponse.json(
-      { error: "Không thể hoàn tất minh chứng lúc này. Vui lòng thử lại." },
-      { status: 500 },
+    return apiErrorResponse(
+      error,
+      "Không thể hoàn tất minh chứng lúc này. Vui lòng thử lại.",
     );
   }
 }

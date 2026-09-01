@@ -23,6 +23,7 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 
 type EvidenceWithCriteria = Evidence & {
@@ -50,6 +51,8 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [evidence, setEvidence] = useState<EvidenceWithCriteria[]>([]);
+  const [evidenceCount, setEvidenceCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [filters, setFilters] = useState<Filters>({
@@ -154,9 +157,52 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       return;
     }
 
+    const evidenceIdSets: Set<string>[] = [];
+    const criterionGroups = [
+      filters.tieuChiIds,
+      filters.tieuChuan
+        ? criteria
+            .filter(
+              (criterion) =>
+                String(criterion.tieu_chuan?.so_thu_tu) === filters.tieuChuan,
+            )
+            .map((criterion) => criterion.id)
+        : [],
+    ].filter((ids) => ids.length > 0);
+
+    for (const criterionIds of criterionGroups) {
+      const { data: matchingLinks, error: matchingLinkError } = await supabase
+        .from("minh_chung_tieu_chi")
+        .select("minh_chung_id")
+        .in("tieu_chi_id", criterionIds);
+
+      if (matchingLinkError) {
+        setMessage(toUserMessage(matchingLinkError));
+        setEvidence([]);
+        setEvidenceCount(0);
+        return;
+      }
+
+      evidenceIdSets.push(
+        new Set((matchingLinks ?? []).map((link) => link.minh_chung_id)),
+      );
+    }
+
+    const eligibleEvidenceIds = evidenceIdSets.length > 0
+      ? [...evidenceIdSets[0]].filter((id) =>
+          evidenceIdSets.every((idSet) => idSet.has(id)),
+        )
+      : null;
+
+    if (eligibleEvidenceIds && eligibleEvidenceIds.length === 0) {
+      setEvidence([]);
+      setEvidenceCount(0);
+      return;
+    }
+
     let query = supabase
       .from("minh_chung")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("co_so_id", profile.co_so_id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -174,10 +220,20 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       query = query.eq("trang_thai_xac_minh", filters.trangThai);
     }
 
-    const { data: evidenceData, error } = await query;
+    if (eligibleEvidenceIds) {
+      query = query.in("id", eligibleEvidenceIds);
+    }
+
+    query = mode === "list"
+      ? query.range((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE - 1)
+      : query.limit(100);
+
+    const { count, data: evidenceData, error } = await query;
 
     if (error) {
       setMessage(toUserMessage(error));
+      setEvidence([]);
+      setEvidenceCount(0);
       return;
     }
 
@@ -193,51 +249,18 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
         : { data: [] };
 
     const links = (linkData ?? []) as unknown as EvidenceCriterionLink[];
-    const rows = ((evidenceData ?? []) as Evidence[])
-      .map((item) => ({
+    const rows = ((evidenceData ?? []) as Evidence[]).map((item) => ({
         ...item,
         criteria: links
           .filter((link) => link.minh_chung_id === item.id)
           .map((link) => link.tieu_chi)
           .filter(Boolean)
           .map((criterion) => criterion as Criterion) as Criterion[],
-      }))
-      .filter((item) => {
-        if (
-          filters.tieuChiIds.length > 0 &&
-          !item.criteria.some((criterion) => filters.tieuChiIds.includes(criterion.id))
-        ) {
-          return false;
-        }
-
-        if (
-          filters.tieuChuan &&
-          !item.criteria.some((criterion) => String(criterion.tieu_chuan?.so_thu_tu) === filters.tieuChuan)
-        ) {
-          return false;
-        }
-
-        return true;
-      });
-
-    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
-      p_hanh_dong: "EVIDENCE_LIST_READ",
-      p_doi_tuong_id: null,
-      p_du_lieu_moi: {
-        nam_hoc_id: selectedYearId,
-        bo_loc: filters,
-        so_dong: rows.length,
-      },
-    });
-
-    if (auditError) {
-      setEvidence([]);
-      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
-      return;
-    }
+      }));
 
     setEvidence(rows);
-  }, [filters, profile, selectedYearId, supabase]);
+    setEvidenceCount(count ?? rows.length);
+  }, [criteria, filters, mode, page, profile, selectedYearId, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -296,7 +319,10 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
         <EvidenceFilters
           criteria={criteria}
           filters={filters}
-          setFilters={setFilters}
+          setFilters={(nextFilters) => {
+            setPage(1);
+            setFilters(nextFilters);
+          }}
           years={years}
         />
       ) : null}
@@ -325,15 +351,16 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
                     <button
                       className="button-secondary"
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
+                        setPage(1);
                         setFilters({
                           keyword: "",
                           namHocId: "",
                           tieuChuan: "",
                           tieuChiIds: [],
                           trangThai: "",
-                        })
-                      }
+                        });
+                      }}
                     >
                       Xóa bộ lọc
                     </button>
@@ -374,6 +401,11 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
             ))
           )}
         </div>
+        <Pagination
+          page={page}
+          total={evidenceCount}
+          onPageChange={setPage}
+        />
       </section>
       ) : null}
     </div>

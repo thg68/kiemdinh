@@ -2,11 +2,12 @@
 
 import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { useAppContext } from "@/components/shared/use-app-context";
 
 type AuditRow = {
@@ -88,6 +89,9 @@ export function AuditLogWorkspace() {
   const [keyword, setKeyword] = useState("");
   const [objectFilter, setObjectFilter] = useState("all");
   const [loadingRows, setLoadingRows] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const deferredKeyword = useDeferredValue(keyword.trim());
 
   const loadRows = useCallback(async () => {
     if (!supabase || !profile) {
@@ -97,12 +101,64 @@ export function AuditLogWorkspace() {
     setLoadingRows(true);
     setMessage("");
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("nhat_ky_truy_cap")
-      .select("id, hanh_dong, doi_tuong, doi_tuong_id, thoi_diem, nguoi_dung:nguoi_dung_id(ho_ten, email)")
+      .select(
+        "id, hanh_dong, doi_tuong, doi_tuong_id, thoi_diem, nguoi_dung:nguoi_dung_id(ho_ten, email)",
+        { count: "exact" },
+      )
       .eq("co_so_id", profile.co_so_id)
-      .order("thoi_diem", { ascending: false })
-      .limit(120);
+      .order("thoi_diem", { ascending: false });
+
+    if (objectFilter !== "all") {
+      query = query.eq("doi_tuong", objectFilter);
+    }
+
+    if (deferredKeyword) {
+      const safeKeyword = deferredKeyword
+        .replace(/[^\p{L}\p{N}\s_-]/gu, " ")
+        .trim();
+      const normalizedKeyword = normalizeText(safeKeyword);
+      const matchingActions = Object.entries(actionLabels)
+        .filter(([code, label]) =>
+          normalizeText(`${code} ${label}`).includes(normalizedKeyword),
+        )
+        .map(([code]) => code);
+      const matchingObjects = Object.entries(objectLabels)
+        .filter(([code, label]) =>
+          normalizeText(`${code} ${label}`).includes(normalizedKeyword),
+        )
+        .map(([code]) => code);
+      const { data: matchingUsers } = safeKeyword
+        ? await supabase
+            .from("nguoi_dung")
+            .select("id")
+            .eq("co_so_id", profile.co_so_id)
+            .or(`ho_ten.ilike.%${safeKeyword}%,email.ilike.%${safeKeyword}%`)
+        : { data: [] };
+      const orFilters = [
+        safeKeyword ? `hanh_dong.ilike.%${safeKeyword}%` : "",
+        safeKeyword ? `doi_tuong.ilike.%${safeKeyword}%` : "",
+        matchingActions.length > 0
+          ? `hanh_dong.in.(${matchingActions.join(",")})`
+          : "",
+        matchingObjects.length > 0
+          ? `doi_tuong.in.(${matchingObjects.join(",")})`
+          : "",
+        matchingUsers && matchingUsers.length > 0
+          ? `nguoi_dung_id.in.(${matchingUsers.map((user) => user.id).join(",")})`
+          : "",
+      ].filter(Boolean);
+
+      if (orFilters.length > 0) {
+        query = query.or(orFilters.join(","));
+      }
+    }
+
+    const { count, data, error } = await query.range(
+      (page - 1) * DEFAULT_PAGE_SIZE,
+      page * DEFAULT_PAGE_SIZE - 1,
+    );
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -111,8 +167,9 @@ export function AuditLogWorkspace() {
     }
 
     setRows((data ?? []) as unknown as AuditRow[]);
+    setTotal(count ?? 0);
     setLoadingRows(false);
-  }, [profile, setMessage, supabase]);
+  }, [deferredKeyword, objectFilter, page, profile, setMessage, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -122,24 +179,7 @@ export function AuditLogWorkspace() {
     return () => window.clearTimeout(timer);
   }, [loadRows]);
 
-  const objects = useMemo(() => [...new Set(rows.map((row) => row.doi_tuong))].sort(), [rows]);
-  const filteredRows = useMemo(() => {
-    const normalizedKeyword = normalizeText(keyword.trim());
-
-    return rows.filter((row) => {
-      const matchesObject = objectFilter === "all" || row.doi_tuong === objectFilter;
-      const haystack = [
-        row.hanh_dong,
-        row.doi_tuong,
-        actionLabel(row.hanh_dong),
-        objectLabel(row.doi_tuong),
-        actorName(row),
-      ].join(" ");
-      const matchesKeyword = !normalizedKeyword || normalizeText(haystack).includes(normalizedKeyword);
-
-      return matchesObject && matchesKeyword;
-    });
-  }, [keyword, objectFilter, rows]);
+  const objects = Object.keys(objectLabels).sort();
 
   if (loading || loadingRows) {
     return <LoadingState label="Đang tải nhật ký thao tác…" />;
@@ -166,7 +206,10 @@ export function AuditLogWorkspace() {
             className="form-control mt-2"
             placeholder="Ví dụ: minh chứng, báo cáo, Nguyễn Văn A"
             value={keyword}
-            onChange={(event) => setKeyword(event.target.value)}
+            onChange={(event) => {
+              setPage(1);
+              setKeyword(event.target.value);
+            }}
           />
         </label>
         <label className="text-sm font-medium">
@@ -174,7 +217,10 @@ export function AuditLogWorkspace() {
           <select
             className="form-control mt-2"
             value={objectFilter}
-            onChange={(event) => setObjectFilter(event.target.value)}
+            onChange={(event) => {
+              setPage(1);
+              setObjectFilter(event.target.value);
+            }}
           >
             <option value="all">Tất cả</option>
             {objects.map((objectName) => (
@@ -194,7 +240,7 @@ export function AuditLogWorkspace() {
           </p>
         </div>
 
-        {filteredRows.length === 0 ? (
+        {rows.length === 0 ? (
           <div className="p-5">
             <EmptyState
               title="Không có dòng nhật ký phù hợp"
@@ -203,7 +249,7 @@ export function AuditLogWorkspace() {
           </div>
         ) : (
           <div className="divide-y divide-[var(--color-border)]">
-            {filteredRows.map((row) => (
+            {rows.map((row) => (
               <article className="grid gap-4 px-5 py-4 transition hover:bg-[var(--color-lavender-mist)]/35 md:grid-cols-[1fr_auto]" key={row.id}>
                 <div className="grid gap-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -227,6 +273,12 @@ export function AuditLogWorkspace() {
             ))}
           </div>
         )}
+        <Pagination
+          disabled={loadingRows}
+          page={page}
+          total={total}
+          onPageChange={setPage}
+        />
       </section>
     </div>
   );

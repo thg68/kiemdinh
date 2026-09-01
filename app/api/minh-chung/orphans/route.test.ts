@@ -18,7 +18,7 @@ const orphanRows = [
 ];
 
 function mockSupabase(options: {
-  listError?: { message: string } | null;
+  listError?: { code?: string; message: string } | null;
   removeError?: { message: string } | null;
   auditError?: { message: string } | null;
 } = {}) {
@@ -65,8 +65,10 @@ describe("API object minh chứng mồ côi", () => {
 
   it("yêu cầu đăng nhập khi dò object mồ côi", async () => {
     const response = await GET(request("GET", false));
+    const body = (await response.json()) as { code?: string };
 
     expect(response.status).toBe(401);
+    expect(body.code).toBe("UNAUTHORIZED");
   });
 
   it("trả danh sách object đã quá thời gian chờ", async () => {
@@ -98,8 +100,14 @@ describe("API object minh chứng mồ côi", () => {
     });
 
     const response = await DELETE(request("DELETE"));
+    const body = (await response.json()) as {
+      code?: string;
+      details?: { deleted?: number };
+    };
 
     expect(response.status).toBe(500);
+    expect(body.code).toBe("INTERNAL_ERROR");
+    expect(body.details?.deleted).toBe(0);
     expect(rpc).not.toHaveBeenCalledWith(
       "fn_ghi_nhat_ky_don_storage_mo_coi",
       expect.anything(),
@@ -108,7 +116,33 @@ describe("API object minh chứng mồ côi", () => {
 
   it("từ chối thời gian chờ ngoài giới hạn", async () => {
     const response = await GET(request("GET", true, "2"));
+    const body = (await response.json()) as { code?: string };
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
+    expect(body.code).toBe("UNPROCESSABLE_ENTITY");
+  });
+
+  it("ánh xạ lỗi quyền bằng mã SQLSTATE", async () => {
+    mockSupabase({
+      listError: { code: "42501", message: "denied" },
+    });
+
+    const response = await GET(request("GET"));
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(403);
+    expect(body.code).toBe("FORBIDDEN");
+  });
+
+  it("không đoán quyền từ chuỗi lỗi không có mã", async () => {
+    mockSupabase({
+      listError: { message: "Bạn không có quyền" },
+    });
+
+    const response = await GET(request("GET"));
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(500);
+    expect(body.code).toBe("INTERNAL_ERROR");
   });
 });

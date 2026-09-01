@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { CapHoc, KetQuaTieuChi, xacDinhMucTuKetQua } from "@/lib/assessment/level-engine";
+import { apiErrors, databaseApiError } from "@/lib/api/errors";
 
 export type ReportSupabaseClient = ReturnType<typeof createRequestSupabaseClient>;
 
@@ -152,7 +153,7 @@ export function createRequestSupabaseClient(authorization: string) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Chưa cấu hình Supabase.");
+    throw apiErrors.internal("Chưa cấu hình Supabase.");
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {
@@ -168,7 +169,7 @@ export async function getReportProfile(supabase: ReportSupabaseClient) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
 
   if (userError || !userData.user) {
-    throw new Error(userError?.message ?? "Bạn cần đăng nhập để xuất báo cáo.");
+    throw apiErrors.unauthorized("Phiên đăng nhập không hợp lệ hoặc đã hết hạn.");
   }
 
   const { data, error } = await supabase
@@ -177,8 +178,12 @@ export async function getReportProfile(supabase: ReportSupabaseClient) {
     .eq("auth_user_id", userData.user.id)
     .maybeSingle();
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "Không tìm thấy hồ sơ người dùng trong cơ sở giáo dục.");
+  if (error) {
+    throw databaseApiError(error, "Không tải được hồ sơ người dùng.");
+  }
+
+  if (!data) {
+    throw apiErrors.notFound("Không tìm thấy hồ sơ người dùng trong cơ sở giáo dục.");
   }
 
   return data as ReportProfile;
@@ -200,11 +205,11 @@ export async function collectReportData(
   });
 
   if (permissionError) {
-    throw new Error(permissionError.message);
+    throw databaseApiError(permissionError, "Không kiểm tra được quyền xuất báo cáo.");
   }
 
   if (!canExport) {
-    throw new Error("Bạn chưa có quyền xuất báo cáo của cơ sở giáo dục này.");
+    throw apiErrors.forbidden("Bạn chưa có quyền xuất báo cáo của cơ sở giáo dục này.");
   }
 
   const [
@@ -298,11 +303,11 @@ export async function collectReportData(
     councilError;
 
   if (firstError) {
-    throw new Error(firstError.message);
+    throw databaseApiError(firstError, "Không tải được dữ liệu xuất báo cáo.");
   }
 
   if (!schoolData || !yearData) {
-    throw new Error("Không tìm thấy cơ sở giáo dục hoặc năm học để xuất báo cáo.");
+    throw apiErrors.notFound("Không tìm thấy cơ sở giáo dục hoặc năm học để xuất báo cáo.");
   }
 
   const criteria = ((criterionData ?? []) as (Omit<ReportCriterion, "tieu_chuan"> & {
@@ -340,7 +345,7 @@ export async function collectReportData(
     : { data: [], error: null };
 
   if (evidenceLinkError) {
-    throw new Error(evidenceLinkError.message);
+    throw databaseApiError(evidenceLinkError, "Không tải được liên kết tiêu chí của minh chứng.");
   }
 
   const evidence = ((evidenceData ?? []) as Omit<ReportEvidence, "tieuChiIds">[]).map((item) => ({

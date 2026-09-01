@@ -1,5 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  ApiError,
+  apiErrorResponse,
+  apiErrors,
+  databaseApiError,
+} from "@/lib/api/errors";
 import { logServerError } from "@/lib/observability/logger";
 
 type OrphanStorageObject = {
@@ -15,7 +21,7 @@ function createRequestSupabaseClient(authorization: string) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase environment is not configured.");
+    throw apiErrors.internal("Cấu hình kết nối Supabase chưa sẵn sàng.");
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {
@@ -47,9 +53,8 @@ async function loadOrphans(request: NextRequest) {
 
   if (!authorization) {
     return {
-      response: NextResponse.json(
-        { error: "Bạn cần đăng nhập để kiểm tra tệp tải lỗi." },
-        { status: 401 },
+      response: apiErrorResponse(
+        apiErrors.unauthorized("Bạn cần đăng nhập để kiểm tra tệp tải lỗi."),
       ),
     };
   }
@@ -58,9 +63,8 @@ async function loadOrphans(request: NextRequest) {
 
   if (minimumAge === null) {
     return {
-      response: NextResponse.json(
-        { error: "Thời gian chờ phải từ 15 phút đến 7 ngày." },
-        { status: 400 },
+      response: apiErrorResponse(
+        apiErrors.unprocessable("Thời gian chờ phải từ 15 phút đến 7 ngày."),
       ),
     };
   }
@@ -70,9 +74,8 @@ async function loadOrphans(request: NextRequest) {
 
   if (authError || !authData.user) {
     return {
-      response: NextResponse.json(
-        { error: "Phiên đăng nhập không hợp lệ hoặc đã hết hạn." },
-        { status: 401 },
+      response: apiErrorResponse(
+        apiErrors.unauthorized("Phiên đăng nhập không hợp lệ hoặc đã hết hạn."),
       ),
     };
   }
@@ -89,9 +92,11 @@ async function loadOrphans(request: NextRequest) {
       status: 403,
     });
     return {
-      response: NextResponse.json(
-        { error: "Bạn không có quyền dọn tệp tải lỗi hoặc dữ liệu chưa sẵn sàng." },
-        { status: 403 },
+      response: apiErrorResponse(
+        databaseApiError(
+          error,
+          "Không thể kiểm tra tệp tải lỗi lúc này.",
+        ),
       ),
     };
   }
@@ -118,9 +123,9 @@ export async function GET(request: NextRequest) {
       route: request.nextUrl.pathname,
       status: 500,
     });
-    return NextResponse.json(
-      { error: "Không thể kiểm tra tệp tải lỗi lúc này." },
-      { status: 500 },
+    return apiErrorResponse(
+      error,
+      "Không thể kiểm tra tệp tải lỗi lúc này.",
     );
   }
 }
@@ -156,12 +161,13 @@ export async function DELETE(request: NextRequest) {
           route: request.nextUrl.pathname,
           status: 500,
         });
-        return NextResponse.json(
-          {
-            deleted,
-            error: "Không thể xóa hết tệp tải lỗi. Hãy thử lại sau.",
-          },
-          { status: 500 },
+        return apiErrorResponse(
+          new ApiError(
+            500,
+            "INTERNAL_ERROR",
+            "Không thể xóa hết tệp tải lỗi. Hãy thử lại sau.",
+            { deleted },
+          ),
         );
       }
 
@@ -176,12 +182,13 @@ export async function DELETE(request: NextRequest) {
           route: request.nextUrl.pathname,
           status: 500,
         });
-        return NextResponse.json(
-          {
-            deleted: deleted + storagePaths.length,
-            error: "Tệp đã được xóa nhưng chưa ghi được nhật ký. Hãy báo quản trị hệ thống.",
-          },
-          { status: 500 },
+        return apiErrorResponse(
+          new ApiError(
+            500,
+            "INTERNAL_ERROR",
+            "Tệp đã được xóa nhưng chưa ghi được nhật ký. Hãy báo quản trị hệ thống.",
+            { deleted: deleted + storagePaths.length },
+          ),
         );
       }
 
@@ -195,9 +202,9 @@ export async function DELETE(request: NextRequest) {
       route: request.nextUrl.pathname,
       status: 500,
     });
-    return NextResponse.json(
-      { error: "Không thể dọn tệp tải lỗi lúc này." },
-      { status: 500 },
+    return apiErrorResponse(
+      error,
+      "Không thể dọn tệp tải lỗi lúc này.",
     );
   }
 }

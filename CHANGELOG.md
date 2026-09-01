@@ -160,3 +160,16 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 - Bổ sung API và giao diện phát hiện/dọn object tải lỗi chưa liên kết sau 60 phút; chỉ vai trò có `evidence.delete` được thao tác và mỗi đợt dọn đều có audit.
 - Script import năm học dùng cùng giới hạn định dạng/dung lượng, đường dẫn object chuẩn và không ghi đè tệp đã có.
 - Bổ sung kiểm thử route, helper và 11 assertion pgTAP cho bucket, đối chiếu object, quyền và luồng dọn tệp lỗi.
+
+## Sprint 16 - API và hiệu năng
+
+- Chuẩn hóa schema dùng chung cho UUID, enum, năm học, cấp học, ngày ISO và
+  phân trang; API trả hợp đồng lỗi ổn định theo mã thay vì đọc nội dung chuỗi.
+- Phân trang phía PostgreSQL cho minh chứng, nhật ký, kế hoạch cải tiến và
+  người dùng, mặc định 25 dòng mỗi trang.
+- Tải tệp cho ZIP song song có giới hạn, có timeout và retry chỉ với lỗi mạng
+  hoặc 5xx; lỗi 4xx dừng ngay.
+- Rate limit nguyên tử trong PostgreSQL cho xuất báo cáo, ZIP và signed URL,
+  dùng chung giữa các Cloudflare Worker và trả `Retry-After` khi bị giới hạn.
+- Bổ sung index theo `co_so_id`, `nam_hoc_id`, trạng thái và thời gian cùng
+  test pgTAP kiểm tra RLS, quyền gọi RPC, giới hạn và tính độc lập theo thao tác.

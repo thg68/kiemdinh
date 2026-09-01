@@ -1,9 +1,14 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { collectReportData, createRequestSupabaseClient } = vi.hoisted(() => ({
+const { collectReportData, createRequestSupabaseClient, enforceRateLimit } = vi.hoisted(() => ({
   collectReportData: vi.fn(),
   createRequestSupabaseClient: vi.fn(() => ({ rpc: vi.fn() })),
+  enforceRateLimit: vi.fn().mockResolvedValue({
+    allowed: true,
+    remaining: 9,
+    retryAfterSeconds: 300,
+  }),
 }));
 
 vi.mock("./data", () => ({
@@ -11,9 +16,16 @@ vi.mock("./data", () => ({
   createRequestSupabaseClient,
 }));
 
+vi.mock("@/lib/api/rate-limit", () => ({
+  enforceRateLimit,
+}));
+
+import { ApiError } from "@/lib/api/errors";
 import { downloadResponse, logReportExport, withReportData } from "./routes";
 
-function request(query = "?namHocId=year-1&capHoc=mam_non", withAuth = true) {
+const yearId = "8f6f40d1-e3fe-4eb0-a576-801367e1d9b1";
+
+function request(query = `?namHocId=${yearId}&capHoc=mam_non`, withAuth = true) {
   return new NextRequest(`http://localhost/api/bao-cao/mau-1${query}`, {
     headers: withAuth ? { authorization: "Bearer token" } : undefined,
   });
@@ -23,6 +35,12 @@ describe("API xuất báo cáo", () => {
   beforeEach(() => {
     collectReportData.mockReset();
     createRequestSupabaseClient.mockClear();
+    enforceRateLimit.mockClear();
+    enforceRateLimit.mockResolvedValue({
+      allowed: true,
+      remaining: 9,
+      retryAfterSeconds: 300,
+    });
   });
 
   it("từ chối request không có token", async () => {
@@ -33,26 +51,45 @@ describe("API xuất báo cáo", () => {
   });
 
   it("từ chối request thiếu năm học hoặc cấp học", async () => {
-    const response = await withReportData(request("?namHocId=year-1"), vi.fn());
+    const response = await withReportData(request(`?namHocId=${yearId}`), vi.fn());
 
     expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "BAD_REQUEST" });
     expect(collectReportData).not.toHaveBeenCalled();
   });
 
-  it("trả 403 khi vai trò không có quyền xuất", async () => {
-    collectReportData.mockRejectedValue(new Error("Bạn chưa có quyền xuất báo cáo của cơ sở giáo dục này."));
+  it("trả 422 khi UUID hoặc cấp học không qua schema", async () => {
+    const invalidUuidResponse = await withReportData(
+      request("?namHocId=year-1&capHoc=mam_non"),
+      vi.fn(),
+    );
+    const invalidLevelResponse = await withReportData(
+      request(`?namHocId=${yearId}&capHoc=trung_hoc`),
+      vi.fn(),
+    );
 
-    const response = await withReportData(request(), vi.fn());
-
-    expect(response.status).toBe(403);
+    expect(invalidUuidResponse.status).toBe(422);
+    expect(invalidLevelResponse.status).toBe(422);
+    expect(collectReportData).not.toHaveBeenCalled();
   });
 
-  it("trả 401 khi token hết hạn trong lúc đọc hồ sơ", async () => {
-    collectReportData.mockRejectedValue(new Error("Bạn cần đăng nhập để xuất báo cáo."));
+  it("trả 403 khi lớp dữ liệu phát sinh lỗi quyền có mã rõ ràng", async () => {
+    collectReportData.mockRejectedValue(
+      new ApiError(403, "FORBIDDEN", "Bạn không có quyền xuất báo cáo này."),
+    );
 
     const response = await withReportData(request(), vi.fn());
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "FORBIDDEN" });
+  });
 
-    expect(response.status).toBe(401);
+  it("không suy luận 403 từ nội dung câu tiếng Việt", async () => {
+    collectReportData.mockRejectedValue(
+      new Error("Bạn chưa có quyền xuất báo cáo của cơ sở giáo dục này."),
+    );
+
+    const response = await withReportData(request(), vi.fn());
+    expect(response.status).toBe(500);
   });
 
   it("không làm lộ chi tiết khi nhận giá trị lỗi không chuẩn", async () => {
@@ -61,19 +98,43 @@ describe("API xuất báo cáo", () => {
     const response = await withReportData(request(), vi.fn());
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: "Không xuất được báo cáo. Vui lòng thử lại." });
+    expect(await response.json()).toEqual({
+      code: "INTERNAL_ERROR",
+      error: "Không xuất được báo cáo. Vui lòng thử lại.",
+    });
   });
 
   it("truyền dữ liệu theo năm học và cấp học vào handler", async () => {
-    const reportData = { year: { id: "year-1" }, capHoc: "mam_non" };
+    const reportData = { year: { id: yearId }, capHoc: "mam_non" };
     collectReportData.mockResolvedValue(reportData);
     const handler = vi.fn().mockResolvedValue(new Response("ok"));
 
     const response = await withReportData(request(), handler);
 
-    expect(collectReportData).toHaveBeenCalledWith(expect.anything(), "year-1", "mam_non");
+    expect(enforceRateLimit).toHaveBeenCalledWith(expect.anything(), "report_export");
+    expect(collectReportData).toHaveBeenCalledWith(expect.anything(), yearId, "mam_non");
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ data: reportData }));
     expect(await response.text()).toBe("ok");
+  });
+
+  it("trả 429 trước khi tải dữ liệu khi hết lượt xuất", async () => {
+    enforceRateLimit.mockRejectedValue(
+      new ApiError(
+        429,
+        "RATE_LIMITED",
+        "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
+        undefined,
+        { "Retry-After": "45" },
+      ),
+    );
+
+    const response = await withReportData(request(), vi.fn(), {
+      rateLimitAction: "evidence_zip",
+    });
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("45");
+    expect(collectReportData).not.toHaveBeenCalled();
   });
 
   it("thiết lập header tải xuống và không cache file nhạy cảm", () => {

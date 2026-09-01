@@ -7,12 +7,15 @@ vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(),
 }));
 
+const NAM_HOC_ID = "11111111-1111-4111-8111-111111111111";
+const TIEU_CHI_ID = "22222222-2222-4222-8222-222222222222";
+
 const validBody = {
-  namHocId: "year-1",
-  tieuChiIds: ["criterion-1"],
-  tieuChiGocId: "criterion-1",
+  namHocId: NAM_HOC_ID,
+  tieuChiIds: [TIEU_CHI_ID],
+  tieuChiGocId: TIEU_CHI_ID,
   ten: "Quyết định phân công",
-  storagePath: "school-1/year-1/file.pdf",
+  storagePath: `school-1/${NAM_HOC_ID}/file.pdf`,
   tenTepGoc: "quyet-dinh.pdf",
   duongDan: "",
   ngayBanHanh: "2026-08-20",
@@ -24,7 +27,7 @@ function mockSupabase(options: {
   downloadData?: Blob | null;
   downloadError?: { message: string } | null;
   rpcData?: string | null;
-  rpcError?: { message: string } | null;
+  rpcError?: { code?: string; message: string } | null;
 } = {}) {
   const getUser = vi.fn().mockResolvedValue({
     data: options.userError ? { user: null } : { user: { id: "user-1" } },
@@ -73,8 +76,44 @@ describe("API hoàn tất tệp minh chứng", () => {
 
   it("yêu cầu phiên đăng nhập hợp lệ", async () => {
     const response = await callRoute(validBody, false);
+    const body = (await response.json()) as { code?: string };
 
     expect(response.status).toBe(401);
+    expect(body.code).toBe("UNAUTHORIZED");
+  });
+
+  it("trả 400 với JSON không hợp lệ", async () => {
+    mockSupabase();
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/minh-chung/finalize", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer token",
+          "content-type": "application/json",
+        },
+        body: "{",
+      }),
+    );
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(400);
+    expect(body.code).toBe("BAD_REQUEST");
+  });
+
+  it("trả 422 và không đọc Storage khi UUID không hợp lệ", async () => {
+    const { download, rpc } = mockSupabase();
+
+    const response = await callRoute({
+      ...validBody,
+      namHocId: "year-1",
+    });
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(422);
+    expect(body.code).toBe("VALIDATION_ERROR");
+    expect(download).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
   });
 
   it("tải lại object và chỉ gửi metadata tự tính vào RPC", async () => {
@@ -103,8 +142,10 @@ describe("API hoàn tất tệp minh chứng", () => {
       ...validBody,
       tenTepGoc: "../quyet-dinh.pdf",
     });
+    const body = (await response.json()) as { code?: string };
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
+    expect(body.code).toBe("UNPROCESSABLE_ENTITY");
     expect(download).not.toHaveBeenCalled();
     expect(rpc).not.toHaveBeenCalled();
   });
@@ -115,8 +156,10 @@ describe("API hoàn tất tệp minh chứng", () => {
     });
 
     const response = await callRoute();
+    const body = (await response.json()) as { code?: string };
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
+    expect(body.code).toBe("UNPROCESSABLE_ENTITY");
     expect(rpc).not.toHaveBeenCalled();
   });
 
@@ -127,8 +170,10 @@ describe("API hoàn tất tệp minh chứng", () => {
       ...validBody,
       tenTepGoc: "quyet-dinh.docx",
     });
+    const body = (await response.json()) as { code?: string };
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
+    expect(body.code).toBe("UNPROCESSABLE_ENTITY");
     expect(rpc).not.toHaveBeenCalled();
   });
 
@@ -139,7 +184,35 @@ describe("API hoàn tất tệp minh chứng", () => {
     });
 
     const response = await callRoute();
+    const body = (await response.json()) as { code?: string };
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(404);
+    expect(body.code).toBe("NOT_FOUND");
+  });
+
+  it("ánh xạ xung đột từ mã SQLSTATE thay vì nội dung lỗi", async () => {
+    mockSupabase({
+      rpcData: null,
+      rpcError: { code: "23505", message: "duplicate" },
+    });
+
+    const response = await callRoute();
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(409);
+    expect(body.code).toBe("CONFLICT");
+  });
+
+  it("không suy luận lỗi quyền từ một chuỗi thông báo", async () => {
+    mockSupabase({
+      rpcData: null,
+      rpcError: { message: "Bạn không có quyền" },
+    });
+
+    const response = await callRoute();
+    const body = (await response.json()) as { code?: string };
+
+    expect(response.status).toBe(500);
+    expect(body.code).toBe("INTERNAL_ERROR");
   });
 });

@@ -1,5 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
+import { RateLimitClient, enforceRateLimit } from "@/lib/api/rate-limit";
+import { SchemaValidationError, uuidSchema } from "@/lib/api/validation";
 import { logServerError } from "@/lib/observability/logger";
 
 function createRequestSupabaseClient(authorization: string) {
@@ -26,16 +29,28 @@ export async function POST(
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
-    return NextResponse.json(
-      { error: "Bạn cần đăng nhập để xem tệp minh chứng." },
-      { status: 401 },
+    return apiErrorResponse(
+      apiErrors.unauthorized("Bạn cần đăng nhập để xem tệp minh chứng."),
     );
   }
 
-  const { id } = await params;
+  const { id: rawId } = await params;
 
   try {
+    const id = uuidSchema.parse(rawId, "id");
     const supabase = createRequestSupabaseClient(authorization);
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw apiErrors.unauthorized(
+        "Phiên đăng nhập không hợp lệ hoặc đã hết hạn.",
+      );
+    }
+
+    await enforceRateLimit(
+      supabase as unknown as RateLimitClient,
+      "evidence_signed_url",
+    );
     const { data: evidence, error: evidenceError } = await supabase
       .from("minh_chung")
       .select("id, co_so_id, storage_path")
@@ -43,23 +58,13 @@ export async function POST(
       .maybeSingle();
 
     if (evidenceError || !evidence) {
-      logServerError("evidence_lookup_rejected", evidenceError, {
-        operation: "create_signed_url",
-        route: request.nextUrl.pathname,
-        resourceId: id,
-        status: 404,
-      });
-      return NextResponse.json(
-        { error: "Không tìm thấy minh chứng hoặc bạn không có quyền xem." },
-        { status: 404 },
+      throw apiErrors.notFound(
+        "Không tìm thấy minh chứng hoặc bạn không có quyền xem.",
       );
     }
 
     if (!evidence.storage_path) {
-      return NextResponse.json(
-        { error: "Minh chứng này không có tệp lưu trữ." },
-        { status: 400 },
-      );
+      throw apiErrors.badRequest("Minh chứng này không có tệp lưu trữ.");
     }
 
     const { data: signedUrlData, error: signedUrlError } = await supabase.storage
@@ -67,15 +72,8 @@ export async function POST(
       .createSignedUrl(evidence.storage_path, 600);
 
     if (signedUrlError || !signedUrlData?.signedUrl) {
-      logServerError("evidence_signed_url_rejected", signedUrlError, {
-        operation: "create_signed_url",
-        route: request.nextUrl.pathname,
-        resourceId: id,
-        status: 403,
-      });
-      return NextResponse.json(
-        { error: "Không thể mở tệp minh chứng. Hãy kiểm tra quyền truy cập rồi thử lại." },
-        { status: 403 },
+      throw apiErrors.forbidden(
+        "Không thể mở tệp minh chứng. Hãy kiểm tra quyền truy cập rồi thử lại.",
       );
     }
 
@@ -86,29 +84,29 @@ export async function POST(
     });
 
     if (auditError) {
-      logServerError("evidence_audit_failed", auditError, {
-        operation: "create_signed_url",
-        route: request.nextUrl.pathname,
-        resourceId: id,
-        status: 500,
-      });
-      return NextResponse.json(
-        { error: "Không ghi nhận được lượt truy cập tệp. Vui lòng thử lại." },
-        { status: 500 },
+      throw new ApiError(
+        500,
+        "AUDIT_WRITE_FAILED",
+        "Không ghi nhận được lượt truy cập tệp. Vui lòng thử lại.",
       );
     }
 
     return NextResponse.json({ signedUrl: signedUrlData.signedUrl });
   } catch (error) {
+    const status = error instanceof ApiError
+      ? error.status
+      : error instanceof SchemaValidationError
+        ? 422
+        : 500;
     logServerError("evidence_signed_url_failed", error, {
       operation: "create_signed_url",
       route: request.nextUrl.pathname,
-      resourceId: id,
-      status: 500,
+      resourceId: rawId,
+      status,
     });
-    return NextResponse.json(
-      { error: "Không thể mở tệp minh chứng lúc này. Vui lòng thử lại." },
-      { status: 500 },
+    return apiErrorResponse(
+      error,
+      "Không thể mở tệp minh chứng lúc này. Vui lòng thử lại.",
     );
   }
 }

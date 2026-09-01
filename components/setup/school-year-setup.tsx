@@ -9,6 +9,7 @@ import {
 } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/alert";
 import { LoadingState } from "@/components/ui/loading-state";
+import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 
 type Profile = {
   id: string;
@@ -114,6 +115,9 @@ export function SchoolYearSetup() {
   const [school, setSchool] = useState<School | null>(null);
   const [years, setYears] = useState<SchoolYear[]>([]);
   const [users, setUsers] = useState<ManagedUser[]>([]);
+  const [assignmentUsers, setAssignmentUsers] = useState<ManagedUser[]>([]);
+  const [userCount, setUserCount] = useState(0);
+  const [userPage, setUserPage] = useState(1);
   const [roles, setRoles] = useState<Role[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -198,7 +202,8 @@ export function SchoolYearSetup() {
     const [
       { data: schoolData, error: schoolError },
       { data: yearData, error: yearError },
-      { data: userData, error: userError },
+      { count: loadedUserCount, data: userData, error: userError },
+      { data: assignmentUserData, error: assignmentUserError },
       { data: roleData, error: roleError },
       { data: canManage, error: canManageError },
       { data: canManageAssignment, error: canManageAssignmentError },
@@ -216,8 +221,21 @@ export function SchoolYearSetup() {
         .order("ngay_bat_dau", { ascending: false }),
       supabase
         .from("nguoi_dung")
-        .select("id, ho_ten, email, trang_thai, nguoi_dung_vai_tro(vai_tro:vai_tro_id(id, ma, ten))")
+        .select(
+          "id, ho_ten, email, trang_thai, nguoi_dung_vai_tro(vai_tro:vai_tro_id(id, ma, ten))",
+          { count: "exact" },
+        )
         .eq("co_so_id", profileData.co_so_id)
+        .order("ho_ten", { ascending: true })
+        .range(
+          (userPage - 1) * DEFAULT_PAGE_SIZE,
+          userPage * DEFAULT_PAGE_SIZE - 1,
+        ),
+      supabase
+        .from("nguoi_dung")
+        .select("id, ho_ten, email, trang_thai")
+        .eq("co_so_id", profileData.co_so_id)
+        .eq("trang_thai", "active")
         .order("ho_ten", { ascending: true }),
       supabase
         .from("vai_tro")
@@ -237,6 +255,7 @@ export function SchoolYearSetup() {
       schoolError ??
       yearError ??
       userError ??
+      assignmentUserError ??
       roleError ??
       canManageError ??
       canManageAssignmentError ??
@@ -256,6 +275,8 @@ export function SchoolYearSetup() {
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
     setUsers((userData ?? []) as unknown as ManagedUser[]);
+    setAssignmentUsers((assignmentUserData ?? []) as ManagedUser[]);
+    setUserCount(loadedUserCount ?? 0);
     setRoles((roleData ?? []) as Role[]);
     setCanManageUsers(Boolean(canManage));
     setCanManageAssignments(Boolean(canManageAssignment));
@@ -303,7 +324,7 @@ export function SchoolYearSetup() {
     }
 
     setLoading(false);
-  }, [router, supabase]);
+  }, [router, supabase, userPage]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -571,7 +592,10 @@ export function SchoolYearSetup() {
         roles={roles}
         supabase={supabase}
         users={users}
+        page={userPage}
+        total={userCount}
         userRoles={userRoles}
+        onPageChange={setUserPage}
         onChanged={loadData}
         onMessage={setMessage}
       />
@@ -584,7 +608,7 @@ export function SchoolYearSetup() {
         canManageAssignments={canManageAssignments}
         criteria={criteria}
         supabase={supabase}
-        users={users}
+        users={assignmentUsers}
         onChanged={loadData}
         onMessage={setMessage}
       />
@@ -677,7 +701,10 @@ function UserRoleManager(props: {
   roles: Role[];
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
   users: ManagedUser[];
+  page: number;
+  total: number;
   userRoles: (user: ManagedUser) => Role[];
+  onPageChange: (page: number) => void;
   onChanged: () => Promise<void>;
   onMessage: (message: string) => void;
 }) {
@@ -895,6 +922,11 @@ function UserRoleManager(props: {
           ))
         )}
       </div>
+      <Pagination
+        page={props.page}
+        total={props.total}
+        onPageChange={props.onPageChange}
+      />
     </section>
   );
 }

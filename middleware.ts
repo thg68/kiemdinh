@@ -4,8 +4,8 @@ import {
   createRequestId,
 } from "@/lib/observability/request-context";
 
-export function proxy(request: NextRequest) {
-  // Request ID luôn do ứng dụng tạo, không tin giá trị client tự gửi.
+export default function middleware(request: NextRequest) {
+  // The application creates a fresh request ID and never trusts a client value.
   const requestId = createRequestId();
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(REQUEST_ID_HEADER, requestId);

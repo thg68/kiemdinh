@@ -4,9 +4,10 @@
 
 - Migration `038_sprint17_production_operations.sql` bảo đảm một hội đồng trên
   mỗi cặp `(co_so_id, nam_hoc_id)` và người phụ trách kế hoạch thuộc cùng đơn vị.
-- Thu hồi `TRUNCATE`, `TRIGGER`, `REFERENCES` khỏi `anon`, `authenticated` và
-  default privileges của các bảng/view tương lai trong schema `public`.
-- `proxy.ts` cấp UUID mới cho mọi request `/api/*`; API phản hồi cùng
+- Thu hồi `TRUNCATE`, `TRIGGER`, `REFERENCES` khỏi `PUBLIC`, `anon`,
+  `authenticated` trên mọi quan hệ hiện hữu và default privileges của role
+  migration `postgres` trong schema `public`.
+- `middleware.ts` cấp UUID mới cho mọi request `/api/*`; API phản hồi cùng
   `x-request-id` để đối chiếu log.
 - `/api/health` kiểm tra Supabase Auth với timeout, trả trạng thái tổng hợp
   `200/503` và không tiết lộ cấu hình.
@@ -16,8 +17,9 @@
 - Ba loại tín hiệu vận hành là `REPORT_EXPORT_FAILURE`, `STORAGE_FAILURE` và
   `LOGIN_FAILURE`; lỗi phía trình duyệt chỉ gửi mã lý do/thao tác an toàn về API
   cùng origin.
-- Workers Logs được bật 100% sampling trong giai đoạn thí điểm để không bỏ sót
-  sự kiện nghiêm trọng. Cần đánh giá lại chi phí và lưu lượng trước khi mở rộng.
+- Custom logs được bật 100% sampling trong giai đoạn thí điểm; invocation logs bị
+  tắt để không lưu tự động request header hoặc URL. Cần đánh giá lại chi phí trước
+  khi mở rộng.
 
 ## Hợp đồng cảnh báo
 
@@ -28,7 +30,19 @@
 | `LOGIN_FAILURE` | Màn hình đăng nhập | reason, requestId, route |
 
 Tài liệu triển khai, Saved Query và xử lý sự cố nằm tại
-`docs/SPRINT-17-OPERATIONS.md`.
+`docs/SPRINT-17-OPERATIONS.md`. Kết quả rollout staging nằm tại
+`docs/SPRINT-17-STAGING-ROLLOUT.md`.
+
+## Rollout staging
+
+- Supabase staging đã nhận migration `033` đến `038`; kiểm tra catalog 4/4 đạt.
+- Worker `kiemdinh-app-staging` đã deploy thành công với version
+  `eb9830b5-af9f-43d4-97ac-1a783d882f76`.
+- Bundle không chứa project ref production; `/api/health` trả 200 và request ID
+  hợp lệ.
+- Workers Logs đã nhận sự kiện `LOGIN_FAILURE` có cấu trúc và không chứa dữ liệu
+  nhạy cảm.
+- Production chưa được migrate hoặc deploy trong đợt này.
 
 ## Kiểm chứng
 

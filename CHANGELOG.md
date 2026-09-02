@@ -178,14 +178,18 @@ Tài liệu này tóm tắt các quyết định kiến trúc quan trọng qua S
 
 - Mỗi đơn vị chỉ có một hội đồng tự đánh giá trong một năm học; người phụ trách
   kế hoạch cải tiến phải thuộc cùng đơn vị với kế hoạch.
-- Thu hồi `TRUNCATE`, `TRIGGER`, `REFERENCES` khỏi vai trò API và default
-  privileges của các quan hệ mới trong schema `public`.
-- Mỗi API request nhận UUID mới ở proxy và trả `x-request-id` để đối chiếu log.
+- Thu hồi `TRUNCATE`, `TRIGGER`, `REFERENCES` khỏi vai trò API trên mọi quan hệ
+  hiện hữu và default privileges của owner migration `postgres` trong `public`.
+- Mỗi API request nhận UUID mới ở Edge Middleware và trả `x-request-id` để đối chiếu log.
 - Bổ sung `/api/health` kiểm tra Supabase Auth có timeout, không tiết lộ secret
   hoặc nội dung lỗi từ nhà cung cấp.
 - Chuẩn hóa log object theo danh sách trường cho phép và ba tín hiệu
   `REPORT_EXPORT_FAILURE`, `STORAGE_FAILURE`, `LOGIN_FAILURE`.
+- Tắt Cloudflare invocation logs để không tự lưu request header hoặc URL; giữ
+  custom logs theo allow-list và request ID.
 - Log không chứa error message/stack, JWT, signed URL, tên tệp, nội dung minh
   chứng hoặc dữ liệu cá nhân nhạy cảm.
 - Workers Logs dùng 100% sampling trong giai đoạn thí điểm; kênh nhận cảnh báo
   được cấu hình riêng theo playbook `docs/SPRINT-17-OPERATIONS.md`.
+- Tách biến môi trường staging khỏi production trong toàn bộ tiến trình build;
+  triển khai thành công Worker `kiemdinh-app-staging` và xác minh health/log.

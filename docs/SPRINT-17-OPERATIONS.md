@@ -67,14 +67,19 @@ Tạo ba Saved Query trong Cloudflare Workers Logs:
 
 | Tên | Điều kiện |
 | --- | --- |
-| Lỗi xuất báo cáo | `alertType = \REPORT_EXPORT_FAILURE\` |
-| Lỗi Storage | `alertType = \STORAGE_FAILURE\` |
-| Đăng nhập thất bại | `alertType = \LOGIN_FAILURE\` |
+| Lỗi xuất báo cáo | `alertType = "REPORT_EXPORT_FAILURE"` |
+| Lỗi Storage | `alertType = "STORAGE_FAILURE"` |
+| Đăng nhập thất bại | `alertType = "LOGIN_FAILURE"` |
 
 Trường log được phép gồm `level`, `severity`, `event`, `alertType`, `category`,
 `errorType`, `operation`, `reason`, `requestId`, `resourceId`, `route`,
 `status`, `timestamp`. Logger loại bỏ query
 string và không chấp nhận metadata tùy ý.
+
+`invocation_logs` được đặt thành `false`; Cloudflare chỉ lưu custom logs do ứng
+dụng phát theo allow-list. Không mở `wrangler tail` trên production trong lúc có
+lưu lượng thật, vì luồng debug thời gian thực có thể hiển thị metadata request cho
+người vận hành đang giữ phiên.
 
 Ngưỡng vận hành đề xuất:
 
@@ -101,6 +106,20 @@ where table_schema = 'public'
   and grantee in ('anon', 'authenticated')
   and privilege_type in ('TRUNCATE', 'TRIGGER', 'REFERENCES');
 ```
+
+### Phạm vi default privileges trên Supabase hosted
+
+Migration `038` sửa default privileges của role `postgres`, là owner tạo quan hệ
+qua migration ứng dụng. Supabase còn role nội bộ `supabase_admin` với default ACL
+do nhà cung cấp quản lý; role migration không được phép thay đổi ACL này. Vì vậy:
+
+- mọi quan hệ `public` hiện hữu vẫn phải qua truy vấn audit ở trên;
+- mọi quan hệ do migration ứng dụng tạo mới được bảo vệ bởi default ACL của
+  `postgres`; và
+- nếu một quan hệ mới có owner `supabase_admin`, phải audit và thu hồi quyền trên
+  chính quan hệ đó trước khi ứng dụng sử dụng.
+
+Không cấp thêm membership vào `supabase_admin` chỉ để làm test hoặc thay đổi ACL.
 
 ## Xử lý sự cố
 

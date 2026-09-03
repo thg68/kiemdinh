@@ -55,6 +55,13 @@
     },
     "production": {
       "name": "kiemdinh-app",
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "kdclgd.io.vn/*",
+          "zone_name": "kdclgd.io.vn"
+        }
+      ],
       "assets": {
         "directory": ".open-next/assets",
         "binding": "ASSETS"

@@ -31,12 +31,15 @@ type Criterion = {
 type Assignment = {
   id: string;
   tieu_chi_id: string;
+  cap_hoc: string;
   vai_tro_trong_tieu_chi: string | null;
   tieu_chi?: Criterion | Criterion[] | null;
 };
 
 type AssessmentRow = {
+  id: string;
   tieu_chi_id: string;
+  cap_hoc: string;
   muc_dat: 0 | 1 | 2;
   trang_thai: string;
 };
@@ -53,6 +56,14 @@ const assessmentStatusLabels: Record<string, string> = {
   cho_duyet: "Chờ duyệt",
   dang_ra_soat: "Đang rà soát",
   da_duyet: "Đã duyệt",
+};
+
+const capHocLabels: Record<string, string> = {
+  mam_non: "Mầm non",
+  tieu_hoc: "Tiểu học",
+  thcs: "THCS",
+  thpt: "THPT",
+  gdtx: "GDTX",
 };
 
 function first<T>(value: T | T[] | null | undefined) {
@@ -75,6 +86,7 @@ export function MyWorkWorkspace() {
       ),
     [roles],
   );
+  const canEditAssessment = isManager || roles.some((role) => role.ma === "MEMBER");
 
   const loadWork = useCallback(async () => {
     if (!supabase || !profile || !activeYear) {
@@ -90,7 +102,7 @@ export function MyWorkWorkspace() {
     const { data: assignmentData, error: assignmentError } = await supabase
       .from("phan_cong_tieu_chi")
       .select(
-        "id, tieu_chi_id, vai_tro_trong_tieu_chi, tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan:tieu_chuan_id(so_thu_tu, ten))",
+        "id, tieu_chi_id, cap_hoc, vai_tro_trong_tieu_chi, tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan:tieu_chuan_id(so_thu_tu, ten))",
       )
       .eq("nam_hoc_id", activeYear.id)
       .eq("nguoi_dung_id", profile.id)
@@ -105,42 +117,53 @@ export function MyWorkWorkspace() {
     const assignments = (assignmentData ?? []) as unknown as Assignment[];
     const criterionIds = assignments.map((item) => item.tieu_chi_id);
 
-    const [{ data: assessmentData }, { data: linkData }] =
-      criterionIds.length > 0
-        ? await Promise.all([
-            supabase
-              .from("tu_danh_gia")
-              .select("tieu_chi_id, muc_dat, trang_thai")
-              .eq("co_so_id", profile.co_so_id)
-              .eq("nam_hoc_id", activeYear.id)
-              .in("tieu_chi_id", criterionIds),
-            supabase
-              .from("minh_chung_tieu_chi")
-              .select("tieu_chi_id, minh_chung:minh_chung_id(nam_hoc_id, deleted_at)")
-              .in("tieu_chi_id", criterionIds),
-          ])
-        : [{ data: [] }, { data: [] }];
+    const { data: assessmentData, error: assessmentError } = criterionIds.length > 0
+      ? await supabase
+          .from("tu_danh_gia")
+          .select("id, tieu_chi_id, cap_hoc, muc_dat, trang_thai")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", activeYear.id)
+          .in("tieu_chi_id", criterionIds)
+      : { data: [], error: null };
+
+    if (assessmentError) {
+      setMessage(toUserMessage(assessmentError, "Không tải được kết quả tự đánh giá theo cấp học."));
+      setLoadingWork(false);
+      return;
+    }
 
     const assessments = (assessmentData ?? []) as AssessmentRow[];
+    const assessmentIds = assessments.map((row) => row.id);
+    const { data: linkData, error: linkError } = assessmentIds.length > 0
+      ? await supabase
+          .from("tu_danh_gia_minh_chung")
+          .select("tu_danh_gia_id")
+          .in("tu_danh_gia_id", assessmentIds)
+      : { data: [], error: null };
+
+    if (linkError) {
+      setMessage(toUserMessage(linkError, "Không tải được minh chứng của công việc."));
+      setLoadingWork(false);
+      return;
+    }
+
     const evidenceCounts = new Map<string, number>();
 
-    for (const link of (linkData ?? []) as {
-      tieu_chi_id: string;
-      minh_chung?: { nam_hoc_id: string; deleted_at: string | null } | { nam_hoc_id: string; deleted_at: string | null }[] | null;
-    }[]) {
-      const evidence = first(link.minh_chung);
-
-      if (evidence?.nam_hoc_id === activeYear.id && evidence.deleted_at === null) {
-        evidenceCounts.set(link.tieu_chi_id, (evidenceCounts.get(link.tieu_chi_id) ?? 0) + 1);
-      }
+    for (const link of linkData ?? []) {
+      evidenceCounts.set(link.tu_danh_gia_id, (evidenceCounts.get(link.tu_danh_gia_id) ?? 0) + 1);
     }
 
     setWorkItems(
-      assignments.map((assignment) => ({
-        assignment,
-        assessment: assessments.find((row) => row.tieu_chi_id === assignment.tieu_chi_id),
-        evidenceCount: evidenceCounts.get(assignment.tieu_chi_id) ?? 0,
-      })),
+      assignments.map((assignment) => {
+        const assessment = assessments.find(
+          (row) => row.tieu_chi_id === assignment.tieu_chi_id && row.cap_hoc === assignment.cap_hoc,
+        );
+        return {
+          assignment,
+          assessment,
+          evidenceCount: assessment ? evidenceCounts.get(assessment.id) ?? 0 : 0,
+        };
+      }),
     );
 
     const [{ count: evidenceCount }, { count: assessmentCount }, { count: reportCount }] =
@@ -250,6 +273,7 @@ export function MyWorkWorkspace() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold tabular-nums text-[var(--color-ink-navy)]">{criterion?.ma ?? "?"}</span>
                       {criterion?.la_bat_buoc ? <Badge tone="warning">Bắt buộc</Badge> : null}
+                      <Badge>{capHocLabels[item.assignment.cap_hoc] ?? item.assignment.cap_hoc}</Badge>
                       <Badge>{assessmentStatusLabels[status] ?? status}</Badge>
                     </div>
                     <h3 className="mt-2 text-base font-semibold leading-7 text-[var(--color-ink-navy)]">
@@ -262,12 +286,14 @@ export function MyWorkWorkspace() {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link className="button-secondary" href="/minh-chung">
+                    <Link className={canEditAssessment ? "button-secondary" : "button-primary"} href="/minh-chung/tao">
                       Nộp minh chứng
                     </Link>
-                    <Link className="button-primary" href="/tu-danh-gia">
-                      Mở tự đánh giá
-                    </Link>
+                    {canEditAssessment ? (
+                      <Link className="button-primary" href={`/tu-danh-gia?cap_hoc=${item.assignment.cap_hoc}&tieu_chi_id=${item.assignment.tieu_chi_id}`}>
+                        Mở tự đánh giá
+                      </Link>
+                    ) : null}
                   </div>
                 </article>
               );

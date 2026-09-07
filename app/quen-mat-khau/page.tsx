@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { PasswordResetForm } from "@/components/auth/password-reset-form";
 
-export default function ForgotPasswordPage() {
+type ForgotPasswordPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
+  const params = await searchParams;
+  const hasRecoveryError = Boolean(params.error || params.error_code);
+
   return (
     <main className="landing-shell">
       <div className="content-wrap flex min-h-[72px] items-center justify-between px-5">
@@ -22,7 +29,7 @@ export default function ForgotPasswordPage() {
           </p>
         </section>
 
-        <PasswordResetForm />
+        <PasswordResetForm initialRecoveryError={hasRecoveryError} />
       </div>
     </main>
   );

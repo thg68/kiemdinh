@@ -16,6 +16,7 @@
     "test:rls": "supabase test db",
     "typecheck": "next typegen && tsc --noEmit",
     "design:check": "impeccable detect app components",
+    "icons:build": "node scripts/build-favicon.mjs",
     "import:school-year": "node scripts/import-school-year.mjs",
     "preview": "node scripts/run-with-node22.mjs npm run preview:cloudflare",
     "preview:cloudflare": "npm run clean:cloudflare && opennextjs-cloudflare build && opennextjs-cloudflare preview",
@@ -32,7 +33,9 @@
     "deploy:production:cloudflare": "npm run check:production-env && npm run clean:cloudflare && opennextjs-cloudflare build --env=production && opennextjs-cloudflare deploy --env=production -- --keep-vars",
     "rollback:production": "node scripts/run-with-node22.mjs wrangler rollback --env production",
     "check:pilot": "node scripts/check-pilot-readiness.mjs",
-    "verify:mau1": "node scripts/verify-mau1.mjs"
+    "verify:mau1": "node scripts/verify-mau1.mjs",
+    "provision:e2e:staging": "node scripts/provision-staging-e2e.mjs",
+    "test:e2e:staging:roles": "node scripts/run-with-node22.mjs node scripts/run-staging-role-gate.mjs"
   },
   "engines": {
     "node": ">=22 <25"

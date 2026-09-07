@@ -1,13 +1,16 @@
 import { NextRequest } from "next/server";
 import { CapHoc } from "@/lib/assessment/level-engine";
-import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
+import { ApiError, apiErrorResponse, apiErrors, databaseApiError } from "@/lib/api/errors";
 import { RateLimitAction, RateLimitClient, enforceRateLimit } from "@/lib/api/rate-limit";
 import { SchemaValidationError, capHocSchema, uuidSchema } from "@/lib/api/validation";
 import {
   logOperationalAlert,
   logServerError,
 } from "@/lib/observability/logger";
-import { getRequestContext } from "@/lib/observability/request-context";
+import {
+  REQUEST_ID_HEADER,
+  getRequestContext,
+} from "@/lib/observability/request-context";
 import { collectReportData, createRequestSupabaseClient } from "./data";
 import { EvidenceZipStorageError } from "./errors";
 import { sanitizeFileName } from "./format";
@@ -19,31 +22,41 @@ export type ReportRouteContext = {
 
 type ReportRouteOptions = {
   rateLimitAction?: RateLimitAction;
+  reportType?: string;
 };
+
+type ReportSourceSeal = {
+  digest: string;
+  manifest: Record<string, unknown>;
+};
+
+async function getReportSourceSeal(
+  supabase: ReportRouteContext["supabase"],
+  namHocId: string,
+  capHoc: CapHoc,
+  reportType: string,
+) {
+  const { data, error } = await supabase.rpc("fn_lay_niem_phong_nguon_bao_cao", {
+    p_nam_hoc_id: namHocId,
+    p_cap_hoc: capHoc,
+    p_loai_bao_cao: reportType,
+  });
+
+  if (error) {
+    throw databaseApiError(error, "Không tạo được niêm phong dữ liệu nguồn của báo cáo.");
+  }
+
+  if (!data || typeof data !== "object" || !("digest" in data)) {
+    throw apiErrors.internal("Khong tao duoc niem phong du lieu nguon cua bao cao.");
+  }
+
+  return data as unknown as ReportSourceSeal;
+}
 
 function errorStatus(error: unknown) {
   if (error instanceof ApiError) return error.status;
   if (error instanceof SchemaValidationError) return 422;
   return 500;
-}
-
-export async function logReportExport(
-  context: ReportRouteContext,
-  reportType: string,
-) {
-  const { error } = await context.supabase.rpc("fn_log_user_access", {
-    p_hanh_dong: "REPORT_EXPORTED",
-    p_doi_tuong_id: context.data.year.id,
-    p_du_lieu_moi: {
-      loai_bao_cao: reportType,
-      nam_hoc_id: context.data.year.id,
-      cap_hoc: context.data.capHoc,
-    },
-  });
-
-  if (error) {
-    throw new Error("Không ghi được nhật ký xuất báo cáo.");
-  }
 }
 
 export async function withReportData(
@@ -74,9 +87,31 @@ export async function withReportData(
       supabase as unknown as RateLimitClient,
       options.rateLimitAction ?? "report_export",
     );
+    const sourceSealBefore = options.reportType
+      ? await getReportSourceSeal(supabase, parsedNamHocId, parsedCapHoc, options.reportType)
+      : null;
     const data = await collectReportData(supabase, parsedNamHocId, parsedCapHoc);
+    const response = await handler({ data, supabase });
 
-    return await handler({ data, supabase });
+    if (options.reportType && sourceSealBefore) {
+      const sourceSealAfter = await getReportSourceSeal(
+        supabase,
+        parsedNamHocId,
+        parsedCapHoc,
+        options.reportType,
+      );
+
+      if (sourceSealBefore.digest !== sourceSealAfter.digest) {
+        throw apiErrors.conflict(
+          "Du lieu nguon da thay doi trong luc tao file. Vui long xuat lai bao cao.",
+        );
+      }
+
+      response.headers.set("X-Report-Source-Digest", sourceSealAfter.digest);
+    }
+
+    response.headers.set(REQUEST_ID_HEADER, requestContext.requestId);
+    return response;
   } catch (error) {
     const status = errorStatus(error);
     const logContext = {
@@ -105,7 +140,9 @@ export async function withReportData(
       logServerError("report_api_rejected", error, logContext);
     }
 
-    return apiErrorResponse(error, "Không xuất được báo cáo. Vui lòng thử lại.");
+    const response = apiErrorResponse(error, "Không xuất được báo cáo. Vui lòng thử lại.");
+    response.headers.set(REQUEST_ID_HEADER, requestContext.requestId);
+    return response;
   }
 }
 

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppContext } from "@/components/shared/use-app-context";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
 
 type User = {
   id: string;
@@ -17,6 +18,7 @@ type User = {
 
 type Council = {
   id: string;
+  nam_hoc_id: string;
   ten: string;
   so_quyet_dinh: string | null;
   ngay_quyet_dinh: string | null;
@@ -58,6 +60,8 @@ export function CouncilWorkspace() {
   const [saving, setSaving] = useState(false);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
+  const selectedYearName = years.find((year) => year.id === effectiveYearId)?.ten ?? "";
+  const councilRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}`);
 
   const loadCouncil = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -66,6 +70,12 @@ export function CouncilWorkspace() {
 
     setLoadingData(true);
     setMessage("");
+    setCouncil(null);
+    setMembers([]);
+    setTen(`Hội đồng tự đánh giá năm học ${selectedYearName}`);
+    setSoQuyetDinh("");
+    setNgayQuyetDinh("");
+    const request = councilRequest.begin("council");
 
     const [{ data: userData, error: userError }, { data: councilData, error: councilError }] =
       await Promise.all([
@@ -77,13 +87,15 @@ export function CouncilWorkspace() {
           .order("ho_ten", { ascending: true }),
         supabase
           .from("hoi_dong_tu_danh_gia")
-          .select("id, ten, so_quyet_dinh, ngay_quyet_dinh, trang_thai")
+          .select("id, nam_hoc_id, ten, so_quyet_dinh, ngay_quyet_dinh, trang_thai")
           .eq("co_so_id", profile.co_so_id)
           .eq("nam_hoc_id", effectiveYearId)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
       ]);
+
+    if (!councilRequest.isCurrent(request)) return;
 
     if (userError || councilError) {
       setMessage(toUserMessage(userError ?? councilError, "Không tải được dữ liệu hội đồng. Vui lòng thử lại."));
@@ -94,7 +106,7 @@ export function CouncilWorkspace() {
     const loadedCouncil = councilData as Council | null;
     setUsers((userData ?? []) as User[]);
     setCouncil(loadedCouncil);
-    setTen(loadedCouncil?.ten ?? `Hội đồng tự đánh giá năm học ${activeYear?.ten ?? ""}`);
+    setTen(loadedCouncil?.ten ?? `Hội đồng tự đánh giá năm học ${selectedYearName}`);
     setSoQuyetDinh(loadedCouncil?.so_quyet_dinh ?? "");
     setNgayQuyetDinh(loadedCouncil?.ngay_quyet_dinh ?? "");
 
@@ -104,6 +116,8 @@ export function CouncilWorkspace() {
         .select("id, chuc_vu, vai_tro_hoi_dong, thu_tu, nguoi_dung:nguoi_dung_id(id, ho_ten, email)")
         .eq("hoi_dong_id", loadedCouncil.id)
         .order("thu_tu", { ascending: true });
+
+      if (!councilRequest.isCurrent(request)) return;
 
       if (memberError) {
         setMessage(toUserMessage(memberError, "Không tải được thành viên hội đồng. Vui lòng thử lại."));
@@ -117,7 +131,7 @@ export function CouncilWorkspace() {
     }
 
     setLoadingData(false);
-  }, [activeYear?.ten, effectiveYearId, profile, setMessage, supabase]);
+  }, [councilRequest, effectiveYearId, profile, selectedYearName, setMessage, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -136,7 +150,7 @@ export function CouncilWorkspace() {
     setSaving(true);
     setMessage("");
 
-    if (council) {
+    if (council?.nam_hoc_id === effectiveYearId) {
       const { error } = await supabase
         .from("hoi_dong_tu_danh_gia")
         .update({
@@ -205,6 +219,8 @@ export function CouncilWorkspace() {
     const { error } = await supabase.from("thanh_vien_hoi_dong").insert({
       hoi_dong_id: councilId,
       nguoi_dung_id: memberUserId,
+      co_so_id: profile?.co_so_id,
+      nam_hoc_id: effectiveYearId,
       chuc_vu: memberTitle,
       vai_tro_hoi_dong: memberRole,
       thu_tu: Number(memberOrder) || 1,

@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -259,46 +260,76 @@ select ok(
 
 insert into tap_checkpoints values ('06-10 evidence policy', num_failed());
 
+insert into public.tu_danh_gia(
+  id, co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc,
+  mo_ta_muc_1, dat_muc_1, muc_dat
+)
+select
+  '00000000-0000-0000-0000-000000008401',
+  '00000000-0000-0000-0000-000000008001',
+  '00000000-0000-0000-0000-000000008202',
+  id,
+  'mam_non',
+  'Mo ta co minh chung chua xac minh',
+  false,
+  0
+from public.v_tieu_chi_nam_hoc
+where nam_hoc_id = '00000000-0000-0000-0000-000000008202'
+  and ma = '1.1';
+
+insert into public.tu_danh_gia_minh_chung(
+  co_so_id, nam_hoc_id, tu_danh_gia_id, minh_chung_id
+)
+values (
+  '00000000-0000-0000-0000-000000008001',
+  '00000000-0000-0000-0000-000000008202',
+  '00000000-0000-0000-0000-000000008401',
+  '00000000-0000-0000-0000-000000008301'
+);
+
 select throws_ok(
   $$
-    insert into public.tu_danh_gia(
-      co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc,
-      mo_ta_muc_1, dat_muc_1, muc_dat
-    )
-    select
-      '00000000-0000-0000-0000-000000008001',
-      '00000000-0000-0000-0000-000000008202',
-      id,
-      'mam_non',
-      'Mo ta co minh chung chua xac minh',
-      true,
-      1
-    from public.v_tieu_chi_nam_hoc
-    where nam_hoc_id = '00000000-0000-0000-0000-000000008202'
-      and ma = '1.1'
+    update public.tu_danh_gia
+    set dat_muc_1 = true, muc_dat = 1
+    where id = '00000000-0000-0000-0000-000000008401'
   $$,
   'P0001',
-  'Chi minh chung da xac minh, con hieu luc va dung phien ban moi duoc dung de danh dau dat.',
+  'Chi minh chung da xac minh, con hieu luc, dung phien ban va dung cap hoc moi duoc dung de danh dau dat.',
   'DB chan danh dau dat bang minh chung chua xac minh'
 );
 
 insert into tap_checkpoints values ('11 unverified assessment', num_failed());
 
 insert into public.tu_danh_gia(
-  co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc,
+  id, co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc,
   mo_ta_muc_1, dat_muc_1, muc_dat
 )
 select
+  '00000000-0000-0000-0000-000000008404',
   '00000000-0000-0000-0000-000000008001',
   '00000000-0000-0000-0000-000000008202',
   id,
   'mam_non',
   'Mo ta co minh chung hop le',
-  true,
-  1
+  false,
+  0
 from public.v_tieu_chi_nam_hoc
 where nam_hoc_id = '00000000-0000-0000-0000-000000008202'
   and ma = '1.4';
+
+insert into public.tu_danh_gia_minh_chung(
+  co_so_id, nam_hoc_id, tu_danh_gia_id, minh_chung_id
+)
+values (
+  '00000000-0000-0000-0000-000000008001',
+  '00000000-0000-0000-0000-000000008202',
+  '00000000-0000-0000-0000-000000008404',
+  '00000000-0000-0000-0000-000000008304'
+);
+
+update public.tu_danh_gia
+set dat_muc_1 = true, muc_dat = 1
+where id = '00000000-0000-0000-0000-000000008404';
 
 select pass('DB chap nhan danh dau dat bang minh chung hop le');
 

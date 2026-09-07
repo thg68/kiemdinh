@@ -1,11 +1,16 @@
 import { NextRequest } from "next/server";
-import { apiErrorResponse, apiErrors } from "@/lib/api/errors";
+import { ApiError, apiErrorResponse, apiErrors } from "@/lib/api/errors";
 import {
   LOGIN_FAILURE_REASONS,
   LoginFailureReason,
 } from "@/lib/observability/auth-events";
 import { logOperationalAlert } from "@/lib/observability/logger";
 import {
+  isOperationalAlertAllowed,
+  unauthenticatedAlertKey,
+} from "@/lib/observability/edge-rate-limit";
+import {
+  REQUEST_ID_HEADER,
   getRequestContext,
   isSameOriginRequest,
 } from "@/lib/observability/request-context";
@@ -43,6 +48,25 @@ export async function POST(request: NextRequest) {
 
   const reason = (body as { reason: LoginFailureReason }).reason;
   const requestContext = getRequestContext(request);
+  const isAllowed = await isOperationalAlertAllowed(
+    unauthenticatedAlertKey(request),
+  );
+
+  if (!isAllowed) {
+    return apiErrorResponse(
+      new ApiError(
+        429,
+        "RATE_LIMITED",
+        "Bạn thao tác quá nhanh. Vui lòng thử lại sau.",
+        undefined,
+        {
+          "Retry-After": "60",
+          [REQUEST_ID_HEADER]: requestContext.requestId,
+        },
+      ),
+    );
+  }
+
   logOperationalAlert(
     "LOGIN_FAILURE",
     "login_failed",
@@ -55,5 +79,8 @@ export async function POST(request: NextRequest) {
     },
   );
 
-  return new Response(null, { status: 204 });
+  return new Response(null, {
+    status: 204,
+    headers: { [REQUEST_ID_HEADER]: requestContext.requestId },
+  });
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppContext } from "@/components/shared/use-app-context";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,12 +37,15 @@ export function ApprovedReportsWorkspace() {
   const [downloadingId, setDownloadingId] = useState("");
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
+  const rowsRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}`);
 
   const loadRows = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) return;
 
     setLoadingRows(true);
     setMessage("");
+    setRows([]);
+    const request = rowsRequest.begin("approved-reports");
 
     const { data, error } = await supabase
       .from("bao_cao")
@@ -49,7 +53,10 @@ export function ApprovedReportsWorkspace() {
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", effectiveYearId)
       .eq("trang_thai", "da_phe_duyet")
+      .in("loai_bao_cao", ["mau_1_tu_danh_gia", "mau_2_ke_hoach_cai_tien"])
       .order("ngay_phe_duyet", { ascending: false });
+
+    if (!rowsRequest.isCurrent(request)) return;
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -59,7 +66,7 @@ export function ApprovedReportsWorkspace() {
     }
 
     setLoadingRows(false);
-  }, [effectiveYearId, profile, setMessage, supabase]);
+  }, [effectiveYearId, profile, rowsRequest, setMessage, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadRows(), 0);

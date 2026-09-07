@@ -15,9 +15,13 @@ import {
   logOperationalAlert,
   logServerError,
 } from "@/lib/observability/logger";
-import { getRequestContext } from "@/lib/observability/request-context";
+import {
+  getRequestContext,
+  withRequestId,
+} from "@/lib/observability/request-context";
 
 type FinalizeEvidenceBody = {
+  requestKey?: unknown;
   namHocId?: unknown;
   tieuChiIds?: unknown;
   tieuChiGocId?: unknown;
@@ -55,6 +59,7 @@ function optionalString(value: unknown) {
 }
 
 function validateBody(body: FinalizeEvidenceBody) {
+  const requestKey = uuidSchema.parse(body.requestKey, "requestKey");
   const namHocId = uuidSchema.parse(body.namHocId, "namHocId");
   const tieuChiGocId = uuidSchema.parse(body.tieuChiGocId, "tieuChiGocId");
   const ten = optionalString(body.ten);
@@ -130,6 +135,7 @@ function validateBody(body: FinalizeEvidenceBody) {
     namHocId,
     ngayBanHanh,
     ngayHetGiaTri,
+    requestKey,
     storagePath,
     ten,
     tenTepGoc,
@@ -138,8 +144,10 @@ function validateBody(body: FinalizeEvidenceBody) {
   };
 }
 
-export async function POST(request: NextRequest) {
-  const requestContext = getRequestContext(request);
+async function finalizeEvidence(
+  request: NextRequest,
+  requestContext: ReturnType<typeof getRequestContext>,
+) {
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -224,9 +232,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { data: evidenceId, error: createError } = await supabase.rpc(
-      "fn_tao_minh_chung",
+    const { data: finalizeResult, error: createError } = await supabase.rpc(
+      "fn_tao_minh_chung_idempotent",
       {
+        p_finalize_key: body.requestKey,
         p_duong_dan: body.duongDan || null,
         p_hash_tep: verifiedFile?.sha256 ?? null,
         p_kich_thuoc: verifiedFile?.size ?? null,
@@ -241,7 +250,9 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    if (createError || !evidenceId) {
+    const result = finalizeResult as { id?: string; created?: boolean } | null;
+
+    if (createError || !result?.id) {
       logServerError("evidence_finalize_rpc_rejected", createError, {
         operation: "finalize_evidence",
         ...requestContext,
@@ -254,7 +265,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ id: evidenceId }, { status: 201 });
+    return NextResponse.json(
+      { id: result.id, idempotent: result.created === false },
+      { status: result.created === false ? 200 : 201 },
+    );
   } catch (error) {
     logServerError("evidence_finalize_failed", error, {
       operation: "finalize_evidence",
@@ -266,4 +280,10 @@ export async function POST(request: NextRequest) {
       "Không thể hoàn tất minh chứng lúc này. Vui lòng thử lại.",
     );
   }
+}
+
+export async function POST(request: NextRequest) {
+  const requestContext = getRequestContext(request);
+  const response = await finalizeEvidence(request, requestContext);
+  return withRequestId(response, requestContext.requestId);
 }

@@ -13,9 +13,20 @@ export async function reportStorageFailure(
   operation: StorageFailureOperation,
 ) {
   try {
+    const { createBrowserSupabaseClient } = await import("@/lib/supabase/client");
+    const { data } = await createBrowserSupabaseClient().auth.getSession();
+    const accessToken = data.session?.access_token;
+
+    if (!accessToken) {
+      return;
+    }
+
     await fetch("/api/observability/storage-failure", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ operation }),
       keepalive: true,
     });

@@ -16,6 +16,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { ReadinessChecklist, ReadinessItem } from "@/components/ui/readiness-checklist";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
+import { hasCapability } from "@/lib/auth/capabilities";
 
 type Profile = {
   id: string;
@@ -80,17 +82,18 @@ const capHocLabels: Record<CapHoc, string> = {
 };
 
 type ExportItem = {
+  approvalWorkflow: boolean;
   endpoint: string;
   label: string;
   reportType: string;
 };
 
 const exports: ExportItem[] = [
-  { endpoint: "mau-1", label: "Mẫu 1 - Báo cáo tự đánh giá (.docx)", reportType: "mau_1_tu_danh_gia" },
-  { endpoint: "mau-2", label: "Mẫu 2 - Kế hoạch cải tiến (.docx)", reportType: "mau_2_ke_hoach_cai_tien" },
-  { endpoint: "danh-muc-minh-chung", label: "Danh mục minh chứng (.xlsx)", reportType: "danh_muc_minh_chung" },
-  { endpoint: "goi-minh-chung", label: "Gói minh chứng (.zip)", reportType: "goi_minh_chung" },
-  { endpoint: "export-json", label: "Dữ liệu đầy đủ năm học (.json)", reportType: "du_lieu_nam_hoc_json" },
+  { approvalWorkflow: true, endpoint: "mau-1", label: "Mẫu 1 - Báo cáo tự đánh giá (.docx)", reportType: "mau_1_tu_danh_gia" },
+  { approvalWorkflow: true, endpoint: "mau-2", label: "Mẫu 2 - Kế hoạch cải tiến (.docx)", reportType: "mau_2_ke_hoach_cai_tien" },
+  { approvalWorkflow: false, endpoint: "danh-muc-minh-chung", label: "Danh mục minh chứng (.xlsx)", reportType: "danh_muc_minh_chung" },
+  { approvalWorkflow: false, endpoint: "goi-minh-chung", label: "Gói minh chứng (.zip)", reportType: "goi_minh_chung" },
+  { approvalWorkflow: false, endpoint: "export-json", label: "Dữ liệu đầy đủ năm học (.json)", reportType: "du_lieu_nam_hoc_json" },
 ];
 
 function storagePathForReport(coSoId: string, namHocId: string, reportType: string, fileName: string) {
@@ -126,8 +129,11 @@ export function ReportExportWorkspace() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [downloading, setDownloading] = useState("");
+  const [roleCodes, setRoleCodes] = useState<string[]>([]);
 
   const capHocList = school?.cap_hoc?.length ? school.cap_hoc : [selectedCapHoc];
+  const reportScopeKey = `${profile?.co_so_id ?? ""}:${selectedYearId}:${selectedCapHoc}`;
+  const reportRequest = useScopedRequest(reportScopeKey);
 
   const loadData = useCallback(async () => {
     if (!supabase) {
@@ -146,19 +152,26 @@ export function ReportExportWorkspace() {
       return null;
     }
 
-    const { data: profileData, error: profileError } = await supabase
-      .from("nguoi_dung")
-      .select("id, co_so_id, ho_ten")
-      .eq("auth_user_id", userData.user.id)
-      .maybeSingle();
+    const [
+      { data: profileData, error: profileError },
+      { data: roleData, error: roleError },
+    ] = await Promise.all([
+      supabase
+        .from("nguoi_dung")
+        .select("id, co_so_id, ho_ten")
+        .eq("auth_user_id", userData.user.id)
+        .maybeSingle(),
+      supabase.rpc("fn_user_role_labels"),
+    ]);
 
-    if (profileError || !profileData) {
-      setMessage(toUserMessage(profileError, "Bạn cần thiết lập cơ sở giáo dục trước."));
+    if (profileError || roleError || !profileData) {
+      setMessage(toUserMessage(profileError ?? roleError, "Bạn cần thiết lập cơ sở giáo dục và quyền truy cập trước."));
       setLoading(false);
       return;
     }
 
     setProfile(profileData as Profile);
+    setRoleCodes(((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma));
 
     const [
       { data: schoolData, error: schoolError },
@@ -206,12 +219,17 @@ export function ReportExportWorkspace() {
   const loadBoundStandard = useCallback(async () => {
     if (!supabase || !profile || !selectedYearId) return;
 
+    setStandards([]);
+    const request = reportRequest.begin("standards");
+
     const { data, error } = await supabase
       .from("v_tieu_chi_nam_hoc")
       .select("id, ma, ten, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", selectedYearId)
       .order("ma", { ascending: true });
+
+    if (!reportRequest.isCurrent(request)) return;
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -235,12 +253,15 @@ export function ReportExportWorkspace() {
     });
 
     setStandards([...standardsById.values()].sort((a, b) => a.so_thu_tu - b.so_thu_tu));
-  }, [profile, selectedYearId, supabase]);
+  }, [profile, reportRequest, selectedYearId, supabase]);
 
   const loadStandardNotes = useCallback(async () => {
     if (!supabase || !profile || !selectedYearId || !selectedCapHoc) {
       return;
     }
+
+    setStandardNotes([]);
+    const request = reportRequest.begin("standard-notes");
 
     const { data, error } = await supabase
       .from("nhan_xet_tieu_chuan")
@@ -249,18 +270,23 @@ export function ReportExportWorkspace() {
       .eq("nam_hoc_id", selectedYearId)
       .eq("cap_hoc", selectedCapHoc);
 
+    if (!reportRequest.isCurrent(request)) return;
+
     if (error) {
       setMessage(toUserMessage(error));
       return;
     }
 
     setStandardNotes((data ?? []) as StandardNote[]);
-  }, [profile, selectedCapHoc, selectedYearId, supabase]);
+  }, [profile, reportRequest, selectedCapHoc, selectedYearId, supabase]);
 
   const loadReportRecords = useCallback(async () => {
     if (!supabase || !profile || !selectedYearId) {
       return;
     }
+
+    setReportRecords([]);
+    const request = reportRequest.begin("report-records");
 
     const { data, error } = await supabase
       .from("bao_cao")
@@ -269,13 +295,15 @@ export function ReportExportWorkspace() {
       .eq("nam_hoc_id", selectedYearId)
       .order("version", { ascending: false });
 
+    if (!reportRequest.isCurrent(request)) return;
+
     if (error) {
       setMessage(toUserMessage(error));
       return;
     }
 
     setReportRecords((data ?? []) as ReportRecord[]);
-  }, [profile, selectedYearId, supabase]);
+  }, [profile, reportRequest, selectedYearId, supabase]);
 
   const loadReadiness = useCallback(async () => {
     if (!supabase || !selectedYearId || !selectedCapHoc) {
@@ -283,11 +311,16 @@ export function ReportExportWorkspace() {
       return;
     }
 
+    setReadinessItems([]);
+    const request = reportRequest.begin("readiness");
+
     const { data, error } = await supabase.rpc("fn_kiem_tra_san_sang_bao_cao", {
       p_nam_hoc_id: selectedYearId,
       p_cap_hoc: selectedCapHoc,
       p_loai_bao_cao: "mau_1_tu_danh_gia",
     });
+
+    if (!reportRequest.isCurrent(request)) return;
 
     if (error || !data) {
       setReadinessItems([{
@@ -346,7 +379,7 @@ export function ReportExportWorkspace() {
     ];
 
     setReadinessItems(items);
-  }, [selectedCapHoc, selectedYearId, supabase]);
+  }, [reportRequest, selectedCapHoc, selectedYearId, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -417,6 +450,8 @@ export function ReportExportWorkspace() {
       return;
     }
 
+    const request = reportRequest.begin("save-standard-notes");
+
     const rows = standards.map((standard) => {
       const note = standardNotes.find((item) => item.tieu_chuan_id === standard.id);
 
@@ -435,6 +470,8 @@ export function ReportExportWorkspace() {
     const { error } = await supabase
       .from("nhan_xet_tieu_chuan")
       .upsert(rows, { onConflict: "co_so_id,nam_hoc_id,tieu_chuan_id,cap_hoc" });
+
+    if (!reportRequest.isCurrent(request)) return;
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -479,7 +516,14 @@ export function ReportExportWorkspace() {
     const fileName = decodeURIComponent(
       disposition.match(/filename\*=UTF-8''([^;]+)/)?.[1] ?? `${endpoint}`,
     );
-    return { blob, fileName };
+    const sourceDigest = response.headers.get("x-report-source-digest");
+
+    if (!sourceDigest || !/^[0-9a-f]{64}$/.test(sourceDigest)) {
+      setMessage("Khong xac dinh duoc phien ban du lieu nguon cua file. Vui long xuat lai.");
+      return null;
+    }
+
+    return { blob, fileName, sourceDigest };
   }
 
   async function download(endpoint: string) {
@@ -510,6 +554,11 @@ export function ReportExportWorkspace() {
       return;
     }
 
+    if (status === "da_phe_duyet" && !hasCapability(roleCodes, "action.report.approve")) {
+      setMessage("Bạn không có quyền phê duyệt báo cáo.");
+      return;
+    }
+
     setDownloading(`${reportType}:${status}`);
     setMessage("");
 
@@ -518,6 +567,8 @@ export function ReportExportWorkspace() {
     let mimeType: string | null = null;
     let fileSize: number | null = null;
     let fileHash: string | null = null;
+    let reportId: string | null = null;
+    let sourceDigest: string | null = null;
 
     if (status === "da_phe_duyet") {
       const item = exports.find((exportItem) => exportItem.reportType === reportType);
@@ -540,6 +591,38 @@ export function ReportExportWorkspace() {
       mimeType = reportFile.blob.type || "application/octet-stream";
       fileSize = reportFile.blob.size;
       fileHash = await sha256Blob(reportFile.blob);
+      sourceDigest = reportFile.sourceDigest;
+
+      // Niem phong dung phien ban nguon da tao file truoc khi dua snapshot len Storage.
+      const { data: sealedReportId, error: sealError } = await supabase.rpc(
+        "fn_luu_trang_thai_bao_cao",
+        {
+          p_nam_hoc_id: selectedYearId,
+          p_cap_hoc: selectedCapHoc,
+          p_loai_bao_cao: reportType,
+          p_trang_thai: "cho_duyet",
+          p_storage_path: null,
+          p_ten_tep_goc: originalFileName,
+          p_mime_type: mimeType,
+          p_kich_thuoc: fileSize,
+          p_sha256: fileHash,
+          p_export_metadata: {
+            nam_hoc_id: selectedYearId,
+            cap_hoc: selectedCapHoc,
+            exported_at: new Date().toISOString(),
+          },
+          p_bao_cao_id: null,
+          p_source_digest: sourceDigest,
+        },
+      );
+
+      if (sealError || !sealedReportId) {
+        setDownloading("");
+        setMessage(toUserMessage(sealError, "Du lieu da thay doi. Vui long xuat lai bao cao truoc khi phe duyet."));
+        return;
+      }
+
+      reportId = sealedReportId as string;
 
       const { error: uploadError } = await supabase.storage
         .from("reports")
@@ -571,6 +654,8 @@ export function ReportExportWorkspace() {
         cap_hoc: selectedCapHoc,
         exported_at: new Date().toISOString(),
       },
+      p_bao_cao_id: reportId,
+      p_source_digest: sourceDigest,
     });
 
     if (error) {
@@ -690,6 +775,7 @@ export function ReportExportWorkspace() {
               isLocked={Boolean(downloading)}
               item={item}
               key={item.endpoint}
+              canApprove={hasCapability(roleCodes, "action.report.approve")}
               onDownload={() => download(item.endpoint)}
               onUpdateStatus={updateReportStatus}
             />
@@ -701,6 +787,7 @@ export function ReportExportWorkspace() {
 }
 
 function ReportExportCard(props: {
+  canApprove: boolean;
   currentStatus: string;
   isDownloading: boolean;
   isLocked: boolean;
@@ -745,9 +832,15 @@ function ReportExportCard(props: {
     <article className="surface-card grid gap-3 p-4">
       <div>
         <p className="text-sm font-semibold text-[var(--color-ink-navy)]">{props.item.label}</p>
-        <div className="mt-2">
-          <StatusBadge status={props.currentStatus} />
-        </div>
+        {props.item.approvalWorkflow ? (
+          <div className="mt-2">
+            <StatusBadge status={props.currentStatus} />
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-[var(--color-graphite)]/70">
+            Tệp xuất bổ trợ, không thuộc quy trình phê duyệt.
+          </p>
+        )}
       </div>
       <button
         className="button-primary"
@@ -758,17 +851,21 @@ function ReportExportCard(props: {
       >
         {props.isDownloading ? "Đang tạo file…" : "Xuất file"}
       </button>
-      <div className="grid gap-2 sm:grid-cols-3">
-        <button className="button-secondary" type="button" onClick={() => setPendingStatus("nhap")}>
-          Bản nháp
-        </button>
-        <button className="button-secondary" type="button" onClick={() => setPendingStatus("cho_duyet")}>
-          Gửi duyệt
-        </button>
-        <button className="button-danger" type="button" onClick={() => setPendingStatus("da_phe_duyet")}>
-          Phê duyệt
-        </button>
-      </div>
+      {props.item.approvalWorkflow ? (
+        <div className={`grid gap-2 ${props.canApprove ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+          <button className="button-secondary" type="button" onClick={() => setPendingStatus("nhap")}>
+            Bản nháp
+          </button>
+          <button className="button-secondary" type="button" onClick={() => setPendingStatus("cho_duyet")}>
+            Gửi duyệt
+          </button>
+          {props.canApprove ? (
+            <button className="button-danger" type="button" onClick={() => setPendingStatus("da_phe_duyet")}>
+              Phê duyệt
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <ConfirmDialog
         confirmLabel={pendingCopy?.confirmLabel}
         description={pendingCopy?.description ?? ""}

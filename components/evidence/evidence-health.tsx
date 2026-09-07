@@ -10,13 +10,20 @@ import {
 import {
   Criterion,
   Evidence,
-  EvidenceCriterionLink,
   SchoolYear,
-  todayIsoDate,
 } from "@/lib/evidence";
 import { Alert } from "@/components/ui/alert";
 import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 import { StorageOrphanMaintenance } from "@/components/evidence/storage-orphan-maintenance";
+import { LoadingState } from "@/components/ui/loading-state";
+import { toUserMessage } from "@/lib/errors/user-message";
+
+type HealthResult = {
+  expired: Evidence[];
+  orphans: Evidence[];
+  duplicate_groups: Array<{ hash_tep: string; items: Evidence[] }>;
+  empty_criteria: Array<Criterion & { tieu_chuan_so_thu_tu: number; tieu_chuan_ten: string }>;
+};
 
 export function EvidenceHealth() {
   const router = useRouter();
@@ -33,10 +40,12 @@ export function EvidenceHealth() {
   const [orphans, setOrphans] = useState<Evidence[]>([]);
   const [duplicateGroups, setDuplicateGroups] = useState<Evidence[][]>([]);
   const [emptyCriteria, setEmptyCriteria] = useState<Criterion[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const loadHealth = useCallback(async () => {
     if (!supabase) {
       setMessage("Chưa cấu hình Supabase trong .env.local.");
+      setLoading(false);
       return;
     }
 
@@ -47,104 +56,56 @@ export function EvidenceHealth() {
       return;
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("nguoi_dung")
       .select("id, co_so_id")
       .eq("auth_user_id", userData.user.id)
       .maybeSingle();
 
-    if (!profile) {
-      setMessage("Bạn cần thiết lập cơ sở giáo dục trước.");
+    if (profileError || !profile) {
+      setMessage(toUserMessage(profileError, "Bạn cần thiết lập cơ sở giáo dục trước."));
+      setLoading(false);
       return;
     }
 
-    const { data: yearData } = await supabase
+    const { data: yearData, error: yearError } = await supabase
       .from("nam_hoc")
       .select("id, ten, trang_thai")
       .eq("co_so_id", profile.co_so_id)
       .eq("trang_thai", "dang_hoat_dong")
       .maybeSingle();
 
-    if (!yearData) {
-      setMessage("Chưa có năm học đang hoạt động.");
+    if (yearError || !yearData) {
+      setMessage(toUserMessage(yearError, "Chưa có năm học đang hoạt động."));
+      setLoading(false);
       return;
     }
 
-    const { data: evidenceData } = await supabase
-      .from("minh_chung")
-      .select("*")
-      .eq("co_so_id", profile.co_so_id)
-      .eq("nam_hoc_id", yearData.id)
-      .is("deleted_at", null);
-
-    const { data: criterionData } = await supabase
-      .from("v_tieu_chi_nam_hoc")
-      .select("id, ma, ten, la_bat_buoc, loai_hinh_ap_dung, tieu_chuan_id, tieu_chuan_so_thu_tu, tieu_chuan_ten")
-      .eq("co_so_id", profile.co_so_id)
-      .eq("nam_hoc_id", yearData.id)
-      .order("ma", { ascending: true });
-
-    const rows = (evidenceData ?? []) as Evidence[];
-    const ids = rows.map((item) => item.id);
-    const { data: linkData } =
-      ids.length > 0
-        ? await supabase
-            .from("minh_chung_tieu_chi")
-            .select(
-              "minh_chung_id, tieu_chi_id, la_tieu_chi_goc, tieu_chi: tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan_id)",
-            )
-            .in("minh_chung_id", ids)
-        : { data: [] };
-
-    const links = (linkData ?? []) as unknown as EvidenceCriterionLink[];
-    const today = todayIsoDate();
-    const expiredRows = rows.filter((item) => item.ngay_het_gia_tri && item.ngay_het_gia_tri < today);
-    const orphanRows = rows.filter((item) => !links.some((link) => link.minh_chung_id === item.id));
-
-    const hashMap = new Map<string, Evidence[]>();
-    for (const item of rows) {
-      if (!item.hash_tep) {
-        continue;
-      }
-
-      hashMap.set(item.hash_tep, [...(hashMap.get(item.hash_tep) ?? []), item]);
-    }
-
-    const duplicateRows = [...hashMap.values()].filter((group) => group.length > 1);
-
-    const linkedCriterionIds = new Set(links.map((link) => link.tieu_chi_id));
-    const emptyCriterionRows = ((criterionData ?? []) as unknown as (Criterion & {
-      tieu_chuan_so_thu_tu: number;
-      tieu_chuan_ten: string;
-    })[])
-      .filter((criterion) => !linkedCriterionIds.has(criterion.id))
-      .map((criterion) => ({
-        ...criterion,
-        tieu_chuan: {
-          so_thu_tu: criterion.tieu_chuan_so_thu_tu,
-          ten: criterion.tieu_chuan_ten,
-        },
-      }));
-
-    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
-      p_hanh_dong: "EVIDENCE_HEALTH_READ",
-      p_doi_tuong_id: null,
-      p_du_lieu_moi: {
-        nam_hoc_id: yearData.id,
-        so_minh_chung: rows.length,
-      },
+    const { data, error } = await supabase.rpc("fn_suc_khoe_minh_chung", {
+      p_nam_hoc_id: yearData.id,
     });
 
-    if (auditError) {
-      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
+    if (error || !data) {
+      setMessage(toUserMessage(error, "Không tổng hợp được sức khỏe minh chứng. Vui lòng thử lại."));
+      setLoading(false);
       return;
     }
 
+    const health = data as HealthResult;
+    const emptyCriterionRows = health.empty_criteria.map((criterion) => ({
+      ...criterion,
+      tieu_chuan: {
+        so_thu_tu: criterion.tieu_chuan_so_thu_tu,
+        ten: criterion.tieu_chuan_ten,
+      },
+    }));
+
     setYear(yearData as SchoolYear);
-    setExpired(expiredRows);
-    setOrphans(orphanRows);
-    setDuplicateGroups(duplicateRows);
+    setExpired(health.expired);
+    setOrphans(health.orphans);
+    setDuplicateGroups(health.duplicate_groups.map((group) => group.items));
     setEmptyCriteria(emptyCriterionRows);
+    setLoading(false);
   }, [router, supabase]);
 
   useEffect(() => {
@@ -154,6 +115,8 @@ export function EvidenceHealth() {
 
     return () => window.clearTimeout(timer);
   }, [loadHealth]);
+
+  if (loading) return <LoadingState label="Đang kiểm tra sức khỏe minh chứng…" />;
 
   return (
     <div className="grid gap-6">
@@ -169,7 +132,7 @@ export function EvidenceHealth() {
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label="Hết hiệu lực" value={expired.length} />
-        <Metric label="Nhóm trùng hash" value={duplicateGroups.length} />
+        <Metric label="Dữ liệu trùng lặp" value={duplicateGroups.length} />
         <Metric label="Mồ côi" value={orphans.length} />
         <Metric label="Tiêu chí rỗng" value={emptyCriteria.length} />
       </section>
@@ -182,7 +145,7 @@ export function EvidenceHealth() {
 
       <HealthPanel title="Minh chứng trùng lặp theo SHA-256">
         {duplicateGroups.length === 0 ? (
-          <p className="text-sm text-[var(--color-graphite)]/70">Không phát hiện nhóm trùng hash.</p>
+          <p className="text-sm text-[var(--color-graphite)]/70">Không phát hiện dữ liệu trùng lặp.</p>
         ) : (
           <div className="grid gap-4">
             {duplicateGroups.map((group) => (

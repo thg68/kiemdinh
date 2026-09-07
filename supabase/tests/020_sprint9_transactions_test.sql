@@ -1,8 +1,9 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(24);
+select plan(25);
 
 insert into auth.users(id, email, aud, role, created_at, updated_at)
 values ('00000000-0000-0000-0000-000000020001', 'sprint9@transaction.test', 'authenticated', 'authenticated', now(), now());
@@ -100,15 +101,18 @@ select throws_ok(
   $$select public.fn_luu_trang_thai_bao_cao(
     (select nh.id from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
       where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2098-2099'),
-    'mam_non', 'mau_1_tu_danh_gia', 'da_phe_duyet', 'missing/report.docx', 'report.docx',
+    'mam_non', 'mau_1_tu_danh_gia', 'da_phe_duyet',
+    (select nd.co_so_id::text || '/missing/report.docx' from public.nguoi_dung nd
+      where nd.auth_user_id = '00000000-0000-0000-0000-000000020001'),
+    'report.docx',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 10,
     repeat('a', 64), '{}'::jsonb
   )$$,
-  'P0001', null,
-  'Cong phe duyet DB chan bao cao chua san sang'
+  '22023', 'Phe duyet bao cao phai chi ro ban bao cao da duoc xuat.',
+  'Cong phe duyet DB buoc chi ro dung ban bao cao da xuat'
 );
 
-reset role;
+set local role postgres;
 
 insert into public.nam_hoc(co_so_id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai, bo_tieu_chuan_id)
 select nh.co_so_id, '2099-2100', '2099-08-01', '2100-05-31', 'chuan_bi', nh.bo_tieu_chuan_id
@@ -141,7 +145,7 @@ select is(
   'Nam hoc duoc chon tro thanh dang hoat dong'
 );
 
-reset role;
+set local role postgres;
 
 insert into public.minh_chung(co_so_id, nam_hoc_id, ma, ten, trang_thai_xac_minh, nguoi_tai_len, nguoi_xac_minh, ngay_xac_minh)
 select vtc.co_so_id, vtc.nam_hoc_id, 'MC.' || vtc.ma || '.90', 'Minh chung ' || vtc.ma,
@@ -159,11 +163,44 @@ join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099'
 where vtc.ma <> '1.1';
 
 insert into public.tu_danh_gia(co_so_id, nam_hoc_id, tieu_chi_id, cap_hoc, mo_ta_muc_1, dat_muc_1, muc_dat, nguoi_nhap)
-select vtc.co_so_id, vtc.nam_hoc_id, vtc.id, 'mam_non'::public.cap_hoc, 'Hien trang co minh chung ' || vtc.ma, true, 1, nd.id
+select vtc.co_so_id, vtc.nam_hoc_id, vtc.id, 'mam_non'::public.cap_hoc, 'Hien trang co minh chung ' || vtc.ma, false, 0, nd.id
 from public.v_tieu_chi_nam_hoc vtc
 join public.nguoi_dung nd on nd.co_so_id = vtc.co_so_id
 join public.nam_hoc nh on nh.id = vtc.nam_hoc_id and nh.ten = '2098-2099'
 where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and vtc.ma <> '1.1';
+
+insert into public.tu_danh_gia_minh_chung(
+  co_so_id, nam_hoc_id, tu_danh_gia_id, minh_chung_id, created_by
+)
+select tdg.co_so_id, tdg.nam_hoc_id, tdg.id, mc.id, nd.id
+from public.tu_danh_gia tdg
+join public.v_tieu_chi_nam_hoc vtc
+  on vtc.id = tdg.tieu_chi_id
+  and vtc.nam_hoc_id = tdg.nam_hoc_id
+join public.minh_chung mc
+  on mc.co_so_id = tdg.co_so_id
+  and mc.nam_hoc_id = tdg.nam_hoc_id
+  and mc.ma = 'MC.' || vtc.ma || '.90'
+join public.nguoi_dung nd
+  on nd.co_so_id = tdg.co_so_id
+  and nd.auth_user_id = '00000000-0000-0000-0000-000000020001'
+join public.nam_hoc nh
+  on nh.id = tdg.nam_hoc_id
+  and nh.ten = '2098-2099'
+where tdg.cap_hoc = 'mam_non'
+  and vtc.ma <> '1.1';
+
+update public.tu_danh_gia tdg
+set dat_muc_1 = true,
+    muc_dat = 1
+from public.nam_hoc nh,
+     public.nguoi_dung nd
+where nh.id = tdg.nam_hoc_id
+  and nh.ten = '2098-2099'
+  and nd.co_so_id = tdg.co_so_id
+  and nd.auth_user_id = '00000000-0000-0000-0000-000000020001'
+  and tdg.cap_hoc = 'mam_non'
+  and tdg.muc_dat = 0;
 
 insert into public.nhan_xet_tieu_chuan(co_so_id, nam_hoc_id, tieu_chuan_id, cap_hoc, diem_manh_noi_bat, han_che_trong_tam, dinh_huong_cai_tien, nguoi_cap_nhat)
 select distinct vtc.co_so_id, vtc.nam_hoc_id, vtc.tieu_chuan_id, 'mam_non'::public.cap_hoc, 'Diem manh', 'Han che', 'Dinh huong', nd.id
@@ -207,12 +244,30 @@ select lives_ok(
   $$select public.fn_luu_trang_thai_bao_cao(
     (select nh.id from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
       where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2098-2099'),
+    'mam_non', 'mau_1_tu_danh_gia', 'cho_duyet', null,
+    'Mau-1-v1.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1024,
+    repeat('a', 64), '{"schema_version":"1.0"}'::jsonb, null,
+    (public.fn_lay_niem_phong_nguon_bao_cao(
+      (select nh.id from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
+        where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2098-2099'),
+      'mam_non', 'mau_1_tu_danh_gia'
+    ) ->> 'digest')
+  )$$,
+  'Niem phong nguon cua snapshot v1'
+);
+
+select lives_ok(
+  $$select public.fn_luu_trang_thai_bao_cao(
+    (select nh.id from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
+      where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2098-2099'),
     'mam_non', 'mau_1_tu_danh_gia', 'da_phe_duyet',
     (select nd.co_so_id || '/' || nh.id || '/mau_1_tu_danh_gia/snapshots/v1.docx'
       from public.nguoi_dung nd join public.nam_hoc nh on nh.co_so_id = nd.co_so_id and nh.ten = '2098-2099'
       where nd.auth_user_id = '00000000-0000-0000-0000-000000020001'),
     'Mau-1-v1.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1024,
-    repeat('a', 64), '{"schema_version":"1.0"}'::jsonb
+    repeat('a', 64), '{"schema_version":"1.0"}'::jsonb,
+    (select id from public.bao_cao where trang_thai = 'cho_duyet' order by version desc limit 1),
+    (select source_digest from public.bao_cao where trang_thai = 'cho_duyet' order by version desc limit 1)
   )$$,
   'Phe duyet snapshot v1 khi readiness dat'
 );
@@ -234,13 +289,15 @@ select lives_ok(
       from public.nguoi_dung nd join public.nam_hoc nh on nh.co_so_id = nd.co_so_id and nh.ten = '2098-2099'
       where nd.auth_user_id = '00000000-0000-0000-0000-000000020001'),
     'Mau-1-v2.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 2048,
-    repeat('b', 64), '{"schema_version":"1.0"}'::jsonb
+    repeat('a', 64), '{"schema_version":"1.0"}'::jsonb,
+    (select id from public.bao_cao where trang_thai = 'da_phe_duyet' and version = 1),
+    (select source_digest from public.bao_cao where trang_thai = 'da_phe_duyet' and version = 1)
   )$$,
-  'Phe duyet lan hai tao snapshot moi'
+  'Retry phe duyet tra ve dung snapshot cu'
 );
 
-select is((select count(*) from public.bao_cao where trang_thai = 'da_phe_duyet'), 2::bigint, 'Luu du hai snapshot da phe duyet');
-select is((select max(version) from public.bao_cao where trang_thai = 'da_phe_duyet'), 2, 'Version snapshot tang dan');
+select is((select count(*) from public.bao_cao where trang_thai = 'da_phe_duyet'), 1::bigint, 'Retry khong tao snapshot trung lap');
+select is((select max(version) from public.bao_cao where trang_thai = 'da_phe_duyet'), 1, 'Retry khong tang version snapshot');
 
 select lives_ok(
   $$select public.fn_tao_dot_import(

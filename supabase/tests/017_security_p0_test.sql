@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -196,7 +197,7 @@ select throws_ok(
   'Client khong chen truc tiep metadata minh chung'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (
@@ -220,7 +221,7 @@ select is(
   'User khong co audit.read khong doc duoc audit tenant minh'
 );
 
-reset role;
+set local role postgres;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000a103', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -234,7 +235,7 @@ select throws_ok(
   'Client khong cap nhat truc tiep bao cao'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (
@@ -256,7 +257,7 @@ select is(
   'SYSTEM_ADMIN khong doc bao cao Tenant B'
 );
 
-reset role;
+set local role postgres;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-00000000a101', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -286,7 +287,7 @@ select throws_ok(
   'Client tao minh chung qua RPC, khong chen truc tiep'
 );
 
-reset role;
+set local role postgres;
 
 select * from finish();
 rollback;

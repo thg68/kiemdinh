@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -133,7 +134,7 @@ select throws_ok(
   'Khong chap nhan action do client tu dat'
 );
 
-reset role;
+set local role postgres;
 
 select * from finish();
 rollback;

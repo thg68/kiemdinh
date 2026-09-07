@@ -10,7 +10,7 @@ type EvidenceSubnavItem = {
 
 const baseItems: EvidenceSubnavItem[] = [
   { key: "list", href: "/minh-chung", label: "Kho minh chứng" },
-  { key: "health", href: "/minh-chung/suc-khoe", label: "Kiểm tra sức khỏe" },
+  { key: "health", href: "/minh-chung/suc-khoe", label: "Kiểm tra tình trạng" },
   { key: "verify", href: "/minh-chung/xac-minh", label: "Xác minh minh chứng" },
 ];
 

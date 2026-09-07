@@ -1,20 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { getRequestContext, isRequestId } from "./request-context";
+import {
+  getRequestContext,
+  isRequestId,
+  withRequestId,
+} from "./request-context";
 
 describe("request context", () => {
-  it("dùng request ID hợp lệ do proxy chuyển vào", () => {
+  it("không tin request ID hợp lệ do client gửi vào", () => {
     const requestId = "123e4567-e89b-42d3-a456-426614174000";
     const request = new Request("https://app.test/api/health?secret=hidden", {
       headers: { "x-request-id": requestId },
     });
 
-    expect(getRequestContext(request)).toEqual({
-      requestId,
-      route: "/api/health",
-    });
+    const context = getRequestContext(request);
+
+    expect(context.route).toBe("/api/health");
+    expect(isRequestId(context.requestId)).toBe(true);
+    expect(context.requestId).not.toBe(requestId);
   });
 
-  it("tạo UUID mới khi header bị thiếu hoặc không hợp lệ", () => {
+  it("tạo UUID mới khi header không hợp lệ", () => {
     const request = new Request("https://app.test/api/health", {
       headers: { "x-request-id": "javascript:token=secret" },
     });
@@ -22,5 +27,12 @@ describe("request context", () => {
 
     expect(isRequestId(context.requestId)).toBe(true);
     expect(context.requestId).not.toBe("javascript:token=secret");
+  });
+
+  it("gắn request ID của server vào response", () => {
+    const requestId = crypto.randomUUID();
+    const response = withRequestId(new Response("ok"), requestId);
+
+    expect(response.headers.get("x-request-id")).toBe(requestId);
   });
 });

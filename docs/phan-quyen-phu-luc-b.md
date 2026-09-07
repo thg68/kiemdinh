@@ -29,3 +29,5 @@ Từ migration `010_permission_hardening_appendix_b.sql`, phân quyền chính �
 ## Lưu ý
 
 Ứng dụng vẫn có thể ẩn/hiện nút để dễ dùng, nhưng bảo vệ chính nằm ở CSDL. Nếu người dùng gọi trực tiếp API hoặc truy vấn Supabase, RLS vẫn phải từ chối dữ liệu ngoài quyền.
+
+Ma trận trang và hành động chi tiết nằm tại `docs/MATRAN-NANG-LUC-VAI-TRO.md`. File này được kiểm tra tự động với `lib/auth/capabilities.ts` để tránh tài liệu nói khác giao diện. Theo ma trận hiện hành, Giáo viên không vào màn hình Tự đánh giá; Thư ký được xác minh minh chứng và xuất báo cáo nhưng không được phê duyệt báo cáo hay sửa thành viên hội đồng.

@@ -12,7 +12,6 @@ function mockSupabase(options: {
   evidenceError?: { message: string } | null;
   signedUrl?: string | null;
   signedUrlError?: { message: string } | null;
-  auditError?: { message: string } | null;
   rateLimited?: boolean;
   userError?: { message: string } | null;
 } = {}) {
@@ -45,7 +44,7 @@ function mockSupabase(options: {
       };
     }
 
-    return { data: null, error: options.auditError ?? null };
+    return { data: null, error: null };
   });
   const client = {
     auth: {
@@ -105,15 +104,13 @@ describe("API signed URL minh chứng", () => {
     expect(await response.json()).toMatchObject({ code: "BAD_REQUEST" });
   });
 
-  it("tạo URL 10 phút và ghi audit trước khi trả về", async () => {
+  it("tạo URL 10 phút nhưng không ghi nhật ký đọc", async () => {
     const { createSignedUrl, rpc } = mockSupabase();
     const response = await callRoute();
 
     expect(response.status).toBe(200);
     expect(createSignedUrl).toHaveBeenCalledWith("school-1/year-1/file.pdf", 600);
-    expect(rpc).toHaveBeenCalledWith("fn_log_user_access", expect.objectContaining({
-      p_hanh_dong: "EVIDENCE_FILE_SIGNED_URL_CREATED",
-    }));
+    expect(rpc).not.toHaveBeenCalledWith("fn_log_user_access", expect.anything());
     expect(rpc).toHaveBeenCalledWith("fn_kiem_tra_gioi_han_api", {
       p_hanh_dong: "evidence_signed_url",
     });
@@ -127,13 +124,6 @@ describe("API signed URL minh chứng", () => {
     expect(response.status).toBe(429);
     expect(response.headers.get("retry-after")).toBe("60");
     expect(createSignedUrl).not.toHaveBeenCalled();
-  });
-
-  it("không trả URL nếu ghi nhật ký thất bại", async () => {
-    mockSupabase({ auditError: { message: "audit failed" } });
-    const response = await callRoute();
-
-    expect(response.status).toBe(500);
   });
 
   it("phát cảnh báo Storage nhưng không ghi signed URL hoặc lỗi gốc", async () => {

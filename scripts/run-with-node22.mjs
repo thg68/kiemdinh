@@ -38,6 +38,7 @@ if (currentMajor !== 22 && !node22Dir) {
 
 const env = {
   ...process.env,
+  NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --max-old-space-size=8192`.trim(),
   ...(node22Dir
     ? {
         PATH: `${node22Dir};${process.env.PATH ?? ""}`,

@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -109,7 +110,7 @@ select throws_ok(
   'RPC van tu choi hanh dong gia mao'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (

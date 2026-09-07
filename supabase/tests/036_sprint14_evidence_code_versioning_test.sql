@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -159,10 +160,10 @@ begin
   execute 'set local role authenticated';
   execute p_sql;
   get diagnostics v_row_count = row_count;
-  execute 'reset role';
+  execute 'set local role postgres';
   return v_row_count;
 exception when others then
-  execute 'reset role';
+  execute 'set local role postgres';
   raise;
 end;
 $$;
@@ -401,6 +402,7 @@ select lives_ok(
       $sql$
         select public.fn_phan_cong_tieu_chi_cho_nguoi_dung(
           '14000000-0000-0000-0000-000000000142',
+          'mam_non',
           '14000000-0000-0000-0000-000000000302',
           array['14000000-0000-0000-0000-000000000132'::uuid],
           'phu_trach_nhap_lieu'
@@ -418,6 +420,7 @@ select throws_ok(
       $sql$
         select public.fn_phan_cong_tieu_chi_cho_nguoi_dung(
           '14000000-0000-0000-0000-000000000142',
+          'mam_non',
           '14000000-0000-0000-0000-000000000302',
           array['14000000-0000-0000-0000-000000000131'::uuid],
           'phu_trach_nhap_lieu'
@@ -425,7 +428,7 @@ select throws_ok(
       $sql$
     )
   $test$,
-  'P0001',
+  '22023',
   'Tiêu chí phân công không thuộc phiên bản bộ tiêu chuẩn của năm học.',
   'RPC phan cong tu choi UUID tieu chi cua phien ban khac'
 );

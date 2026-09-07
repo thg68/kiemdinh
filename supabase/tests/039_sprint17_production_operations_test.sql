@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -67,6 +68,9 @@ select throws_ok(
   null,
   'Khong tao duoc hoi dong thu hai trong cung don vi va nam hoc'
 );
+
+-- Trigger audit mutation cần actor thuộc đúng đơn vị, kể cả khi fixture chạy bằng owner.
+select set_config('request.jwt.claim.sub', '17000000-0000-0000-0000-000000000201', true);
 
 insert into public.ke_hoach_cai_tien(
   id, co_so_id, nam_hoc_id, phu_trach_id, noi_dung

@@ -113,6 +113,12 @@ jobs:
       E2E_TEACHER_PASSWORD: ${{ secrets.E2E_TEACHER_PASSWORD }}
       E2E_VIEWER_EMAIL: ${{ secrets.E2E_VIEWER_EMAIL }}
       E2E_VIEWER_PASSWORD: ${{ secrets.E2E_VIEWER_PASSWORD }}
+      STAGING_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      STAGING_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      PRODUCTION_SUPABASE_URL: ${{ secrets.PRODUCTION_SUPABASE_URL }}
+      E2E_ALLOW_STAGING_PROVISION: "true"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -120,8 +126,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Provision tenant và 7 tài khoản UAT staging
+        id: provision
+        run: npm run provision:e2e:staging
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e -- --grep "Sprint 12"
+      - name: Chạy đủ role gate, không cho phép skip
+        env:
+          E2E_YEAR_ID: ${{ steps.provision.outputs.year_id }}
+          E2E_CAP_HOC: ${{ steps.provision.outputs.cap_hoc }}
+        run: npm run test:e2e -- --grep "Sprint 12"
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

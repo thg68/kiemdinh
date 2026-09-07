@@ -53,25 +53,19 @@ export function EvidenceDetail({ evidenceId }: { evidenceId: string }) {
       return;
     }
 
-    const { data: linkData } = await supabase
+    const { data: linkData, error: linkError } = await supabase
       .from("minh_chung_tieu_chi")
       .select(
         "minh_chung_id, tieu_chi_id, la_tieu_chi_goc, tieu_chi: tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan_id, tieu_chuan: tieu_chuan_id(so_thu_tu, ten))",
       )
       .eq("minh_chung_id", evidenceId);
 
-    const enrichedLinks = (linkData ?? []) as unknown as EvidenceCriterionLink[];
-
-    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
-      p_hanh_dong: "EVIDENCE_DETAIL_READ",
-      p_doi_tuong_id: evidenceId,
-      p_du_lieu_moi: null,
-    });
-
-    if (auditError) {
-      setMessage("Không ghi được nhật ký truy cập. Vui lòng tải lại trang.");
+    if (linkError) {
+      setMessage(toUserMessage(linkError, "Không tải được danh sách tiêu chí đang sử dụng minh chứng."));
       return;
     }
+
+    const enrichedLinks = (linkData ?? []) as unknown as EvidenceCriterionLink[];
 
     setEvidence(evidenceData as Evidence);
     setLinks(enrichedLinks);

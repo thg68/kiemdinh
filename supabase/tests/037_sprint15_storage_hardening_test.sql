@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -135,10 +136,10 @@ begin
   execute 'set local role authenticated';
   execute p_sql;
   get diagnostics v_row_count = row_count;
-  execute 'reset role';
+  execute 'set local role postgres';
   return v_row_count;
 exception when others then
-  execute 'reset role';
+  execute 'set local role postgres';
   raise;
 end;
 $$;

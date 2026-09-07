@@ -3,7 +3,7 @@
 import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
@@ -158,6 +158,12 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       return;
     }
 
+    if (mode === "create") {
+      setEvidence([]);
+      setEvidenceCount(0);
+      return;
+    }
+
     const evidenceIdSets: Set<string>[] = [];
     const criterionGroups = [
       filters.tieuChiIds,
@@ -225,9 +231,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       query = query.in("id", eligibleEvidenceIds);
     }
 
-    query = mode === "list"
-      ? query.range((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE - 1)
-      : query.limit(100);
+    query = query.range((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE - 1);
 
     const { count, data: evidenceData, error } = await query;
 
@@ -300,7 +304,6 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
       {mode === "create" ? (
         <EvidenceCreateForm
           criteria={criteria}
-          evidence={evidence}
           profile={profile}
           selectedYearId={selectedYearId}
           supabase={supabase}
@@ -415,7 +418,6 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
 
 function EvidenceCreateForm(props: {
   criteria: Criterion[];
-  evidence: EvidenceWithCriteria[];
   profile: Profile | null;
   selectedYearId: string;
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
@@ -424,6 +426,13 @@ function EvidenceCreateForm(props: {
 }) {
   const [mode, setMode] = useState<"new" | "reuse">("new");
   const [selectedEvidenceId, setSelectedEvidenceId] = useState("");
+  const [selectedReusableEvidence, setSelectedReusableEvidence] = useState<{ id: string; ma: string; ten: string } | null>(null);
+  const [reuseKeyword, setReuseKeyword] = useState("");
+  const [reuseResults, setReuseResults] = useState<Array<{ id: string; ma: string; ten: string; trang_thai_xac_minh: string; total_count: number }>>([]);
+  const [reusePage, setReusePage] = useState(1);
+  const [reuseTotal, setReuseTotal] = useState(0);
+  const [reuseError, setReuseError] = useState("");
+  const [loadingReuse, setLoadingReuse] = useState(false);
   const [selectedCriterionIds, setSelectedCriterionIds] = useState<string[]>([]);
   const [rootCriterionId, setRootCriterionId] = useState("");
   const [ten, setTen] = useState("");
@@ -432,6 +441,34 @@ function EvidenceCreateForm(props: {
   const [file, setFile] = useState<File | null>(null);
   const [hyperlink, setHyperlink] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const finalizeKeyRef = useRef<string | null>(null);
+  const pendingStoragePathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (mode !== "reuse" || !props.supabase || !props.selectedYearId) return;
+    const client = props.supabase;
+    const timer = window.setTimeout(async () => {
+      setLoadingReuse(true);
+      setReuseError("");
+      const { data, error } = await client.rpc("fn_tim_minh_chung_de_dung_lai", {
+        p_nam_hoc_id: props.selectedYearId,
+        p_tu_khoa: reuseKeyword.trim(),
+        p_limit: 25,
+        p_offset: (reusePage - 1) * 25,
+      });
+      if (error) {
+        setReuseError(toUserMessage(error, "Không tìm được minh chứng. Vui lòng thử lại."));
+        setReuseResults([]);
+        setReuseTotal(0);
+      } else {
+        const rows = (data ?? []) as typeof reuseResults;
+        setReuseResults(rows);
+        setReuseTotal(rows[0]?.total_count ?? 0);
+      }
+      setLoadingReuse(false);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [mode, props.selectedYearId, props.supabase, reuseKeyword, reusePage]);
 
   function toggleCriterion(id: string) {
     setSelectedCriterionIds((current) => {
@@ -531,21 +568,18 @@ function EvidenceCreateForm(props: {
         return;
       }
 
-      storagePath = storagePathForEvidence(props.profile.co_so_id, props.selectedYearId, file);
+      storagePath = pendingStoragePathRef.current ?? storagePathForEvidence(props.profile.co_so_id, props.selectedYearId, file);
       hash = await sha256File(file);
       type = canonicalEvidenceMimeType(file);
 
-      const { error: uploadError } = await props.supabase.storage
-        .from("evidence")
-        .upload(storagePath, file, {
-          cacheControl: "3600",
-          contentType: type ?? undefined,
-          metadata: {
-            original_name: file.name,
-            sha256: hash,
-          },
-          upsert: false,
-        });
+      const { error: uploadError } = pendingStoragePathRef.current
+        ? { error: null }
+        : await props.supabase.storage.from("evidence").upload(storagePath, file, {
+            cacheControl: "3600",
+            contentType: type ?? undefined,
+            metadata: { original_name: file.name, sha256: hash },
+            upsert: false,
+          });
 
       if (uploadError) {
         void reportStorageFailure("evidence_upload");
@@ -553,6 +587,8 @@ function EvidenceCreateForm(props: {
         await props.onDone(toUserMessage(uploadError, "Không tải được tệp minh chứng. Vui lòng thử lại."));
         return;
       }
+
+      pendingStoragePathRef.current = storagePath;
     }
 
     const { data: sessionData } = await props.supabase.auth.getSession();
@@ -568,34 +604,37 @@ function EvidenceCreateForm(props: {
       return;
     }
 
-    let finalizeResponse: Response;
+    let finalizeResponse: Response | null = null;
+    finalizeKeyRef.current ??= crypto.randomUUID();
+    const finalizeBody = JSON.stringify({
+      requestKey: finalizeKeyRef.current,
+      duongDan: hyperlink,
+      namHocId: props.selectedYearId,
+      ngayBanHanh: ngayBanHanh || null,
+      ngayHetGiaTri: ngayHetGiaTri || null,
+      storagePath,
+      ten: ten.trim(),
+      tenTepGoc: file?.name ?? "",
+      tieuChiGocId: rootCriterionId,
+      tieuChiIds: selectedCriterionIds,
+    });
 
-    try {
-      finalizeResponse = await fetch("/api/minh-chung/finalize", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          duongDan: hyperlink,
-          namHocId: props.selectedYearId,
-          ngayBanHanh: ngayBanHanh || null,
-          ngayHetGiaTri: ngayHetGiaTri || null,
-          storagePath,
-          ten: ten.trim(),
-          tenTepGoc: file?.name ?? "",
-          tieuChiGocId: rootCriterionId,
-          tieuChiIds: selectedCriterionIds,
-        }),
-      });
-    } catch {
-      if (storagePath) {
-        await cleanupStorageObject(storagePath);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        finalizeResponse = await fetch("/api/minh-chung/finalize", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: finalizeBody,
+        });
+        break;
+      } catch {
+        // Retry giữ nguyên requestKey; không xóa object vì transaction có thể đã commit.
       }
+    }
 
+    if (!finalizeResponse) {
       setSubmitting(false);
-      await props.onDone("Mất kết nối khi hoàn tất minh chứng. Vui lòng thử lại.");
+      await props.onDone("Mất kết nối khi hoàn tất minh chứng. Tệp được giữ an toàn; hãy bấm lưu lại để kiểm tra trạng thái.");
       return;
     }
 
@@ -621,6 +660,8 @@ function EvidenceCreateForm(props: {
     setNgayHetGiaTri("");
     setSelectedCriterionIds([]);
     setRootCriterionId("");
+    finalizeKeyRef.current = null;
+    pendingStoragePathRef.current = null;
     await props.onDone("Đã tạo minh chứng và gắn tiêu chí.");
   }
 
@@ -666,22 +707,48 @@ function EvidenceCreateForm(props: {
         </div>
 
         {mode === "reuse" ? (
-          <label className="text-sm font-medium">
-            Minh chứng có sẵn
-            <select
-              className="form-control mt-2"
-              value={selectedEvidenceId}
-              onChange={(event) => setSelectedEvidenceId(event.target.value)}
-              required
-            >
-              <option value="">Chọn minh chứng</option>
-              {props.evidence.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.ma} - {item.ten}
-                </option>
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">
+              Tìm minh chứng có sẵn
+              <input
+                className="form-control mt-2"
+                placeholder="Nhập mã hoặc tên minh chứng"
+                value={reuseKeyword}
+                onChange={(event) => {
+                  setReuseKeyword(event.target.value);
+                  setReusePage(1);
+                }}
+              />
+            </label>
+            {reuseError ? <Alert tone="warning">{reuseError}</Alert> : null}
+            {selectedReusableEvidence ? (
+              <div className="rounded-[var(--radius-card)] border border-[var(--color-electric-cobalt)] p-3 text-sm">
+                <strong>Đã chọn: {selectedReusableEvidence.ma}</strong> - {selectedReusableEvidence.ten}
+              </div>
+            ) : null}
+            <div aria-label="Kết quả tìm minh chứng" className="grid gap-2" role="listbox">
+              {loadingReuse ? (
+                <LoadingState label="Đang tìm minh chứng…" />
+              ) : reuseResults.length === 0 ? (
+                <p className="text-sm text-[var(--color-graphite)]/70">Không có minh chứng phù hợp.</p>
+              ) : reuseResults.map((item) => (
+                <button
+                  aria-selected={selectedEvidenceId === item.id}
+                  className={`surface-card p-3 text-left text-sm ${selectedEvidenceId === item.id ? "border-[var(--color-electric-cobalt)]" : ""}`}
+                  key={item.id}
+                  role="option"
+                  type="button"
+                  onClick={() => {
+                    setSelectedEvidenceId(item.id);
+                    setSelectedReusableEvidence(item);
+                  }}
+                >
+                  <strong>{item.ma}</strong> - {item.ten}
+                </button>
               ))}
-            </select>
-          </label>
+            </div>
+            <Pagination page={reusePage} pageSize={25} total={reuseTotal} onPageChange={setReusePage} />
+          </div>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             <label className="text-sm font-medium">

@@ -11,55 +11,49 @@ export type ActiveNav =
   | "audit"
   | "settings";
 
-export type AppRole =
-  | "SYSTEM_ADMIN"
-  | "PRINCIPAL"
-  | "SELF_ASSESSMENT_CHAIR"
-  | "SECRETARY"
-  | "MEMBER"
-  | "TEACHER"
-  | "VIEWER";
+import { hasCapability, type PageCapability } from "./capabilities";
+
+export type { AppRole } from "./capabilities";
 
 export type NavigationItem = {
   key: ActiveNav;
   label: string;
   href: string;
-  roles: AppRole[];
+  capability: PageCapability;
 };
 
-const managementRoles: AppRole[] = ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY"];
-
 export const primaryNavigation: NavigationItem[] = [
-  { key: "dashboard", label: "Tổng quan", href: "/dashboard", roles: managementRoles },
-  { key: "work", label: "Việc của tôi", href: "/viec-cua-toi", roles: [...managementRoles, "MEMBER", "TEACHER"] },
-  { key: "standards", label: "Bộ tiêu chuẩn", href: "/bo-tieu-chuan", roles: ["SYSTEM_ADMIN", ...managementRoles, "MEMBER", "TEACHER"] },
-  { key: "evidence", label: "Minh chứng", href: "/minh-chung", roles: [...managementRoles, "MEMBER", "TEACHER"] },
-  { key: "assessment", label: "Tự đánh giá", href: "/tu-danh-gia", roles: [...managementRoles, "MEMBER"] },
-  { key: "improvement", label: "Kế hoạch cải tiến", href: "/ke-hoach-cai-tien", roles: managementRoles },
-  { key: "council", label: "Hội đồng TĐG", href: "/hoi-dong-tu-danh-gia", roles: managementRoles },
-  { key: "reports", label: "Báo cáo", href: "/bao-cao", roles: managementRoles },
-  { key: "legal", label: "Văn bản liên quan", href: "/van-ban-lien-quan", roles: managementRoles },
-  { key: "audit", label: "Nhật ký", href: "/nhat-ky", roles: ["PRINCIPAL"] },
-  { key: "settings", label: "Cài đặt", href: "/thiet-lap", roles: ["SYSTEM_ADMIN", "PRINCIPAL", "SELF_ASSESSMENT_CHAIR"] },
+  { key: "dashboard", label: "Tổng quan", href: "/dashboard", capability: "page.dashboard" },
+  { key: "work", label: "Việc của tôi", href: "/viec-cua-toi", capability: "page.work" },
+  { key: "standards", label: "Bộ tiêu chuẩn", href: "/bo-tieu-chuan", capability: "page.standards" },
+  { key: "evidence", label: "Minh chứng", href: "/minh-chung", capability: "page.evidence" },
+  { key: "assessment", label: "Tự đánh giá", href: "/tu-danh-gia", capability: "page.assessment" },
+  { key: "improvement", label: "Kế hoạch cải tiến", href: "/ke-hoach-cai-tien", capability: "page.improvement" },
+  { key: "council", label: "Hội đồng TĐG", href: "/hoi-dong-tu-danh-gia", capability: "page.council" },
+  { key: "reports", label: "Báo cáo", href: "/bao-cao", capability: "page.reports" },
+  { key: "legal", label: "Văn bản liên quan", href: "/van-ban-lien-quan", capability: "page.legal" },
+  { key: "audit", label: "Nhật ký", href: "/nhat-ky", capability: "page.audit" },
+  { key: "settings", label: "Cài đặt", href: "/thiet-lap", capability: "page.settings" },
 ];
 
 const viewerReport: NavigationItem = {
   key: "reports",
   label: "Báo cáo đã phê duyệt",
   href: "/bao-cao/da-phe-duyet",
-  roles: ["VIEWER"],
+  capability: "page.approved_reports",
 };
 
 export function navigationForRoles(roleCodes: string[]) {
   const roles = new Set(roleCodes);
-
-  const items = primaryNavigation.filter((item) =>
-    item.roles.some((role) => roles.has(role)),
-  );
+  const items = primaryNavigation.filter((item) => hasCapability(roleCodes, item.capability));
 
   if (roles.has("VIEWER") && !items.some((item) => item.key === "reports")) {
     items.push(viewerReport);
   }
 
   return items;
+}
+
+export function firstRouteForRoles(roleCodes: string[]) {
+  return navigationForRoles(roleCodes)[0]?.href ?? "/thiet-lap";
 }

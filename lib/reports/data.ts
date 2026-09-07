@@ -148,6 +148,18 @@ export type ReportData = {
   giaiTrinh: ReturnType<typeof xacDinhMucTuKetQua>;
 };
 
+export function assertReportScope(
+  school: Pick<ReportSchool, "cap_hoc">,
+  capHoc: CapHoc,
+) {
+  if (!school.cap_hoc.includes(capHoc)) {
+    throw apiErrors.unprocessable(
+      "Cấp học được chọn không thuộc cơ sở giáo dục hiện tại.",
+      { field: "capHoc", code: "SCHOOL_LEVEL_OUT_OF_SCOPE" },
+    );
+  }
+}
+
 export function createRequestSupabaseClient(authorization: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -261,6 +273,7 @@ export async function collectReportData(
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
       .eq("la_du_lieu_demo", false)
+      .is("archived_at", null)
       .order("created_at", { ascending: true }),
     supabase
       .from("nhan_xet_tieu_chuan")
@@ -310,6 +323,8 @@ export async function collectReportData(
     throw apiErrors.notFound("Không tìm thấy cơ sở giáo dục hoặc năm học để xuất báo cáo.");
   }
 
+  assertReportScope(schoolData as ReportSchool, capHoc);
+
   const criteria = ((criterionData ?? []) as (Omit<ReportCriterion, "tieu_chuan"> & {
     tieu_chuan_so_thu_tu: number;
     tieu_chuan_ten: string;
@@ -336,12 +351,13 @@ export async function collectReportData(
     }
   }
 
-  const evidenceIds = (evidenceData ?? []).map((item) => item.id);
-  const { data: evidenceLinkData, error: evidenceLinkError } = evidenceIds.length
+  const assessments = (assessmentData ?? []) as ReportAssessment[];
+  const assessmentIds = assessments.map((item) => item.id);
+  const { data: evidenceLinkData, error: evidenceLinkError } = assessmentIds.length
     ? await supabase
-        .from("minh_chung_tieu_chi")
-        .select("minh_chung_id, tieu_chi_id")
-        .in("minh_chung_id", evidenceIds)
+        .from("tu_danh_gia_minh_chung")
+        .select("minh_chung_id, tu_danh_gia_id")
+        .in("tu_danh_gia_id", assessmentIds)
     : { data: [], error: null };
 
   if (evidenceLinkError) {
@@ -352,10 +368,10 @@ export async function collectReportData(
     ...item,
     tieuChiIds: (evidenceLinkData ?? [])
       .filter((link) => link.minh_chung_id === item.id)
-      .map((link) => link.tieu_chi_id),
+      .map((link) => assessments.find((assessment) => assessment.id === link.tu_danh_gia_id)?.tieu_chi_id)
+      .filter((criterionId): criterionId is string => Boolean(criterionId)),
   }));
 
-  const assessments = (assessmentData ?? []) as ReportAssessment[];
   const ketQuaTieuChi = criteria.map<KetQuaTieuChi>((criterion) => {
     const assessment = assessments.find((item) => item.tieu_chi_id === criterion.id);
 

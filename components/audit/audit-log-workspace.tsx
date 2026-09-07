@@ -9,6 +9,13 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { useAppContext } from "@/components/shared/use-app-context";
+import {
+  AUDIT_ACTION_LABELS,
+  AUDIT_OBJECT_LABELS,
+  LEGACY_NON_MUTATION_AUDIT_ACTIONS,
+  auditActionLabel,
+  auditObjectLabel,
+} from "@/lib/audit/catalog";
 
 type AuditRow = {
   id: string;
@@ -22,53 +29,12 @@ type AuditRow = {
   } | null;
 };
 
-const actionLabels: Record<string, string> = {
-  EVIDENCE_LIST_READ: "Xem danh sách minh chứng",
-  EVIDENCE_DETAIL_READ: "Xem chi tiết minh chứng",
-  EVIDENCE_HEALTH_READ: "Kiểm tra sức khỏe minh chứng",
-  EVIDENCE_FILE_SIGNED_URL_CREATED: "Tạo liên kết xem tệp minh chứng",
-  REPORT_EXPORTED: "Xuất báo cáo",
-  SELF_ASSESSMENT_STATUS_UPDATED: "Cập nhật trạng thái tự đánh giá",
-  EVIDENCE_STATUS_UPDATED: "Cập nhật trạng thái minh chứng",
-  USER_ROLE_UPDATED: "Cập nhật vai trò người dùng",
-};
-
-const objectLabels: Record<string, string> = {
-  bao_cao: "Báo cáo",
-  co_so_giao_duc: "Cơ sở giáo dục",
-  hoi_dong_tu_danh_gia: "Hội đồng tự đánh giá",
-  ke_hoach_cai_tien: "Kế hoạch cải tiến",
-  minh_chung: "Minh chứng",
-  nam_hoc: "Năm học",
-  nguoi_dung: "Người dùng",
-  phan_cong_tieu_chi: "Phân công tiêu chí",
-  tieu_chi: "Tiêu chí",
-  tu_danh_gia: "Tự đánh giá",
-};
-
 function normalizeText(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
-function humanizeCode(value: string) {
-  return value
-    .toLowerCase()
-    .split("_")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function actionLabel(action: string) {
-  return actionLabels[action] ?? humanizeCode(action);
-}
-
-function objectLabel(objectName: string) {
-  return objectLabels[objectName] ?? humanizeCode(objectName);
-}
-
 function actionTone(action: string) {
-  if (action.includes("EXPORTED") || action.includes("SIGNED_URL")) {
+  if (action.includes("CREATED") || action.includes("RESTORED")) {
     return "success" as const;
   }
 
@@ -108,6 +74,7 @@ export function AuditLogWorkspace() {
         { count: "exact" },
       )
       .eq("co_so_id", profile.co_so_id)
+      .not("hanh_dong", "in", `(${LEGACY_NON_MUTATION_AUDIT_ACTIONS.join(",")})`)
       .order("thoi_diem", { ascending: false });
 
     if (objectFilter !== "all") {
@@ -119,12 +86,12 @@ export function AuditLogWorkspace() {
         .replace(/[^\p{L}\p{N}\s_-]/gu, " ")
         .trim();
       const normalizedKeyword = normalizeText(safeKeyword);
-      const matchingActions = Object.entries(actionLabels)
+      const matchingActions = Object.entries(AUDIT_ACTION_LABELS)
         .filter(([code, label]) =>
           normalizeText(`${code} ${label}`).includes(normalizedKeyword),
         )
         .map(([code]) => code);
-      const matchingObjects = Object.entries(objectLabels)
+      const matchingObjects = Object.entries(AUDIT_OBJECT_LABELS)
         .filter(([code, label]) =>
           normalizeText(`${code} ${label}`).includes(normalizedKeyword),
         )
@@ -179,7 +146,7 @@ export function AuditLogWorkspace() {
     return () => window.clearTimeout(timer);
   }, [loadRows]);
 
-  const objects = Object.keys(objectLabels).sort();
+  const objects = Object.keys(AUDIT_OBJECT_LABELS).sort();
 
   if (loading || loadingRows) {
     return <LoadingState label="Đang tải nhật ký thao tác…" />;
@@ -225,7 +192,7 @@ export function AuditLogWorkspace() {
             <option value="all">Tất cả</option>
             {objects.map((objectName) => (
               <option key={objectName} value={objectName}>
-                {objectLabel(objectName)}
+                {auditObjectLabel(objectName)}
               </option>
             ))}
           </select>
@@ -253,8 +220,8 @@ export function AuditLogWorkspace() {
               <article className="grid gap-4 px-5 py-4 transition hover:bg-[var(--color-lavender-mist)]/35 md:grid-cols-[1fr_auto]" key={row.id}>
                 <div className="grid gap-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge>{objectLabel(row.doi_tuong)}</Badge>
-                    <Badge tone={actionTone(row.hanh_dong)}>{actionLabel(row.hanh_dong)}</Badge>
+                    <Badge>{auditObjectLabel(row.doi_tuong)}</Badge>
+                    <Badge tone={actionTone(row.hanh_dong)}>{auditActionLabel(row.hanh_dong)}</Badge>
                   </div>
                   <p className="text-sm leading-6 text-[var(--color-graphite)]">
                     <span className="font-semibold text-[var(--color-ink-navy)]">{actorName(row)}</span>

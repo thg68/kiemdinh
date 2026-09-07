@@ -11,6 +11,19 @@
 
 Không dùng dữ liệu học sinh thuộc nhóm Đỏ trong manifest hoặc file E2E.
 
+### Tài khoản kiểm thử vai trò
+
+Workflow tự tạo/cập nhật bảy tài khoản trong tenant `UAT-STAGING-01` bằng
+`npm run provision:e2e:staging`. Cần cấu hình GitHub Environment `staging`:
+
+- `STAGING_SUPABASE_URL`, `STAGING_SUPABASE_ANON_KEY`.
+- `STAGING_SUPABASE_SERVICE_ROLE_KEY` chỉ dành cho job provision, không đưa vào Worker.
+- `PRODUCTION_SUPABASE_URL` để script từ chối nếu trỏ nhầm production.
+- Cặp `E2E_<ROLE>_EMAIL` và `E2E_<ROLE>_PASSWORD` cho đủ bảy vai trò.
+
+Script chỉ chạy khi có `E2E_ALLOW_STAGING_PROVISION=true`, không in mật khẩu hoặc
+service-role key ra log, và có thể chạy lại mà không tạo trùng tài khoản.
+
 ## 2. Kiểm tra dataset
 
 Cấu hình tài khoản Hiệu trưởng staging trong biến môi trường, không commit mật khẩu:
@@ -67,10 +80,12 @@ Chạy workflow **Sprint 12 pilot release gate** và xác nhận quyền diễn 
 
 1. Replay toàn bộ migration trên Supabase local.
 2. Chạy pgTAP.
-3. Dump staging sang tệp tạm.
-4. Restore vào Supabase local.
-5. So sánh số lượng bảng lõi và chạy hậu kiểm.
-6. Xóa tệp dump ngay cả khi job thất bại.
+3. Provision tenant cùng bảy tài khoản UAT staging.
+4. Chạy đúng 18 phép thử đăng nhập, capability, URL trực tiếp và RLS; thiếu secret phải fail, không skip.
+5. Dump staging sang tệp tạm.
+6. Restore vào Supabase local.
+7. So sánh số lượng bảng lõi và chạy hậu kiểm.
+8. Xóa tệp dump ngay cả khi job thất bại.
 
 Không tải database dump lên GitHub artifact.
 

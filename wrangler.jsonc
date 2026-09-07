@@ -20,6 +20,13 @@
   "images": {
     "binding": "IMAGES"
   },
+  "ratelimits": [
+    {
+      "name": "OBSERVABILITY_RATE_LIMITER",
+      "namespace_id": "17001",
+      "simple": { "limit": 20, "period": 60 }
+    }
+  ],
   "observability": {
     "enabled": true,
     "logs": {
@@ -44,6 +51,13 @@
       "images": {
         "binding": "IMAGES"
       },
+      "ratelimits": [
+        {
+          "name": "OBSERVABILITY_RATE_LIMITER",
+          "namespace_id": "17002",
+          "simple": { "limit": 20, "period": 60 }
+        }
+      ],
       "observability": {
         "enabled": true,
         "logs": {
@@ -75,6 +89,13 @@
       "images": {
         "binding": "IMAGES"
       },
+      "ratelimits": [
+        {
+          "name": "OBSERVABILITY_RATE_LIMITER",
+          "namespace_id": "17003",
+          "simple": { "limit": 20, "period": 60 }
+        }
+      ],
       "observability": {
         "enabled": true,
         "logs": {

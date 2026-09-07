@@ -57,8 +57,19 @@ function normalizeText(value: string) {
   return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
 }
 
+const statusLabels: Record<string, { label: string; tone: "neutral" | "success" | "warning" }> = {
+  dang_ap_dung: { label: "Đang áp dụng", tone: "success" },
+  da_khoa: { label: "Đã khóa", tone: "neutral" },
+  du_thao: { label: "Dự thảo", tone: "warning" },
+  het_hieu_luc: { label: "Hết hiệu lực", tone: "neutral" },
+};
+
+function formatStatus(status: string) {
+  return statusLabels[status] ?? { label: status, tone: "neutral" as const };
+}
+
 export function StandardsWorkspace() {
-  const { loading, message, school, setMessage, supabase } = useAppContext();
+  const { activeYear, loading, message, school, setMessage, supabase } = useAppContext();
   const [standardSet, setStandardSet] = useState<StandardSet | null>(null);
   const [standards, setStandards] = useState<Standard[]>([]);
   const [criteria, setCriteria] = useState<Criterion[]>([]);
@@ -68,7 +79,10 @@ export function StandardsWorkspace() {
   const [loadingStandards, setLoadingStandards] = useState(false);
 
   const loadStandards = useCallback(async () => {
-    if (!supabase || !school) {
+    if (!supabase || !school || !activeYear) {
+      setStandardSet(null);
+      setStandards([]);
+      setCriteria([]);
       return;
     }
 
@@ -78,13 +92,12 @@ export function StandardsWorkspace() {
     const { data: setData, error: setError } = await supabase
       .from("bo_tieu_chuan")
       .select("id, ma_van_ban, ten, version, trang_thai, loai_hinh")
+      .eq("id", activeYear.bo_tieu_chuan_id)
       .eq("loai_hinh", school.loai_hinh)
-      .order("version", { ascending: false })
-      .limit(1)
       .maybeSingle();
 
     if (setError || !setData) {
-      setMessage(toUserMessage(setError, "Chưa có bộ tiêu chuẩn cho loại hình của đơn vị."));
+      setMessage(toUserMessage(setError, "Năm học này chưa được gắn với bộ tiêu chuẩn phù hợp."));
       setLoadingStandards(false);
       return;
     }
@@ -123,7 +136,7 @@ export function StandardsWorkspace() {
     setStandards((standardData ?? []) as Standard[]);
     setCriteria((criterionData ?? []) as Criterion[]);
     setLoadingStandards(false);
-  }, [school, setMessage, supabase]);
+  }, [activeYear, school, setMessage, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -160,18 +173,41 @@ export function StandardsWorkspace() {
       {message ? <Alert tone="warning">{message}</Alert> : null}
 
       {standardSet ? (
-        <section className="featured-card grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+        <section className="featured-card grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <p className="text-sm text-white/72">{standardSet.ma_van_ban}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">{standardSet.ten}</h2>
-            <p className="mt-3 text-sm leading-6 text-white/78">
+            <span className="inline-block rounded bg-white/10 px-2.5 py-0.5 font-mono text-xs font-medium text-white/80 border border-white/15">
+              {standardSet.ma_van_ban}
+            </span>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-white">{standardSet.ten}</h2>
+            <p className="mt-2 text-sm leading-6 text-white/78">
               Nội dung tiêu chuẩn được đọc từ bảng dữ liệu có phiên bản. Màn hình này chỉ để tra cứu, không phải nơi nhập báo cáo.
             </p>
           </div>
-          <div className="grid gap-2 text-sm text-white/82">
-            <span>Phiên bản {standardSet.version}</span>
-            <span>{standardSet.trang_thai}</span>
-            <span>{criteria.length}/15 tiêu chí</span>
+          <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-end">
+            {(() => {
+              const { label, tone } = formatStatus(standardSet.trang_thai);
+              const bgClass =
+                tone === "success"
+                  ? "bg-emerald-500/20 text-emerald-200 border-emerald-400/30"
+                  : tone === "warning"
+                  ? "bg-amber-500/20 text-amber-200 border-amber-400/30"
+                  : "bg-white/10 text-white/80 border-white/20";
+              return (
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border backdrop-blur-md ${bgClass}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                  {label}
+                </span>
+              );
+            })()}
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 border border-white/20">
+              Phiên bản {standardSet.version}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 border border-white/20">
+              Năm học {activeYear?.ten}
+            </span>
+            <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/90 border border-white/20">
+              {criteria.length} tiêu chí
+            </span>
           </div>
         </section>
       ) : null}

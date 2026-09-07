@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import {
@@ -8,7 +9,10 @@ import {
   type RoleLabel,
 } from "@/components/layout/current-user-roles";
 import { Alert } from "@/components/ui/alert";
+import { LoadingState } from "@/components/ui/loading-state";
+import { capabilityForPath, hasCapability } from "@/lib/auth/capabilities";
 import {
+  firstRouteForRoles,
   navigationForRoles,
   type ActiveNav,
 } from "@/lib/auth/navigation";
@@ -31,6 +35,8 @@ export function ApplicationShell({
   description,
   title,
 }: ApplicationShellProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const configured = isSupabaseConfigured();
   const [menuOpen, setMenuOpen] = useState(false);
   const [roles, setRoles] = useState<RoleLabel[]>([]);
@@ -42,7 +48,12 @@ export function ApplicationShell({
     () => (configured ? createBrowserSupabaseClient() : null),
     [configured],
   );
-  const navigation = navigationForRoles(roles.map((role) => role.ma));
+  const roleCodes = useMemo(() => roles.map((role) => role.ma), [roles]);
+  const navigation = navigationForRoles(roleCodes);
+  const requiredCapability = capabilityForPath(pathname);
+  const isOnboardingAccount = pathname.startsWith("/thiet-lap") && roleCodes.length === 0;
+  const canAccess =
+    !requiredCapability || isOnboardingAccount || hasCapability(roleCodes, requiredCapability);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -55,6 +66,15 @@ export function ApplicationShell({
     let activeRequest = true;
 
     async function loadRoles() {
+      const { data: authData, error: authError } = await client.auth.getUser();
+
+      if (!activeRequest) return;
+
+      if (authError || !authData.user) {
+        router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
       const { data, error } = await client.rpc("fn_user_role_labels");
 
       if (!activeRequest) return;
@@ -72,7 +92,16 @@ export function ApplicationShell({
     return () => {
       activeRequest = false;
     };
-  }, [supabase]);
+  }, [pathname, router, supabase]);
+
+  useEffect(() => {
+    if (rolesLoading || roleMessage || canAccess) return;
+
+    const destination = firstRouteForRoles(roleCodes);
+    if (destination !== pathname) {
+      router.replace(destination);
+    }
+  }, [canAccess, pathname, roleCodes, roleMessage, rolesLoading, router]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -84,6 +113,30 @@ export function ApplicationShell({
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [menuOpen]);
+
+  if (rolesLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center p-6">
+        <LoadingState label="Đang kiểm tra quyền truy cập…" />
+      </main>
+    );
+  }
+
+  if (!configured || roleMessage) {
+    return (
+      <main className="mx-auto grid min-h-screen max-w-xl place-items-center p-6">
+        <Alert tone="warning">{roleMessage || "Chưa cấu hình kết nối hệ thống."}</Alert>
+      </main>
+    );
+  }
+
+  if (!canAccess) {
+    return (
+      <main className="mx-auto grid min-h-screen max-w-xl place-items-center p-6">
+        <Alert tone="warning">Bạn không có quyền truy cập trang này. Hệ thống đang chuyển tới khu vực phù hợp.</Alert>
+      </main>
+    );
+  }
 
   return (
     <div className="app-layout">

@@ -1,10 +1,17 @@
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { isOperationalAlertAllowed } from "@/lib/observability/edge-rate-limit";
 import { POST } from "./route";
+
+vi.mock("@/lib/observability/edge-rate-limit", () => ({
+  isOperationalAlertAllowed: vi.fn().mockResolvedValue(true),
+  unauthenticatedAlertKey: vi.fn().mockReturnValue("auth-failure:test"),
+}));
 
 describe("POST /api/observability/auth-failure", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.mocked(isOperationalAlertAllowed).mockResolvedValue(true);
   });
 
   it("chỉ ghi mã nguyên nhân chuẩn hóa, không ghi email hay mật khẩu", async () => {
@@ -52,6 +59,26 @@ describe("POST /api/observability/auth-failure", () => {
     ));
 
     expect(response.status).toBe(403);
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it("trả 429 và không ghi alert khi vượt giới hạn", async () => {
+    vi.mocked(isOperationalAlertAllowed).mockResolvedValue(false);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const response = await POST(new NextRequest(
+      "https://app.test/api/observability/auth-failure",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          origin: "https://app.test",
+        },
+        body: JSON.stringify({ reason: "invalid_credentials" }),
+      },
+    ));
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("retry-after")).toBe("60");
     expect(spy).not.toHaveBeenCalled();
   });
 });

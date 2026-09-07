@@ -10,6 +10,12 @@ import {
 import { Alert } from "@/components/ui/alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
+import {
+  CAP_HOC_THEO_LOAI_HINH,
+  type CapHocValue,
+  type LoaiHinh,
+  validateSchoolOnboarding,
+} from "@/lib/domain/school-metadata";
 
 type Profile = {
   id: string;
@@ -21,6 +27,7 @@ type School = {
   id: string;
   ten: string;
   loai_hinh: string;
+  cap_hoc: CapHocValue[];
   ma_truong?: string | null;
 };
 
@@ -50,6 +57,7 @@ type Assignment = {
   nam_hoc_id: string;
   nguoi_dung_id: string;
   tieu_chi_id: string;
+  cap_hoc: CapHocValue | null;
   vai_tro_trong_tieu_chi: string | null;
 };
 
@@ -130,8 +138,8 @@ export function SchoolYearSetup() {
 
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
-  const [loaiHinh, setLoaiHinh] = useState("mam_non");
-  const [capHoc, setCapHoc] = useState<string[]>(["mam_non"]);
+  const [loaiHinh, setLoaiHinh] = useState<LoaiHinh>("mam_non");
+  const [capHoc, setCapHoc] = useState<CapHocValue[]>(["mam_non"]);
   const [emailHieuTruong, setEmailHieuTruong] = useState("");
   const [hoTenHieuTruong, setHoTenHieuTruong] = useState("");
   const [tenNamHoc, setTenNamHoc] = useState("2026-2027");
@@ -211,7 +219,7 @@ export function SchoolYearSetup() {
     ] = await Promise.all([
       supabase
         .from("co_so_giao_duc")
-        .select("id, ten, loai_hinh, ma_truong")
+        .select("id, ten, loai_hinh, cap_hoc, ma_truong")
         .eq("id", profileData.co_so_id)
         .maybeSingle(),
       supabase
@@ -222,7 +230,7 @@ export function SchoolYearSetup() {
       supabase
         .from("nguoi_dung")
         .select(
-          "id, ho_ten, email, trang_thai, nguoi_dung_vai_tro(vai_tro:vai_tro_id(id, ma, ten))",
+          "id, ho_ten, email, trang_thai, nguoi_dung_vai_tro!nguoi_dung_vai_tro_nguoi_dung_id_co_so_id_fkey(vai_tro:vai_tro_id(id, ma, ten))",
           { count: "exact" },
         )
         .eq("co_so_id", profileData.co_so_id)
@@ -233,7 +241,7 @@ export function SchoolYearSetup() {
         ),
       supabase
         .from("nguoi_dung")
-        .select("id, ho_ten, email, trang_thai")
+        .select("id, ho_ten, email, trang_thai, nguoi_dung_vai_tro!nguoi_dung_vai_tro_nguoi_dung_id_co_so_id_fkey(vai_tro:vai_tro_id(id, ma, ten))")
         .eq("co_so_id", profileData.co_so_id)
         .eq("trang_thai", "active")
         .order("ho_ten", { ascending: true }),
@@ -292,7 +300,7 @@ export function SchoolYearSetup() {
       ] = await Promise.all([
         supabase
           .from("phan_cong_tieu_chi")
-          .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, vai_tro_trong_tieu_chi")
+          .select("id, nam_hoc_id, nguoi_dung_id, tieu_chi_id, cap_hoc, vai_tro_trong_tieu_chi")
           .eq("co_so_id", profileData.co_so_id)
           .eq("nam_hoc_id", loadedActiveYear.id),
         supabase
@@ -343,6 +351,20 @@ export function SchoolYearSetup() {
     }
 
     setMessage("");
+
+    const validationMessage = validateSchoolOnboarding({
+      tenCoSo,
+      loaiHinh,
+      capHoc,
+      tenNamHoc,
+      ngayBatDau,
+      ngayKetThuc,
+      hoTenHieuTruong,
+    });
+    if (validationMessage) {
+      setMessage(validationMessage);
+      return;
+    }
 
     const { error } = await supabase.rpc("fn_quan_tri_tao_co_so_va_nam_hoc", {
       p_ten_co_so: tenCoSo,
@@ -431,7 +453,12 @@ export function SchoolYearSetup() {
     await loadData();
   }
 
-  function toggleCapHoc(value: string) {
+  function changeLoaiHinh(value: LoaiHinh) {
+    setLoaiHinh(value);
+    setCapHoc([CAP_HOC_THEO_LOAI_HINH[value][0]]);
+  }
+
+  function toggleCapHoc(value: CapHocValue) {
     setCapHoc((current) =>
       current.includes(value)
         ? current.filter((item) => item !== value)
@@ -564,16 +591,16 @@ export function SchoolYearSetup() {
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-medium">Tên cơ sở giáo dục<input className="form-control mt-2" value={tenCoSo} onChange={(event) => setTenCoSo(event.target.value)} required /></label>
             <label className="text-sm font-medium">Mã trường<input className="form-control mt-2" value={maTruong} onChange={(event) => setMaTruong(event.target.value)} /></label>
-            <label className="text-sm font-medium">Loại hình<select className="form-control mt-2" value={loaiHinh} onChange={(event) => setLoaiHinh(event.target.value)}><option value="mam_non">Mầm non</option><option value="pho_thong">Phổ thông</option><option value="gdtx">GDTX</option></select></label>
+            <label className="text-sm font-medium">Loại hình<select className="form-control mt-2" value={loaiHinh} onChange={(event) => changeLoaiHinh(event.target.value as LoaiHinh)}><option value="mam_non">Mầm non</option><option value="pho_thong">Phổ thông</option><option value="gdtx">GDTX</option></select></label>
             <label className="text-sm font-medium">Email Hiệu trưởng<input className="form-control mt-2" type="email" value={emailHieuTruong} onChange={(event) => setEmailHieuTruong(event.target.value)} required /></label>
             <label className="text-sm font-medium md:col-span-2">Họ và tên Hiệu trưởng<input className="form-control mt-2" value={hoTenHieuTruong} onChange={(event) => setHoTenHieuTruong(event.target.value)} required /></label>
           </div>
           <fieldset className="grid gap-2 text-sm font-medium">
             <legend>Cấp học</legend>
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {capHocOptions.map((option) => (
+              {capHocOptions.filter((option) => CAP_HOC_THEO_LOAI_HINH[loaiHinh].includes(option.value as CapHocValue)).map((option) => (
                 <label className="surface-card flex items-center gap-2 px-3 py-3" key={option.value}>
-                  <input type="checkbox" checked={capHoc.includes(option.value)} onChange={() => toggleCapHoc(option.value)} />
+                  <input type="checkbox" checked={capHoc.includes(option.value as CapHocValue)} onChange={() => toggleCapHoc(option.value as CapHocValue)} />
                   {option.label}
                 </label>
               ))}
@@ -606,6 +633,7 @@ export function SchoolYearSetup() {
         activeYear={activeYear ?? null}
         assignments={assignments}
         canManageAssignments={canManageAssignments}
+        capHocList={school?.cap_hoc ?? []}
         criteria={criteria}
         supabase={supabase}
         users={assignmentUsers}
@@ -1007,6 +1035,7 @@ function AssignmentManager(props: {
   activeYear: SchoolYear | null;
   assignments: Assignment[];
   canManageAssignments: boolean;
+  capHocList: CapHocValue[];
   criteria: Criterion[];
   supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
   users: ManagedUser[];
@@ -1014,10 +1043,16 @@ function AssignmentManager(props: {
   onMessage: (message: string) => void;
 }) {
   const assignableUsers = useMemo(
-    () => props.users.filter((user) => user.trang_thai === "active"),
+    () => props.users.filter((user) => {
+      const roleCodes = (user.nguoi_dung_vai_tro ?? [])
+        .map((item) => Array.isArray(item.vai_tro) ? item.vai_tro[0]?.ma : item.vai_tro?.ma)
+        .filter(Boolean);
+      return user.trang_thai === "active" && roleCodes.some((role) => role === "MEMBER" || role === "TEACHER");
+    }),
     [props.users],
   );
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [selectedCapHoc, setSelectedCapHoc] = useState<CapHocValue>(props.capHocList[0] ?? "mam_non");
   const [selectedCriterionIds, setSelectedCriterionIds] = useState<string[]>([]);
   const [assignmentRole, setAssignmentRole] = useState("phu_trach_nhap_lieu");
   const [saving, setSaving] = useState(false);
@@ -1025,7 +1060,9 @@ function AssignmentManager(props: {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const userId = selectedUserId || assignableUsers[0]?.id || "";
-      const userAssignments = props.assignments.filter((item) => item.nguoi_dung_id === userId);
+      const userAssignments = props.assignments.filter(
+        (item) => item.nguoi_dung_id === userId && item.cap_hoc === selectedCapHoc,
+      );
 
       setSelectedUserId(userId);
       setSelectedCriterionIds(userAssignments.map((item) => item.tieu_chi_id));
@@ -1033,7 +1070,7 @@ function AssignmentManager(props: {
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [assignableUsers, props.assignments, selectedUserId]);
+  }, [assignableUsers, props.assignments, selectedCapHoc, selectedUserId]);
 
   function toggleCriterion(id: string) {
     setSelectedCriterionIds((current) =>
@@ -1052,6 +1089,7 @@ function AssignmentManager(props: {
 
     const { error } = await props.supabase.rpc("fn_phan_cong_tieu_chi_cho_nguoi_dung", {
       p_nam_hoc_id: props.activeYear.id,
+      p_cap_hoc: selectedCapHoc,
       p_nguoi_dung_id: selectedUserId,
       p_tieu_chi_ids: selectedCriterionIds,
       p_vai_tro_trong_tieu_chi: assignmentRole,
@@ -1083,7 +1121,7 @@ function AssignmentManager(props: {
         </p>
       ) : (
         <div className="grid gap-4 p-5">
-          <div className="grid gap-4 lg:grid-cols-[1fr_260px_auto]">
+          <div className="grid gap-4 lg:grid-cols-[1fr_180px_240px_auto]">
             <label className="text-sm font-medium">
               Người được phân công
               <select
@@ -1095,6 +1133,21 @@ function AssignmentManager(props: {
                 {assignableUsers.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.ho_ten} {user.email ? `- ${user.email}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              Cấp học
+              <select
+                className="form-control mt-2"
+                disabled={!props.canManageAssignments}
+                value={selectedCapHoc}
+                onChange={(event) => setSelectedCapHoc(event.target.value as CapHocValue)}
+              >
+                {props.capHocList.map((cap) => (
+                  <option key={cap} value={cap}>
+                    {capHocOptions.find((option) => option.value === cap)?.label ?? cap}
                   </option>
                 ))}
               </select>

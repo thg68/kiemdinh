@@ -8,7 +8,7 @@ export default function AuditLogPage() {
     <ApplicationShell
       active="audit"
       title="Nhật ký thao tác"
-      description="Theo dõi các thao tác đọc, ghi và phê duyệt trong phạm vi đơn vị để phục vụ kiểm soát nội bộ."
+      description="Theo dõi các thao tác thay đổi và phê duyệt trong phạm vi đơn vị để phục vụ kiểm soát nội bộ."
     >
       <AuditLogWorkspace />
     </ApplicationShell>

@@ -10,6 +10,7 @@ import {
 } from "@/lib/supabase/client";
 import { classifyLoginFailure } from "@/lib/observability/auth-events";
 import { Alert } from "@/components/ui/alert";
+import { firstRouteForRoles } from "@/lib/auth/navigation";
 
 type AuthMode = "dang_nhap" | "dang_ky";
 type MessageTone = "danger" | "info" | "success" | "warning";
@@ -116,7 +117,12 @@ export function LoginForm() {
     }
 
     if (mode === "dang_nhap") {
-      router.push("/thiet-lap");
+      const { data: roleData, error: roleError } = await supabase.rpc("fn_user_role_labels");
+      const roleCodes = roleError
+        ? []
+        : ((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma);
+
+      router.replace(firstRouteForRoles(roleCodes));
       return;
     }
 

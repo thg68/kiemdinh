@@ -59,7 +59,7 @@ Quản lý người dùng nằm trong `/thiet-lap`: người dùng mới cần t
 
 Kho minh chứng nằm tại `/minh-chung`; kiểm tra sức khỏe minh chứng tại `/minh-chung/suc-khoe`.
 
-Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board và What-if.
+Tự đánh giá nằm tại `/tu-danh-gia`; chọn cấp học, nhập mô tả theo từng tiêu chí, gắn mã minh chứng từ kho M2 rồi xem Gap Board. Nhóm quản lý có thể mở **Mô phỏng phương án** để thử nhiều tiêu chí và tìm lộ trình nâng mức mà không thay đổi dữ liệu thật.
 
 Xuất báo cáo nằm tại `/bao-cao`; chọn năm học và cấp học để tải Mẫu 1, Mẫu 2, danh mục minh chứng, gói minh chứng và JSON dự phòng.
 
@@ -79,10 +79,13 @@ Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-li
 - `docs/huong-dan-thu-ky-hoi-dong.md`: hướng dẫn sử dụng cho Thư ký hội đồng.
 - `docs/huong-dan-giao-vien.md`: hướng dẫn sử dụng cho Giáo viên.
 - `docs/kich-ban-video-demo-10-phut.md`: kịch bản quay video demo 10 phút.
+- `docs/kich-ban-gioi-thieu-va-huong-dan-su-dung.md`: kịch bản thuyết trình 12 phút, thao tác demo và hướng dẫn nhanh theo vai trò.
 - `docs/definition-of-done-m0-m4.md`: kiểm tra Định nghĩa Hoàn thành cho M0-M4.
 - `docs/nhap-noi-dung-phu-luc-tt57.md`: nguyên tắc nhập nội dung phụ lục TT57 vào bảng dữ liệu.
 - `docs/phan-quyen-phu-luc-b.md`: mô tả phân quyền và RLS theo Phụ lục B.
 - `docs/luong-man-hinh-theo-vai-tro.md`: mapping vai trò với các màn hình thao tác chính.
+- `docs/MATRAN-NANG-LUC-VAI-TRO.md`: ma trận capability được unit test đối chiếu với mã nguồn.
+- `docs/RUNBOOK-BOOTSTRAP-SYSTEM-ADMIN.md`: quy trình một lần để tạo quản trị hệ thống đầu tiên.
 - `docs/SPRINT-14-RESULT.md`: quyết định versioning cho mã minh chứng và kết quả kiểm thử hồi quy.
 - `docs/SPRINT-15-RESULT.md`: kết quả hardening luồng tải, kiểm tra và hoàn tất minh chứng.
 - `docs/SPRINT-15-OPERATIONS.md`: thứ tự triển khai, kiểm tra và xử lý object tải lỗi.
@@ -139,7 +142,7 @@ Các định dạng đã có: Mẫu 1 `.docx`, Mẫu 2 `.docx`, danh mục minh 
 - Thử lưu Mức 2 khi thiếu mô tả Mức 2; phải bị từ chối.
 - Sau khi nâng hoặc hạ mức, kiểm tra `lich_su_tu_danh_gia` có dòng ghi người đổi, mức cũ, mức mới và thời điểm.
 - Gap Board phải tô nổi tiêu chí bắt buộc chưa đạt và cập nhật kết quả ngay sau khi lưu.
-- What-if đổi tạm một tiêu chí lên Mức 1 hoặc Mức 2; kết quả trên màn hình thay đổi nhưng CSDL không phát sinh bản ghi mới.
+- Mô phỏng lộ trình đề xuất tổ hợp tiêu chí tối thiểu để đạt Mức 1 hoặc Mức 2; người dùng có thể thử nhiều tiêu chí cùng lúc nhưng CSDL không phát sinh bản ghi mới.
 - Dùng vai trò không được phân công để ghi tiêu chí; RLS/RPC phải từ chối thao tác.
 
 ## Checklist Kiểm Thử Thủ Công Sprint 4

@@ -11,6 +11,7 @@ const NAM_HOC_ID = "11111111-1111-4111-8111-111111111111";
 const TIEU_CHI_ID = "22222222-2222-4222-8222-222222222222";
 
 const validBody = {
+  requestKey: "33333333-3333-4333-8333-333333333333",
   namHocId: NAM_HOC_ID,
   tieuChiIds: [TIEU_CHI_ID],
   tieuChiGocId: TIEU_CHI_ID,
@@ -26,7 +27,7 @@ function mockSupabase(options: {
   userError?: { message: string } | null;
   downloadData?: Blob | null;
   downloadError?: { message: string } | null;
-  rpcData?: string | null;
+  rpcData?: { id: string; created: boolean } | null;
   rpcError?: { code?: string; message: string } | null;
 } = {}) {
   const getUser = vi.fn().mockResolvedValue({
@@ -41,7 +42,7 @@ function mockSupabase(options: {
     error: options.downloadError ?? null,
   });
   const rpc = vi.fn().mockResolvedValue({
-    data: options.rpcData === undefined ? "evidence-1" : options.rpcData,
+    data: options.rpcData === undefined ? { id: "evidence-1", created: true } : options.rpcData,
     error: options.rpcError ?? null,
   });
   const client = {
@@ -126,13 +127,24 @@ describe("API hoàn tất tệp minh chứng", () => {
     expect(body.id).toBe("evidence-1");
     expect(download).toHaveBeenCalledWith(validBody.storagePath);
     expect(rpc).toHaveBeenCalledWith(
-      "fn_tao_minh_chung",
+      "fn_tao_minh_chung_idempotent",
       expect.objectContaining({
+        p_finalize_key: validBody.requestKey,
         p_hash_tep: expect.stringMatching(/^[0-9a-f]{64}$/),
         p_kich_thuoc: 18,
         p_loai_tep: "application/pdf",
       }),
     );
+  });
+
+  it("trả lại cùng minh chứng khi finalize được retry", async () => {
+    mockSupabase({ rpcData: { id: "evidence-1", created: false } });
+
+    const response = await callRoute();
+    const body = (await response.json()) as { id?: string; idempotent?: boolean };
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ id: "evidence-1", idempotent: true });
   });
 
   it("từ chối tên tệp gốc không an toàn trước khi đọc Storage", async () => {

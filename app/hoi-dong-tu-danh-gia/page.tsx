@@ -8,7 +8,7 @@ export default function CouncilPage() {
     <ApplicationShell
       active="council"
       title="Hội đồng tự đánh giá"
-      description="Quản lý thông tin hội đồng, quyết định thành lập và danh sách thành viên dùng trong Mẫu 1."
+      description={"Quản lý thông tin hội đồng, quyết định thành lập và danh sách thành viên dùng trong Mẫu\u00a01."}
     >
       <CouncilWorkspace />
     </ApplicationShell>

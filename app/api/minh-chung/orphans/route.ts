@@ -10,7 +10,10 @@ import {
   logOperationalAlert,
   logServerError,
 } from "@/lib/observability/logger";
-import { getRequestContext } from "@/lib/observability/request-context";
+import {
+  getRequestContext,
+  withRequestId,
+} from "@/lib/observability/request-context";
 
 type OrphanStorageObject = {
   storage_path: string;
@@ -52,8 +55,10 @@ function parseMinimumAge(request: NextRequest) {
   return value;
 }
 
-async function loadOrphans(request: NextRequest) {
-  const requestContext = getRequestContext(request);
+async function loadOrphans(
+  request: NextRequest,
+  requestContext: ReturnType<typeof getRequestContext>,
+) {
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -113,11 +118,12 @@ async function loadOrphans(request: NextRequest) {
   };
 }
 
-export async function GET(request: NextRequest) {
-  const requestContext = getRequestContext(request);
-
+async function listOrphans(
+  request: NextRequest,
+  requestContext: ReturnType<typeof getRequestContext>,
+) {
   try {
-    const result = await loadOrphans(request);
+    const result = await loadOrphans(request, requestContext);
 
     if (result.response) {
       return result.response;
@@ -137,11 +143,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
-  const requestContext = getRequestContext(request);
-
+async function deleteOrphans(
+  request: NextRequest,
+  requestContext: ReturnType<typeof getRequestContext>,
+) {
   try {
-    const result = await loadOrphans(request);
+    const result = await loadOrphans(request, requestContext);
 
     if (result.response) {
       return result.response;
@@ -221,4 +228,16 @@ export async function DELETE(request: NextRequest) {
       "Không thể dọn tệp tải lỗi lúc này.",
     );
   }
+}
+
+export async function GET(request: NextRequest) {
+  const requestContext = getRequestContext(request);
+  const response = await listOrphans(request, requestContext);
+  return withRequestId(response, requestContext.requestId);
+}
+
+export async function DELETE(request: NextRequest) {
+  const requestContext = getRequestContext(request);
+  const response = await deleteOrphans(request, requestContext);
+  return withRequestId(response, requestContext.requestId);
 }

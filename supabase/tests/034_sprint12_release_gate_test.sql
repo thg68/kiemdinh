@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -76,7 +77,7 @@ select ok(
   'Cong thi diem chan nam hoc chua du 100 minh chung'
 );
 
-reset role;
+set local role postgres;
 
 insert into public.minh_chung(
   id, co_so_id, nam_hoc_id, ma, ten, trang_thai_xac_minh, nguoi_tai_len,
@@ -150,7 +151,7 @@ select is(
   'Cong thi diem xac nhan du 15 tieu chi co minh chung'
 );
 
-reset role;
+set local role postgres;
 
 insert into public.minh_chung(
   id, co_so_id, nam_hoc_id, ma, ten, trang_thai_xac_minh, nguoi_tai_len
@@ -187,7 +188,7 @@ select ok(
   'Cong thi diem khong dat khi con du lieu demo'
 );
 
-reset role;
+set local role postgres;
 
 select throws_ok(
   $$insert into public.bao_cao(

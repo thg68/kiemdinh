@@ -7,6 +7,7 @@ import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
 
 export type AppProfile = {
   id: string;
@@ -20,6 +21,7 @@ export type AppSchool = {
   ten: string;
   loai_hinh: string;
   cap_hoc: string[] | null;
+  ma_truong?: string | null;
 };
 
 export type AppSchoolYear = {
@@ -43,6 +45,7 @@ export function useAppContext() {
   const [years, setYears] = useState<AppSchoolYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const contextRequest = useScopedRequest("current-user-context");
 
   const activeYear = years.find((year) => year.trang_thai === "dang_hoat_dong") ?? years[0];
 
@@ -55,8 +58,11 @@ export function useAppContext() {
 
     setLoading(true);
     setMessage("");
+    const request = contextRequest.begin("context");
 
     const { data: userData } = await supabase.auth.getUser();
+
+    if (!contextRequest.isCurrent(request)) return;
 
     if (!userData.user) {
       router.replace("/login");
@@ -69,6 +75,8 @@ export function useAppContext() {
       .eq("auth_user_id", userData.user.id)
       .maybeSingle();
 
+    if (!contextRequest.isCurrent(request)) return;
+
     if (profileError || !profileData) {
       setMessage(toUserMessage(profileError, "Bạn cần thuộc một cơ sở giáo dục trước khi dùng chức năng này."));
       setLoading(false);
@@ -79,7 +87,7 @@ export function useAppContext() {
       await Promise.all([
         supabase
           .from("co_so_giao_duc")
-          .select("id, ten, loai_hinh, cap_hoc")
+          .select("id, ten, loai_hinh, cap_hoc, ma_truong")
           .eq("id", profileData.co_so_id)
           .maybeSingle(),
         supabase
@@ -88,6 +96,8 @@ export function useAppContext() {
           .eq("co_so_id", profileData.co_so_id)
           .order("ngay_bat_dau", { ascending: false }),
       ]);
+
+    if (!contextRequest.isCurrent(request)) return;
 
     if (schoolError || yearError) {
       setMessage(toUserMessage(schoolError ?? yearError, "Không tải được thông tin đơn vị. Vui lòng thử lại."));
@@ -99,7 +109,7 @@ export function useAppContext() {
     setSchool(schoolData as AppSchool | null);
     setYears((yearData ?? []) as AppSchoolYear[]);
     setLoading(false);
-  }, [router, supabase]);
+  }, [contextRequest, router, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

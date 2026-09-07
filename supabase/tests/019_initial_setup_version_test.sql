@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -36,11 +37,11 @@ select throws_ok(
     'Unauthorized School', 'UNAUTHORIZED-019', 'mam_non', array['mam_non']::public.cap_hoc[],
     '2026-2027', '2026-08-01', '2027-05-31', 'principal@onboarding.test', 'UAT Principal'
   )$$,
-  'P0001', 'Chỉ Quản trị hệ thống được tạo đơn vị mới.',
+  '42501', 'Chỉ Quản trị hệ thống được tạo đơn vị mới.',
   'Tai khoan thuong khong the dung RPC quan tri de tao don vi'
 );
 
-reset role;
+set local role postgres;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000019001', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -53,7 +54,7 @@ select lives_ok(
   'Quan tri he thong tao don vi, nam hoc va loi moi Hieu truong'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (select count(*) from public.nam_hoc nh
@@ -87,7 +88,7 @@ select lives_ok(
   'Hieu truong chap nhan loi moi thanh cong'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (select count(*) from public.nguoi_dung nd
@@ -111,7 +112,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000019004
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select is((select count(*) from public.fn_danh_sach_loi_moi_cua_toi()), 0::bigint, 'Tai khoan khac khong nhin thay loi moi');
 
-reset role;
+set local role postgres;
 
 select is(
   (select count(*) from public.nguoi_dung where auth_user_id = '00000000-0000-0000-0000-000000019002'),
@@ -136,7 +137,7 @@ select lives_ok(
   'Hieu truong gui loi moi Giao vien bang email'
 );
 
-reset role;
+set local role postgres;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000019005', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -148,7 +149,7 @@ select lives_ok(
   'Giao vien chap nhan loi moi thanh cong'
 );
 
-reset role;
+set local role postgres;
 
 select is(
   (select count(*) from public.nguoi_dung nd

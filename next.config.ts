@@ -3,6 +3,10 @@ import { buildSecurityHeaders } from "./lib/security/headers";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Keep local Windows and small CI builders below their memory ceiling.
+    cpus: 1,
+  },
   async headers() {
     return [
       {

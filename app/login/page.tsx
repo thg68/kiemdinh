@@ -19,8 +19,8 @@ export default function LoginPage() {
             Đăng nhập hệ thống quản trị nhà trường
           </h1>
           <p className="page-copy mt-6">
-            Sau khi đăng nhập, tài khoản mới sẽ tạo cơ sở giáo dục và năm học
-            đang hoạt động trong bước thiết lập ban đầu.
+            Tài khoản được mời sẽ tham gia đúng đơn vị và nhận vai trò đã được phân công.
+            Người có quyền quản trị mới có thể tạo đơn vị hoặc thiết lập năm học.
           </p>
           <div className="mt-8 grid gap-3 text-sm text-[var(--color-graphite)]/78 sm:grid-cols-3">
             <div className="surface-card p-4">Phân quyền theo đơn vị</div>

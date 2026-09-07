@@ -1,0 +1,4 @@
+-- Supabase CLI connects through an ephemeral role. Tests explicitly use the
+-- privileged fixture role so RESET ROLE never depends on the connection user.
+set local role postgres;
+set local search_path = public, extensions;

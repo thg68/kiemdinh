@@ -34,6 +34,14 @@ test("đăng nhập có nhãn form và thao tác được hoàn toàn bằng bà
   await expect(page.locator(":focus")).not.toHaveCount(0);
 });
 
+test("liên kết khôi phục hết hạn hiển thị lỗi và cho yêu cầu liên kết mới", async ({ page }) => {
+  await page.goto("/quen-mat-khau?error=access_denied&error_code=otp_expired");
+
+  await expect(page.getByText("Liên kết khôi phục không hợp lệ, đã hết hạn hoặc đã được sử dụng.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Gửi liên kết đặt lại" })).toBeVisible();
+  await expect(page).toHaveURL(/\/quen-mat-khau$/);
+});
+
 test("menu giáo viên chỉ hiện các khu vực phù hợp với vai trò", async ({ page }) => {
   test.skip(!hasCredentials("TEACHER"), "Thiếu tài khoản Giáo viên staging.");
   await loginAs(page, "TEACHER");

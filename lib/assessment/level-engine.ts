@@ -26,6 +26,13 @@ export type KetQuaTheoCapHoc = {
   ketQuaTieuChi: KetQuaTieuChi[];
 };
 
+export type MucHieuLuc = 0 | 1 | 2;
+
+type KetQuaTieuChiDaTinh = {
+  mucDat: MucHieuLuc;
+  nguon: KetQuaTieuChi;
+};
+
 function coNoiDung(value?: string | null) {
   return Boolean(value?.trim());
 }
@@ -83,8 +90,18 @@ export function kiemTraRangBuocCapNhat(item: KetQuaTieuChi) {
   };
 }
 
-function demTheoMuc(items: KetQuaTieuChi[], mucToiThieu: 1 | 2) {
-  return items.filter((item) => mucHopLe(item) >= mucToiThieu).length;
+function chuanHoaVaTinhMuc(
+  ketQuaTieuChi: KetQuaTieuChi[],
+  mucGiaDinh?: ReadonlyMap<string, MucHieuLuc>,
+) {
+  return chuanHoaKetQuaTieuChi(ketQuaTieuChi).map<KetQuaTieuChiDaTinh>((item) => ({
+    mucDat: mucGiaDinh?.get(item.ma) ?? mucHopLe(item),
+    nguon: item,
+  }));
+}
+
+function demTheoMuc(items: KetQuaTieuChiDaTinh[], mucToiThieu: 1 | 2) {
+  return items.filter((item) => item.mucDat >= mucToiThieu).length;
 }
 
 function labelMuc(muc: 0 | 1 | 2) {
@@ -99,26 +116,26 @@ function labelMuc(muc: 0 | 1 | 2) {
   return "chưa đạt Mức 1";
 }
 
-function taoChan(items: KetQuaTieuChi[], mucToiThieu: 1 | 2) {
+function taoChan(items: KetQuaTieuChiDaTinh[], mucToiThieu: 1 | 2) {
   return items
-    .filter((item) => mucHopLe(item) < mucToiThieu)
+    .filter((item) => item.mucDat < mucToiThieu)
     .map((item) => {
-      const rangBuoc = kiemTraRangBuocCapNhat(item);
-      const thieuDuLieu = rangBuoc.loi.length > 0 && mucHopLe(item) === 0 && item.mucDat >= mucToiThieu;
+      const rangBuoc = kiemTraRangBuocCapNhat(item.nguon);
+      const thieuDuLieu = rangBuoc.loi.length > 0 && item.mucDat === 0 && item.nguon.mucDat >= mucToiThieu;
 
       if (thieuDuLieu) {
-        return `${item.ma} thiếu mô tả hiện trạng hoặc mã minh chứng`;
+        return `${item.nguon.ma} thiếu mô tả hiện trạng hoặc mã minh chứng`;
       }
 
-      return `${item.ma} ${labelMuc(mucHopLe(item))}`;
+      return `${item.nguon.ma} ${labelMuc(item.mucDat)}`;
     });
 }
 
-function taoKhoangCachLenMuc2(batBuoc: KetQuaTieuChi[], conLai: KetQuaTieuChi[]) {
-  const batBuocCanNang = batBuoc.filter((item) => mucHopLe(item) < 2).length;
+function taoKhoangCachLenMuc2(batBuoc: KetQuaTieuChiDaTinh[], conLai: KetQuaTieuChiDaTinh[]) {
+  const batBuocCanNang = batBuoc.filter((item) => item.mucDat < 2).length;
   const conLaiMuc2 = demTheoMuc(conLai, 2);
   const conLaiCanNang = Math.max(0, 5 - conLaiMuc2);
-  const conLaiDuoiMuc1 = conLai.filter((item) => mucHopLe(item) < 1).length;
+  const conLaiDuoiMuc1 = conLai.filter((item) => item.mucDat < 1).length;
 
   const parts = [
     `Cần nâng ${batBuocCanNang} tiêu chí bắt buộc lên Mức 2`,
@@ -132,17 +149,16 @@ function taoKhoangCachLenMuc2(batBuoc: KetQuaTieuChi[], conLai: KetQuaTieuChi[])
   return parts.join(" và ");
 }
 
-function taoKhoangCachLenMuc1(batBuoc: KetQuaTieuChi[], conLai: KetQuaTieuChi[]) {
-  const batBuocCanDat = batBuoc.filter((item) => mucHopLe(item) < 1).length;
+function taoKhoangCachLenMuc1(batBuoc: KetQuaTieuChiDaTinh[], conLai: KetQuaTieuChiDaTinh[]) {
+  const batBuocCanDat = batBuoc.filter((item) => item.mucDat < 1).length;
   const conLaiCanDat = Math.max(0, 5 - demTheoMuc(conLai, 1));
 
   return `Cần hoàn thành ${batBuocCanDat} tiêu chí bắt buộc và ${conLaiCanDat} tiêu chí còn lại ở Mức 1`;
 }
 
-export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc {
-  const ketQuaDaChuanHoa = chuanHoaKetQuaTieuChi(ketQuaTieuChi);
-  const batBuoc = ketQuaDaChuanHoa.filter((item) => item.laBatBuoc);
-  const conLai = ketQuaDaChuanHoa.filter((item) => !item.laBatBuoc);
+function tinhMucTuKetQuaDaChuanHoa(ketQuaDaChuanHoa: KetQuaTieuChiDaTinh[]): GiaiTrinhMuc {
+  const batBuoc = ketQuaDaChuanHoa.filter((item) => item.nguon.laBatBuoc);
+  const conLai = ketQuaDaChuanHoa.filter((item) => !item.nguon.laBatBuoc);
 
   if (ketQuaDaChuanHoa.length !== 15 || batBuoc.length !== 8 || conLai.length !== 7) {
     return {
@@ -156,7 +172,7 @@ export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc
   const batBuocMuc1 = demTheoMuc(batBuoc, 1);
   const conLaiMuc2 = demTheoMuc(conLai, 2);
   const conLaiMuc1 = demTheoMuc(conLai, 1);
-  const conLaiDuoiMuc1 = conLai.filter((item) => mucHopLe(item) < 1);
+  const conLaiDuoiMuc1 = conLai.filter((item) => item.mucDat < 1);
 
   if (batBuocMuc2 === batBuoc.length && conLaiMuc2 >= 5 && conLaiDuoiMuc1.length === 0) {
     return {
@@ -174,7 +190,7 @@ export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc
       chanLenMucTiepTheo: [
         ...taoChan(batBuoc, 2),
         ...taoChan(conLai, 2).slice(0, Math.max(0, 5 - conLaiMuc2)),
-        ...conLaiDuoiMuc1.map((item) => `${item.ma} chưa đạt tối thiểu Mức 1`),
+        ...conLaiDuoiMuc1.map((item) => `${item.nguon.ma} chưa đạt tối thiểu Mức 1`),
       ],
       khoangCach: taoKhoangCachLenMuc2(batBuoc, conLai),
     };
@@ -191,6 +207,17 @@ export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc
   };
 }
 
+export function xacDinhMucTuKetQua(ketQuaTieuChi: KetQuaTieuChi[]): GiaiTrinhMuc {
+  return tinhMucTuKetQuaDaChuanHoa(chuanHoaVaTinhMuc(ketQuaTieuChi));
+}
+
+export function xacDinhMucVoiGiaDinh(
+  ketQuaTieuChi: KetQuaTieuChi[],
+  mucGiaDinh: ReadonlyMap<string, MucHieuLuc>,
+): GiaiTrinhMuc {
+  return tinhMucTuKetQuaDaChuanHoa(chuanHoaVaTinhMuc(ketQuaTieuChi, mucGiaDinh));
+}
+
 function mucThuTu(muc: MucDatCapHoc) {
   if (muc === "Đạt Mức 2") {
     return 2;
@@ -203,10 +230,10 @@ function mucThuTu(muc: MucDatCapHoc) {
   return 0;
 }
 
-export function xacDinhMucToanTruongTuKetQua(
-  cacCapHoc: KetQuaTheoCapHoc[],
+function tongHopMucToanTruong(
+  ketQua: Array<{ capHoc: CapHoc; giaiTrinh: GiaiTrinhMuc }>,
 ): GiaiTrinhMuc<MucDatToanTruong> {
-  if (cacCapHoc.length === 0) {
+  if (ketQua.length === 0) {
     return {
       mucDat: "Không đạt",
       lyDo: "Chưa có cấp học nào để xác định mức toàn trường.",
@@ -215,10 +242,6 @@ export function xacDinhMucToanTruongTuKetQua(
     };
   }
 
-  const ketQua = cacCapHoc.map((cap) => ({
-    capHoc: cap.capHoc,
-    giaiTrinh: xacDinhMucTuKetQua(cap.ketQuaTieuChi),
-  }));
   const coCapKhongDat = ketQua.some((item) => item.giaiTrinh.mucDat === "Không đạt Mức 1");
 
   if (coCapKhongDat) {
@@ -242,4 +265,26 @@ export function xacDinhMucToanTruongTuKetQua(
         ? "Toàn trường đã đạt mức cao nhất theo khung hiện tại."
         : "Mức toàn trường lấy theo cấp học có mức thấp nhất.",
   };
+}
+
+export function xacDinhMucToanTruongTuKetQua(
+  cacCapHoc: KetQuaTheoCapHoc[],
+): GiaiTrinhMuc<MucDatToanTruong> {
+  return tongHopMucToanTruong(cacCapHoc.map((cap) => ({
+    capHoc: cap.capHoc,
+    giaiTrinh: xacDinhMucTuKetQua(cap.ketQuaTieuChi),
+  })));
+}
+
+export function xacDinhMucToanTruongVoiGiaDinh(
+  cacCapHoc: KetQuaTheoCapHoc[],
+  capHocGiaDinh: CapHoc,
+  mucGiaDinh: ReadonlyMap<string, MucHieuLuc>,
+): GiaiTrinhMuc<MucDatToanTruong> {
+  return tongHopMucToanTruong(cacCapHoc.map((cap) => ({
+    capHoc: cap.capHoc,
+    giaiTrinh: cap.capHoc === capHocGiaDinh
+      ? xacDinhMucVoiGiaDinh(cap.ketQuaTieuChi, mucGiaDinh)
+      : xacDinhMucTuKetQua(cap.ketQuaTieuChi),
+  })));
 }

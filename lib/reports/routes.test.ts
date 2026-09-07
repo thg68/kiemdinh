@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { collectReportData, createRequestSupabaseClient, enforceRateLimit } = vi.hoisted(() => ({
+const { collectReportData, createRequestSupabaseClient, enforceRateLimit, rpc } = vi.hoisted(() => ({
   collectReportData: vi.fn(),
-  createRequestSupabaseClient: vi.fn(() => ({ rpc: vi.fn() })),
+  rpc: vi.fn(),
+  createRequestSupabaseClient: vi.fn(() => ({ rpc })),
   enforceRateLimit: vi.fn().mockResolvedValue({
     allowed: true,
     remaining: 9,
@@ -21,8 +22,9 @@ vi.mock("@/lib/api/rate-limit", () => ({
 }));
 
 import { ApiError } from "@/lib/api/errors";
+import { isRequestId } from "@/lib/observability/request-context";
 import { EvidenceZipStorageError } from "./errors";
-import { downloadResponse, logReportExport, withReportData } from "./routes";
+import { downloadResponse, withReportData } from "./routes";
 
 const yearId = "8f6f40d1-e3fe-4eb0-a576-801367e1d9b1";
 
@@ -37,6 +39,7 @@ describe("API xuất báo cáo", () => {
     collectReportData.mockReset();
     createRequestSupabaseClient.mockClear();
     enforceRateLimit.mockClear();
+    rpc.mockReset();
     enforceRateLimit.mockResolvedValue({
       allowed: true,
       remaining: 9,
@@ -48,6 +51,7 @@ describe("API xuất báo cáo", () => {
     const response = await withReportData(request(undefined, false), vi.fn());
 
     expect(response.status).toBe(401);
+    expect(isRequestId(response.headers.get("x-request-id"))).toBe(true);
     expect(createRequestSupabaseClient).not.toHaveBeenCalled();
   });
 
@@ -82,6 +86,18 @@ describe("API xuất báo cáo", () => {
     const response = await withReportData(request(), vi.fn());
     expect(response.status).toBe(403);
     expect(await response.json()).toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  it("trả 403 khi RPC niêm phong từ chối quyền xuất báo cáo", async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: "42501" } });
+
+    const response = await withReportData(request(), vi.fn(), {
+      reportType: "du_lieu_nam_hoc_json",
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "FORBIDDEN" });
+    expect(collectReportData).not.toHaveBeenCalled();
   });
 
   it("không suy luận 403 từ nội dung câu tiếng Việt", async () => {
@@ -163,7 +179,44 @@ describe("API xuất báo cáo", () => {
     expect(enforceRateLimit).toHaveBeenCalledWith(expect.anything(), "report_export");
     expect(collectReportData).toHaveBeenCalledWith(expect.anything(), yearId, "mam_non");
     expect(handler).toHaveBeenCalledWith(expect.objectContaining({ data: reportData }));
+    expect(isRequestId(response.headers.get("x-request-id"))).toBe(true);
     expect(await response.text()).toBe("ok");
+  });
+
+  it("gắn digest nguồn vào file khi dữ liệu không đổi trong lúc xuất", async () => {
+    const reportData = { year: { id: yearId }, capHoc: "mam_non" };
+    const digest = "a".repeat(64);
+    collectReportData.mockResolvedValue(reportData);
+    rpc.mockResolvedValue({
+      data: { digest, manifest: { schema_version: 1 } },
+      error: null,
+    });
+
+    const response = await withReportData(
+      request(),
+      vi.fn().mockResolvedValue(new Response("file")),
+      { reportType: "mau_1_tu_danh_gia" },
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-report-source-digest")).toBe(digest);
+    expect(rpc).toHaveBeenCalledTimes(2);
+  });
+
+  it("trả 409 nếu nguồn thay đổi trong lúc tạo file", async () => {
+    collectReportData.mockResolvedValue({ year: { id: yearId }, capHoc: "mam_non" });
+    rpc
+      .mockResolvedValueOnce({ data: { digest: "a".repeat(64), manifest: {} }, error: null })
+      .mockResolvedValueOnce({ data: { digest: "b".repeat(64), manifest: {} }, error: null });
+
+    const response = await withReportData(
+      request(),
+      vi.fn().mockResolvedValue(new Response("file")),
+      { reportType: "mau_1_tu_danh_gia" },
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "CONFLICT" });
   });
 
   it("trả 429 trước khi tải dữ liệu khi hết lượt xuất", async () => {
@@ -194,30 +247,4 @@ describe("API xuất báo cáo", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
   });
 
-  it("ghi nhật ký với loại báo cáo, năm học và cấp học", async () => {
-    const rpc = vi.fn().mockResolvedValue({ error: null });
-    await logReportExport({
-      data: { year: { id: "year-1" }, capHoc: "mam_non" },
-      supabase: { rpc },
-    } as never, "mau_1_tu_danh_gia");
-
-    expect(rpc).toHaveBeenCalledWith("fn_log_user_access", {
-      p_hanh_dong: "REPORT_EXPORTED",
-      p_doi_tuong_id: "year-1",
-      p_du_lieu_moi: {
-        loai_bao_cao: "mau_1_tu_danh_gia",
-        nam_hoc_id: "year-1",
-        cap_hoc: "mam_non",
-      },
-    });
-  });
-
-  it("không coi xuất báo cáo là thành công khi audit thất bại", async () => {
-    const rpc = vi.fn().mockResolvedValue({ error: { message: "audit failed" } });
-
-    await expect(logReportExport({
-      data: { year: { id: "year-1" }, capHoc: "mam_non" },
-      supabase: { rpc },
-    } as never, "mau_1_tu_danh_gia")).rejects.toThrow("Không ghi được nhật ký");
-  });
 });

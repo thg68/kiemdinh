@@ -31,6 +31,16 @@ test.describe("luồng Hiệu trưởng", () => {
     await page.getByRole("link", { name: "Nhật ký", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Nhật ký thao tác" })).toBeVisible();
   });
+
+  test("đăng xuất xóa phiên cục bộ và chặn quay lại trang nghiệp vụ", async ({ page }) => {
+    requireRole("PRINCIPAL");
+    await loginAs(page, "PRINCIPAL");
+    await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
+    await expect(page).toHaveURL(/\/login$/);
+
+    await page.goto("/dashboard");
+    await expect(page).toHaveURL(/\/login\?next=%2Fdashboard/);
+  });
 });
 
 test.describe("luồng Thư ký Hội đồng", () => {

@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { useAppContext } from "@/components/shared/use-app-context";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
 
 type RelatedDocument = {
   id: string;
@@ -18,6 +19,7 @@ type RelatedDocument = {
   ngay_het_hieu_luc: string | null;
   duong_dan: string | null;
   ghi_chu: string | null;
+  archived_at: string | null;
 };
 
 export function RelatedDocumentsWorkspace() {
@@ -34,8 +36,11 @@ export function RelatedDocumentsWorkspace() {
   const [ghiChu, setGhiChu] = useState("");
   const [loadingRows, setLoadingRows] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
+  const rowsRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}:${showArchived}`);
 
   const loadRows = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -44,13 +49,19 @@ export function RelatedDocumentsWorkspace() {
 
     setLoadingRows(true);
     setMessage("");
+    setRows([]);
+    const request = rowsRequest.begin("related-documents");
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("van_ban_lien_quan")
-      .select("id, ten, so_hieu, co_quan_ban_hanh, ngay_ban_hanh, ngay_hieu_luc, ngay_het_hieu_luc, duong_dan, ghi_chu")
+      .select("id, ten, so_hieu, co_quan_ban_hanh, ngay_ban_hanh, ngay_hieu_luc, ngay_het_hieu_luc, duong_dan, ghi_chu, archived_at")
       .eq("co_so_id", profile.co_so_id)
-      .eq("nam_hoc_id", effectiveYearId)
-      .order("ngay_ban_hanh", { ascending: false });
+      .eq("nam_hoc_id", effectiveYearId);
+
+    query = showArchived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
+    const { data, error } = await query.order("ngay_ban_hanh", { ascending: false });
+
+    if (!rowsRequest.isCurrent(request)) return;
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -60,7 +71,7 @@ export function RelatedDocumentsWorkspace() {
 
     setRows((data ?? []) as RelatedDocument[]);
     setLoadingRows(false);
-  }, [effectiveYearId, profile, setMessage, supabase]);
+  }, [effectiveYearId, profile, rowsRequest, setMessage, showArchived, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -81,18 +92,36 @@ export function RelatedDocumentsWorkspace() {
     setSaving(true);
     setMessage("");
 
-    const { error } = await supabase.from("van_ban_lien_quan").insert({
-      co_so_id: profile.co_so_id,
-      nam_hoc_id: effectiveYearId,
-      ten,
-      so_hieu: soHieu || null,
-      co_quan_ban_hanh: coQuanBanHanh || null,
+    if (ngayHieuLuc && ngayHetHieuLuc && ngayHetHieuLuc < ngayHieuLuc) {
+      setSaving(false);
+      setMessage("Ngày hết hiệu lực không được trước ngày hiệu lực.");
+      return;
+    }
+
+    const payload = {
+      ten: ten.trim(),
+      so_hieu: soHieu.trim() || null,
+      co_quan_ban_hanh: coQuanBanHanh.trim() || null,
       ngay_ban_hanh: ngayBanHanh || null,
       ngay_hieu_luc: ngayHieuLuc || null,
       ngay_het_hieu_luc: ngayHetHieuLuc || null,
-      duong_dan: duongDan || null,
-      ghi_chu: ghiChu || null,
-    });
+      duong_dan: duongDan.trim() || null,
+      ghi_chu: ghiChu.trim() || null,
+    };
+
+    const { error } = editingId
+      ? await supabase
+          .from("van_ban_lien_quan")
+          .update(payload)
+          .eq("id", editingId)
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", effectiveYearId)
+          .is("archived_at", null)
+      : await supabase.from("van_ban_lien_quan").insert({
+          co_so_id: profile.co_so_id,
+          nam_hoc_id: effectiveYearId,
+          ...payload,
+        });
 
     setSaving(false);
 
@@ -101,6 +130,14 @@ export function RelatedDocumentsWorkspace() {
       return;
     }
 
+    const successMessage = editingId ? "Đã cập nhật văn bản liên quan." : "Đã thêm văn bản liên quan.";
+    resetForm();
+    setMessage(successMessage);
+    await loadRows();
+  }
+
+  function resetForm() {
+    setEditingId("");
     setTen("");
     setSoHieu("");
     setCoQuanBanHanh("");
@@ -109,7 +146,35 @@ export function RelatedDocumentsWorkspace() {
     setNgayHetHieuLuc("");
     setDuongDan("");
     setGhiChu("");
-    setMessage("Đã thêm văn bản liên quan.");
+  }
+
+  function editDocument(row: RelatedDocument) {
+    setEditingId(row.id);
+    setTen(row.ten);
+    setSoHieu(row.so_hieu ?? "");
+    setCoQuanBanHanh(row.co_quan_ban_hanh ?? "");
+    setNgayBanHanh(row.ngay_ban_hanh ?? "");
+    setNgayHieuLuc(row.ngay_hieu_luc ?? "");
+    setNgayHetHieuLuc(row.ngay_het_hieu_luc ?? "");
+    setDuongDan(row.duong_dan ?? "");
+    setGhiChu(row.ghi_chu ?? "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function setArchived(row: RelatedDocument, archived: boolean) {
+    if (!supabase || !profile) return;
+    const { error } = await supabase
+      .from("van_ban_lien_quan")
+      .update({ archived_at: archived ? new Date().toISOString() : null })
+      .eq("id", row.id)
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", effectiveYearId);
+    if (error) {
+      setMessage(toUserMessage(error));
+      return;
+    }
+    if (editingId === row.id) resetForm();
+    setMessage(archived ? "Đã lưu trữ văn bản." : "Đã khôi phục văn bản.");
     await loadRows();
   }
 
@@ -153,7 +218,7 @@ export function RelatedDocumentsWorkspace() {
 
       <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>
         <div>
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Thêm văn bản</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">{editingId ? "Chỉnh sửa văn bản" : "Thêm văn bản"}</h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
             Chỉ TT57 là nguồn đã xác minh trong hệ thống. Các văn bản khác do nhà trường tự nhập và tự cập nhật.
           </p>
@@ -192,14 +257,20 @@ export function RelatedDocumentsWorkspace() {
             <textarea className="form-control mt-2 min-h-24" value={ghiChu} onChange={(event) => setGhiChu(event.target.value)} />
           </label>
         </div>
-        <button className="button-primary" disabled={saving}>
-          {saving ? "Đang lưu…" : "Thêm văn bản"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button className="button-primary" disabled={saving}>
+            {saving ? "Đang lưu…" : editingId ? "Lưu thay đổi" : "Thêm văn bản"}
+          </button>
+          {editingId ? <button className="button-secondary" type="button" onClick={resetForm}>Hủy chỉnh sửa</button> : null}
+        </div>
       </form>
 
       <section className="surface-card overflow-hidden">
-        <div className="border-b border-[var(--color-border)] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Danh mục văn bản</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">{showArchived ? "Văn bản đã lưu trữ" : "Danh mục văn bản"}</h2>
+          <button className="button-secondary" type="button" onClick={() => setShowArchived((value) => !value)}>
+            {showArchived ? "Xem văn bản đang dùng" : "Xem mục đã lưu trữ"}
+          </button>
         </div>
         {rows.length === 0 ? (
           <div className="p-5">
@@ -221,11 +292,14 @@ export function RelatedDocumentsWorkspace() {
                     Hiệu lực: {row.ngay_hieu_luc ?? "?"} đến {row.ngay_het_hieu_luc ?? "chưa ghi hạn"}
                   </p>
                 </div>
-                {row.duong_dan ? (
-                  <a className="button-secondary" href={row.duong_dan} rel="noreferrer" target="_blank">
-                    Mở liên kết
-                  </a>
-                ) : null}
+                <div className="flex flex-wrap gap-2 md:justify-end">
+                  {row.duong_dan ? <a className="button-secondary" href={row.duong_dan} rel="noreferrer" target="_blank">Mở liên kết</a> : null}
+                  {showArchived ? (
+                    <button className="button-secondary" type="button" onClick={() => void setArchived(row, false)}>Khôi phục</button>
+                  ) : (
+                    <><button className="button-secondary" type="button" onClick={() => editDocument(row)}>Sửa</button><button className="button-secondary" type="button" onClick={() => void setArchived(row, true)}>Lưu trữ</button></>
+                  )}
+                </div>
               </article>
             ))}
           </div>

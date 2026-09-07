@@ -7,7 +7,10 @@ import {
   logOperationalAlert,
   logServerError,
 } from "@/lib/observability/logger";
-import { getRequestContext } from "@/lib/observability/request-context";
+import {
+  getRequestContext,
+  withRequestId,
+} from "@/lib/observability/request-context";
 
 function createRequestSupabaseClient(authorization: string) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -26,11 +29,11 @@ function createRequestSupabaseClient(authorization: string) {
   });
 }
 
-export async function POST(
+async function createEvidenceSignedUrl(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
+  requestContext: ReturnType<typeof getRequestContext>,
 ) {
-  const requestContext = getRequestContext(request);
   const authorization = request.headers.get("authorization");
 
   if (!authorization) {
@@ -93,20 +96,6 @@ export async function POST(
       );
     }
 
-    const { error: auditError } = await supabase.rpc("fn_log_user_access", {
-      p_hanh_dong: "EVIDENCE_FILE_SIGNED_URL_CREATED",
-      p_doi_tuong_id: evidence.id,
-      p_du_lieu_moi: { expires_in: 600 },
-    });
-
-    if (auditError) {
-      throw new ApiError(
-        500,
-        "AUDIT_WRITE_FAILED",
-        "Không ghi nhận được lượt truy cập tệp. Vui lòng thử lại.",
-      );
-    }
-
     return NextResponse.json({ signedUrl: signedUrlData.signedUrl });
   } catch (error) {
     const status = error instanceof ApiError
@@ -125,4 +114,13 @@ export async function POST(
       "Không thể mở tệp minh chứng lúc này. Vui lòng thử lại.",
     );
   }
+}
+
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
+  const requestContext = getRequestContext(request);
+  const response = await createEvidenceSignedUrl(request, context, requestContext);
+  return withRequestId(response, requestContext.requestId);
 }

@@ -922,6 +922,34 @@ button:disabled {
   }
 }
 
+.simulation-drawer-backdrop {
+  align-items: stretch;
+  background: rgba(12, 23, 84, 0.38);
+  display: flex;
+  inset: 0;
+  justify-content: flex-end;
+  position: fixed;
+  z-index: 90;
+}
+
+.simulation-drawer {
+  background: white;
+  border-left: 1px solid var(--color-border);
+  box-shadow: -20px 0 50px rgba(12, 23, 84, 0.16);
+  height: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  width: 620px;
+}
+
+@media (max-width: 639px) {
+  .simulation-drawer {
+    border-left: 0;
+    width: 100%;
+  }
+}
+
 @media (max-width: 767px) {
   .landing-heading {
     font-size: 2.5rem;

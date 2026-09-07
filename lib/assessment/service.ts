@@ -78,19 +78,20 @@ export async function docDuLieuTinhMuc(
     throw evidenceError;
   }
 
-  const evidenceByCriterion = new Map<string, string[]>();
-  const evidenceIds = (evidenceData ?? []).map((item) => item.id);
-  const { data: evidenceLinks, error: evidenceLinkError } = evidenceIds.length
+  const loadedAssessments = (assessmentData ?? []) as TuDanhGiaRow[];
+  const assessmentIds = loadedAssessments.map((item) => item.id);
+  const { data: evidenceLinks, error: evidenceLinkError } = assessmentIds.length
     ? await supabase
-        .from("minh_chung_tieu_chi")
-        .select("minh_chung_id, tieu_chi_id")
-        .in("minh_chung_id", evidenceIds)
+        .from("tu_danh_gia_minh_chung")
+        .select("tu_danh_gia_id, minh_chung_id")
+        .in("tu_danh_gia_id", assessmentIds)
     : { data: [], error: null };
 
   if (evidenceLinkError) {
     throw evidenceLinkError;
   }
 
+  const evidenceByAssessment = new Map<string, string[]>();
   const evidenceCodeById = new Map((evidenceData ?? []).map((item) => [item.id, item.ma]));
 
   for (const link of evidenceLinks ?? []) {
@@ -98,12 +99,12 @@ export async function docDuLieuTinhMuc(
 
     if (!evidenceCode) continue;
 
-    const current = evidenceByCriterion.get(link.tieu_chi_id) ?? [];
+    const current = evidenceByAssessment.get(link.tu_danh_gia_id) ?? [];
     current.push(evidenceCode);
-    evidenceByCriterion.set(link.tieu_chi_id, current);
+    evidenceByAssessment.set(link.tu_danh_gia_id, current);
   }
 
-  const assessments = ((assessmentData ?? []) as TuDanhGiaRow[]).reduce(
+  const assessments = loadedAssessments.reduce(
     (map, item) => map.set(item.tieu_chi_id, item),
     new Map<string, TuDanhGiaRow>(),
   );
@@ -120,7 +121,7 @@ export async function docDuLieuTinhMuc(
         mucDat: row?.muc_dat ?? 0,
         moTaMuc1: row?.mo_ta_muc_1 ?? "",
         moTaMuc2: row?.mo_ta_muc_2 ?? "",
-        maMinhChung: evidenceByCriterion.get(criterion.id) ?? [],
+        maMinhChung: row ? evidenceByAssessment.get(row.id) ?? [] : [],
       };
     },
   );

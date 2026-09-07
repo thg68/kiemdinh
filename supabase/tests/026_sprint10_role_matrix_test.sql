@@ -1,4 +1,5 @@
 begin;
+\ir _bootstrap.pgtap
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
@@ -158,10 +159,10 @@ begin
   perform set_config('request.jwt.claim.role', 'authenticated', true);
   execute 'set local role authenticated';
   execute p_query into v_count;
-  execute 'reset role';
+  execute 'set local role postgres';
   return v_count;
 exception when others then
-  execute 'reset role';
+  execute 'set local role postgres';
   raise;
 end;
 $$;

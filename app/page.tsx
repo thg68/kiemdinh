@@ -19,8 +19,8 @@ const features = [
     featured: true,
   },
   {
-    title: "What-if",
-    body: "Mô phỏng tác động của từng cải tiến trước khi đưa ra quyết định.",
+    title: "Mô phỏng lộ trình",
+    body: "Thử nhiều tiêu chí và tìm phương án tối thiểu để đạt mức tiếp theo.",
     featured: true,
   },
   {
@@ -164,7 +164,7 @@ export default function Home() {
               {[
                 ["01", "Vận hành nhà trường", "Kế hoạch, phân công, chuyên môn, an toàn và hoạt động hằng ngày."],
                 ["02", "Dữ liệu & Minh chứng", "Kho minh chứng, liên kết tiêu chí, mã hóa và chỉ số chất lượng."],
-                ["03", "Đánh giá & Cải tiến", "Tự đánh giá, Gap Board, What-if, cải tiến và báo cáo."],
+                ["03", "Đánh giá & Cải tiến", "Tự đánh giá, Gap Board, mô phỏng lộ trình, cải tiến và báo cáo."],
               ].map(([step, title, body]) => (
                 <article className="surface-card surface-card-pad" key={title}>
                   <p className="text-sm font-semibold text-[var(--color-electric-cobalt)]">{step}</p>

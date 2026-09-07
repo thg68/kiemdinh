@@ -11,13 +11,15 @@ export function createRequestId() {
   return crypto.randomUUID();
 }
 
-export function getRequestContext(request: Pick<Request, "headers" | "url">) {
-  const incomingRequestId = request.headers.get(REQUEST_ID_HEADER);
+export function withRequestId(response: Response, requestId: string) {
+  response.headers.set(REQUEST_ID_HEADER, requestId);
+  return response;
+}
 
+export function getRequestContext(request: Pick<Request, "headers" | "url">) {
   return {
-    requestId: isRequestId(incomingRequestId)
-      ? incomingRequestId
-      : createRequestId(),
+    // API tự cấp ID tại biên xử lý; không tin cả UUID có hình thức hợp lệ từ client.
+    requestId: createRequestId(),
     route: new URL(request.url).pathname,
   };
 }

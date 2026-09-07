@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { useAppContext } from "@/components/shared/use-app-context";
+import { useScopedRequest } from "@/components/shared/use-scoped-request";
 import { CapHoc } from "@/lib/assessment/level-engine";
 
 type Standard = {
@@ -47,6 +48,7 @@ type Plan = {
   nguon_luc: string | null;
   minh_chung_du_kien: string | null;
   muc_do_thuc_hien: PlanStatus;
+  archived_at: string | null;
   tieu_chuan?: Standard | Standard[] | null;
   tieu_chi?: Criterion | Criterion[] | null;
   phu_trach?: User | User[] | null;
@@ -130,12 +132,16 @@ export function ImprovementPlanWorkspace() {
   const [reportSections, setReportSections] = useState<ReportSections>(emptyReportSections);
   const [savingSections, setSavingSections] = useState(false);
   const [selectedReportCapHoc, setSelectedReportCapHoc] = useState<CapHoc>("mam_non");
+  const [editingPlanId, setEditingPlanId] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
   const schoolCapHoc = (school?.cap_hoc ?? []) as CapHoc[];
   const reportCapHoc = schoolCapHoc.includes(selectedReportCapHoc)
     ? selectedReportCapHoc
     : schoolCapHoc[0] ?? "mam_non";
+  const yearRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}`);
+  const reportSectionRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}:${reportCapHoc}`);
 
   const loadReferenceData = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -144,6 +150,10 @@ export function ImprovementPlanWorkspace() {
 
     setLoadingData(true);
     setMessage("");
+    setCriteria([]);
+    setUsers([]);
+    setSelectedCriterionId("");
+    const request = yearRequest.begin("reference");
 
     const [{ data: criterionData, error: criterionError }, { data: userData, error: userError }] =
       await Promise.all([
@@ -161,6 +171,8 @@ export function ImprovementPlanWorkspace() {
           .order("ho_ten", { ascending: true }),
       ]);
 
+    if (!yearRequest.isCurrent(request)) return;
+
     if (criterionError || userError) {
       setMessage(toUserMessage(criterionError ?? userError, "Không tải được dữ liệu tham chiếu. Vui lòng thử lại."));
       setLoadingData(false);
@@ -169,25 +181,35 @@ export function ImprovementPlanWorkspace() {
 
     setCriteria((criterionData ?? []) as Criterion[]);
     setUsers((userData ?? []) as User[]);
-    setSelectedCriterionId((current) => current || ((criterionData ?? []) as Criterion[])[0]?.id || "");
+    setSelectedCriterionId(((criterionData ?? []) as Criterion[])[0]?.id || "");
     setLoadingData(false);
-  }, [effectiveYearId, profile, setMessage, supabase]);
+  }, [effectiveYearId, profile, setMessage, supabase, yearRequest]);
 
   const loadPlans = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
       return;
     }
 
-    const { count, data, error } = await supabase
+    setPlans([]);
+    setPlanCount(0);
+    const request = yearRequest.begin("plans");
+
+    let query = supabase
       .from("ke_hoach_cai_tien")
       .select(
-        "id, tieu_chuan_id, tieu_chi_id, noi_dung, muc_tieu, hoat_dong, chi_so_ket_qua, thoi_gian_bat_dau, thoi_gian_ket_thuc, phu_trach_id, nguon_luc, minh_chung_du_kien, muc_do_thuc_hien, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten), tieu_chi:tieu_chi_id(id, ma, ten, tieu_chuan_id, la_bat_buoc), phu_trach:phu_trach_id(id, ho_ten, email)",
+        "id, tieu_chuan_id, tieu_chi_id, noi_dung, muc_tieu, hoat_dong, chi_so_ket_qua, thoi_gian_bat_dau, thoi_gian_ket_thuc, phu_trach_id, nguon_luc, minh_chung_du_kien, muc_do_thuc_hien, archived_at, tieu_chuan:tieu_chuan_id(id, so_thu_tu, ten), tieu_chi:tieu_chi_id(id, ma, ten, tieu_chuan_id, la_bat_buoc), phu_trach:phu_trach_id(id, ho_ten, email)",
         { count: "exact" },
       )
       .eq("co_so_id", profile.co_so_id)
-      .eq("nam_hoc_id", effectiveYearId)
+      .eq("nam_hoc_id", effectiveYearId);
+
+    query = showArchived ? query.not("archived_at", "is", null) : query.is("archived_at", null);
+
+    const { count, data, error } = await query
       .order("created_at", { ascending: false })
       .range((page - 1) * DEFAULT_PAGE_SIZE, page * DEFAULT_PAGE_SIZE - 1);
+
+    if (!yearRequest.isCurrent(request)) return;
 
     if (error) {
       setMessage(toUserMessage(error));
@@ -196,12 +218,15 @@ export function ImprovementPlanWorkspace() {
 
     setPlans((data ?? []) as unknown as Plan[]);
     setPlanCount(count ?? 0);
-  }, [effectiveYearId, page, profile, setMessage, supabase]);
+  }, [effectiveYearId, page, profile, setMessage, showArchived, supabase, yearRequest]);
 
   const loadReportSections = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
       return;
     }
+
+    setReportSections(emptyReportSections);
+    const request = reportSectionRequest.begin("report-sections");
 
     const { data, error } = await supabase
       .from("noi_dung_mau_2")
@@ -211,13 +236,32 @@ export function ImprovementPlanWorkspace() {
       .eq("cap_hoc", reportCapHoc)
       .maybeSingle();
 
+    if (!reportSectionRequest.isCurrent(request)) return;
+
     if (error) {
       setMessage(toUserMessage(error));
       return;
     }
 
     setReportSections(data ? { ...emptyReportSections, ...data } : emptyReportSections);
-  }, [effectiveYearId, profile, reportCapHoc, setMessage, supabase]);
+  }, [effectiveYearId, profile, reportCapHoc, reportSectionRequest, setMessage, supabase]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      setSaving(false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [effectiveYearId]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSavingSections(false);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [effectiveYearId, reportCapHoc]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -249,6 +293,7 @@ export function ImprovementPlanWorkspace() {
     }
 
     setSavingSections(true);
+    const request = reportSectionRequest.begin("save-report-sections");
     const { error } = await supabase.from("noi_dung_mau_2").upsert(
       {
         co_so_id: profile.co_so_id,
@@ -259,6 +304,7 @@ export function ImprovementPlanWorkspace() {
       },
       { onConflict: "co_so_id,nam_hoc_id,cap_hoc" },
     );
+    if (!reportSectionRequest.isCurrent(request)) return;
     setSavingSections(false);
     setMessage(error ? toUserMessage(error) : "Đã lưu nội dung tám phần của Mẫu 2.");
   }
@@ -280,8 +326,9 @@ export function ImprovementPlanWorkspace() {
 
     setSaving(true);
     setMessage("");
+    const request = yearRequest.begin("save-plan");
 
-    const { error } = await supabase.from("ke_hoach_cai_tien").insert({
+    const payload = {
       co_so_id: profile.co_so_id,
       nam_hoc_id: effectiveYearId,
       tieu_chuan_id: criterion.tieu_chuan_id,
@@ -295,8 +342,22 @@ export function ImprovementPlanWorkspace() {
       phu_trach_id: phuTrachId || null,
       nguon_luc: nguonLuc,
       minh_chung_du_kien: minhChungDuKien,
-      muc_do_thuc_hien: "chua_thuc_hien",
-    });
+    };
+
+    const { error } = editingPlanId
+      ? await supabase
+          .from("ke_hoach_cai_tien")
+          .update(payload)
+          .eq("id", editingPlanId)
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", effectiveYearId)
+          .is("archived_at", null)
+      : await supabase.from("ke_hoach_cai_tien").insert({
+          ...payload,
+          muc_do_thuc_hien: "chua_thuc_hien",
+        });
+
+    if (!yearRequest.isCurrent(request)) return;
 
     setSaving(false);
 
@@ -305,6 +366,14 @@ export function ImprovementPlanWorkspace() {
       return;
     }
 
+    resetPlanForm();
+    setMessage(editingPlanId ? "Đã cập nhật kế hoạch cải tiến." : "Đã thêm kế hoạch cải tiến.");
+    await loadPlans();
+  }
+
+  function resetPlanForm() {
+    setEditingPlanId("");
+    setSelectedCriterionId(criteria[0]?.id ?? "");
     setNoiDung("");
     setMucTieu("");
     setHoatDong("");
@@ -314,7 +383,37 @@ export function ImprovementPlanWorkspace() {
     setPhuTrachId("");
     setNguonLuc("");
     setMinhChungDuKien("");
-    setMessage("Đã thêm kế hoạch cải tiến.");
+  }
+
+  function editPlan(plan: Plan) {
+    setEditingPlanId(plan.id);
+    setSelectedCriterionId(plan.tieu_chi_id ?? criteria[0]?.id ?? "");
+    setNoiDung(plan.noi_dung ?? "");
+    setMucTieu(plan.muc_tieu ?? "");
+    setHoatDong(plan.hoat_dong ?? "");
+    setChiSoKetQua(plan.chi_so_ket_qua ?? "");
+    setTimeStart(plan.thoi_gian_bat_dau ?? "");
+    setTimeEnd(plan.thoi_gian_ket_thuc ?? "");
+    setPhuTrachId(plan.phu_trach_id ?? "");
+    setNguonLuc(plan.nguon_luc ?? "");
+    setMinhChungDuKien(plan.minh_chung_du_kien ?? "");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function setPlanArchived(plan: Plan, archived: boolean) {
+    if (!supabase || !profile) return;
+    const { error } = await supabase
+      .from("ke_hoach_cai_tien")
+      .update({ archived_at: archived ? new Date().toISOString() : null })
+      .eq("id", plan.id)
+      .eq("co_so_id", profile.co_so_id)
+      .eq("nam_hoc_id", effectiveYearId);
+    if (error) {
+      setMessage(toUserMessage(error));
+      return;
+    }
+    if (editingPlanId === plan.id) resetPlanForm();
+    setMessage(archived ? "Đã lưu trữ kế hoạch cải tiến." : "Đã khôi phục kế hoạch cải tiến.");
     await loadPlans();
   }
 
@@ -411,7 +510,7 @@ export function ImprovementPlanWorkspace() {
 
       <form className="surface-card grid gap-4 p-5" onSubmit={handleSubmit}>
         <div>
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Thêm nội dung cải tiến</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">{editingPlanId ? "Chỉnh sửa nội dung cải tiến" : "Thêm nội dung cải tiến"}</h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
             Các ô dưới đây đi thẳng vào bảng kế hoạch cải tiến của Mẫu 2.
           </p>
@@ -461,17 +560,23 @@ export function ImprovementPlanWorkspace() {
           <TextArea label="Minh chứng dự kiến" value={minhChungDuKien} onChange={setMinhChungDuKien} />
         </div>
 
-        <button className="button-primary" disabled={saving}>
-          {saving ? "Đang lưu…" : "Thêm vào kế hoạch"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button className="button-primary" disabled={saving}>
+            {saving ? "Đang lưu…" : editingPlanId ? "Lưu thay đổi" : "Thêm vào kế hoạch"}
+          </button>
+          {editingPlanId ? <button className="button-secondary" type="button" onClick={resetPlanForm}>Hủy chỉnh sửa</button> : null}
+        </div>
       </form>
 
       <section className="surface-card overflow-hidden">
-        <div className="border-b border-[var(--color-border)] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Danh sách kế hoạch cải tiến</h2>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] px-5 py-4">
+          <div><h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">{showArchived ? "Kế hoạch đã lưu trữ" : "Danh sách kế hoạch cải tiến"}</h2>
           <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
             Mỗi dòng là một nhiệm vụ sẽ được đưa vào Mẫu 2 khi xuất báo cáo.
-          </p>
+          </p></div>
+          <button className="button-secondary" type="button" onClick={() => { setPage(1); setShowArchived((value) => !value); }}>
+            {showArchived ? "Xem kế hoạch đang dùng" : "Xem mục đã lưu trữ"}
+          </button>
         </div>
         {plans.length === 0 ? (
           <div className="p-5">
@@ -506,10 +611,11 @@ export function ImprovementPlanWorkspace() {
                         Thời gian: {plan.thoi_gian_bat_dau ?? "?"} đến {plan.thoi_gian_ket_thuc ?? "?"}
                       </p>
                     </div>
-                    <label className="text-sm font-medium">
+                    <div className="grid gap-2"><label className="text-sm font-medium">
                       Cập nhật tiến độ
                       <select
                         className="form-control mt-2"
+                        disabled={showArchived}
                         value={plan.muc_do_thuc_hien}
                         onChange={(event) => updatePlanStatus(plan.id, event.target.value as PlanStatus)}
                       >
@@ -520,6 +626,14 @@ export function ImprovementPlanWorkspace() {
                         ))}
                       </select>
                     </label>
+                    {showArchived ? (
+                      <button className="button-secondary" type="button" onClick={() => void setPlanArchived(plan, false)}>Khôi phục</button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button className="button-secondary flex-1" type="button" onClick={() => editPlan(plan)}>Sửa</button>
+                        <button className="button-secondary flex-1" type="button" onClick={() => void setPlanArchived(plan, true)}>Lưu trữ</button>
+                      </div>
+                    )}</div>
                   </div>
                 </article>
               );

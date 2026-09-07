@@ -10,7 +10,11 @@ export const runtime = "nodejs";
 
 const HEALTH_TIMEOUT_MS = 2_500;
 
-async function checkSupabaseAuth() {
+type ReadinessCheck = "database" | "storage" | "supabaseAuth";
+
+type CheckStatus = "ok" | "unavailable";
+
+function supabaseConfiguration() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -18,36 +22,63 @@ async function checkSupabaseAuth() {
     throw new Error("supabase_health_configuration_missing");
   }
 
+  return { supabaseKey, supabaseUrl };
+}
+
+async function probe(path: string) {
+  const { supabaseKey, supabaseUrl } = supabaseConfiguration();
+
   const response = await fetch(
-    new URL("/auth/v1/health", supabaseUrl),
+    new URL(path, supabaseUrl),
     {
       cache: "no-store",
-      headers: { apikey: supabaseKey },
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
       signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS),
     },
   );
 
   if (!response.ok) {
-    throw new Error("supabase_auth_health_unavailable");
+    throw new Error("supabase_component_unavailable");
   }
 }
 
+const READINESS_PROBES: Record<ReadinessCheck, string> = {
+  supabaseAuth: "/auth/v1/health",
+  database: "/rest/v1/bo_tieu_chuan?select=id&limit=1",
+  storage: "/storage/v1/status",
+};
+
 export async function GET(request: NextRequest) {
   const requestContext = getRequestContext(request);
-  let status = 200;
-  let supabaseAuth: "ok" | "unavailable" = "ok";
+  const entries = Object.entries(READINESS_PROBES) as Array<
+    [ReadinessCheck, string]
+  >;
+  const results = await Promise.allSettled(
+    entries.map(([, path]) => probe(path)),
+  );
+  const checks = entries.reduce<Record<ReadinessCheck, CheckStatus>>(
+    (accumulator, [name], index) => {
+      const result = results[index];
+      accumulator[name] = result.status === "fulfilled" ? "ok" : "unavailable";
 
-  try {
-    await checkSupabaseAuth();
-  } catch (error) {
-    status = 503;
-    supabaseAuth = "unavailable";
-    logServerError("health_check_failed", error, {
-      operation: "check_supabase_auth",
-      ...requestContext,
-      status,
-    });
-  }
+      if (result.status === "rejected") {
+        logServerError("readiness_check_failed", result.reason, {
+          operation: `check_${name}`,
+          ...requestContext,
+          status: 503,
+        });
+      }
+
+      return accumulator;
+    },
+    { database: "ok", storage: "ok", supabaseAuth: "ok" },
+  );
+  const status = Object.values(checks).every((value) => value === "ok")
+    ? 200
+    : 503;
 
   return Response.json(
     {
@@ -55,7 +86,7 @@ export async function GET(request: NextRequest) {
       requestId: requestContext.requestId,
       checks: {
         application: "ok",
-        supabaseAuth,
+        ...checks,
       },
       timestamp: new Date().toISOString(),
     },

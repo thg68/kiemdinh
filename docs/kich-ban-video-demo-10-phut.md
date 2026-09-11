@@ -1,404 +1,226 @@
-# Kịch Bản Giới Thiệu Và Hướng Dẫn PDT Quality Trong 10 Phút
+# Kịch bản video demo PDT Quality trong 10 phút
 
-Kịch bản này dùng để quay video hoặc trình bày trực tiếp. Tổng thời lượng mục tiêu là 10 phút. Người trình bày nên nói chậm, thao tác dứt khoát và chỉ giải thích những gì đang xuất hiện trên màn hình.
+Kịch bản này dùng để quay một video liền mạch, tập trung vào một hành trình dữ liệu hoàn chỉnh. Không cố giới thiệu mọi nút. Mỗi cảnh phải cho người xem thấy dữ liệu đi từ minh chứng thật đến báo cáo đã phê duyệt như thế nào.
 
-## 1. Mục tiêu của buổi giới thiệu
-
-Sau 10 phút, người xem cần hiểu được bốn điều:
-
-1. Giáo viên chỉ cần nộp minh chứng phát sinh từ công việc hằng ngày.
-2. Một minh chứng có một mã duy nhất nhưng có thể phục vụ nhiều tiêu chí.
-3. Gap Board và mô phỏng lộ trình giúp người quản lý biết việc nào cần ưu tiên.
-4. Mẫu 1 được xuất từ dữ liệu thật và chỉ được coi là chính thức sau khi phê duyệt.
-
-## 2. Chuẩn bị trước khi quay
+## 1. Chuẩn bị
 
 ### Tài khoản
 
-Chuẩn bị ba tài khoản thuộc cùng một cơ sở giáo dục:
-
-| Tài khoản | Điều kiện cần có |
-|---|---|
-| Giáo viên | Được phân công ít nhất một tiêu chí và có quyền tạo minh chứng |
-| Thư ký Hội đồng | Có quyền xác minh minh chứng, nhập tự đánh giá và xuất báo cáo |
-| Hiệu trưởng | Có quyền duyệt tự đánh giá, mô phỏng lộ trình và phê duyệt báo cáo |
-
-Không hiển thị email, mật khẩu, khóa Supabase hoặc thông tin đăng nhập trong video.
+- Giáo viên có ít nhất một tiêu chí được phân công.
+- Thư ký Hội đồng có quyền xác minh minh chứng và nhập tự đánh giá.
+- Hiệu trưởng hoặc Chủ tịch Hội đồng có quyền duyệt tự đánh giá và báo cáo.
+- Quản trị hệ thống có thêm một vai trò nhà trường nếu cần quay cảnh chuyển workspace.
 
 ### Dữ liệu
 
-Chuẩn bị một tệp PDF hoặc DOCX không chứa dữ liệu cá nhân của học sinh:
+- Một trường Quảng Ninh đã có năm học đang hoạt động.
+- Một tệp minh chứng không chứa thông tin nhạy cảm.
+- Một tiêu chí có nội dung Mức 1 và Mức 2.
+- Sáu phần nội dung chung của Mẫu 2 và ít nhất một nhiệm vụ cải tiến nếu muốn quay trạng thái sẵn sàng.
 
-- Tên tệp: `Bien-ban-sinh-hoat-to-chuyen-mon-thang-9.pdf`.
-- Tên minh chứng: `Biên bản sinh hoạt tổ chuyên môn tháng 9`.
-- Ngày ban hành: dùng ngày gần nhất phù hợp với năm học đang hoạt động.
-- Tiêu chí minh họa: chọn một tiêu chí Giáo viên đã được phân công.
-- Nên chọn thêm một tiêu chí thứ hai để minh họa khả năng dùng chung minh chứng.
+### Quy tắc quay
 
-### Trạng thái hệ thống
+- Dùng độ phân giải tối thiểu 1920 x 1080 và mức thu phóng 100%.
+- Chỉ giữ một cửa sổ ứng dụng trong khung hình.
+- Không mở công cụ phát triển, JWT, signed URL hoặc biến môi trường.
+- Không dùng dữ liệu `[DEMO]` để khẳng định hồ sơ chính thức đã đầy đủ.
+- Sau mỗi thao tác ghi, dừng đủ lâu để thấy thông báo thành công.
 
-Trước khi quay, kiểm tra:
+## 2. Kịch bản chi tiết
 
-- Domain `https://kdclgd.io.vn` truy cập được.
-- Năm học đang hoạt động hiển thị đúng.
-- Ba tài khoản đều thuộc cùng một đơn vị.
-- Tiêu chí dùng trong demo chưa bị khóa bởi một lượt duyệt khác.
-- Trang Báo cáo đã có thông tin hội đồng và nhận xét theo tiêu chuẩn.
-- Trình duyệt đặt mức thu phóng 100% và không mở DevTools.
-- Đã đăng xuất trước cảnh đầu tiên.
+## 0:00-0:30 Mở đầu
 
-## 3. Quy ước trình bày
+**Lời thoại**
 
-- **Lời thoại**: đọc gần như nguyên văn.
-- **Thao tác**: hành động thực hiện trên màn hình.
-- **Màn hình phải thấy**: tín hiệu xác nhận thao tác đã thành công.
-- **Chuyển cảnh**: thời điểm đổi tài khoản hoặc đổi màn hình.
+“PDT Quality giúp nhà trường quản lý minh chứng, tự đánh giá, kế hoạch cải tiến và báo cáo trong cùng một quy trình có thể truy vết.”
 
-## 4. Kịch bản chi tiết
+“Trong 10 phút, tôi sẽ đưa một minh chứng từ lúc giáo viên nộp đến lúc dữ liệu đủ điều kiện xuất báo cáo.”
 
-## 0:00-0:20 - Mở đầu bằng đúng một câu vấn đề
+**Màn hình:** Trang đăng nhập và tên sản phẩm.
 
-### Lời thoại
+## 0:30-1:10 Đăng ký và chọn trường
 
-“Nhà trường không thiếu hồ sơ, nhưng vẫn mất nhiều thời gian để biết hồ sơ nào chứng minh cho tiêu chí nào và còn thiếu gì trước khi xuất báo cáo.”
+**Thao tác**
 
-Không nói thêm câu thứ hai trong phần này. Dừng khoảng một giây rồi bắt đầu thao tác.
+1. Mở tab **Tạo tài khoản**.
+2. Tìm trường bằng tên hoặc mã trường.
+3. Chọn một trường trong danh mục Quảng Ninh.
+4. Chuyển sang tài khoản Giáo viên đã chuẩn bị và đăng nhập.
 
-### Thao tác
+**Lời thoại**
 
-1. Mở `https://kdclgd.io.vn`.
-2. Giữ màn hình trang chủ trong khoảng ba giây.
-3. Chọn **Đăng nhập**.
+“Giáo viên chọn trường ngay khi đăng ký. Sau khi xác nhận email, tài khoản được tạo tại đúng trường với vai trò Giáo viên; các vai trò có thẩm quyền cao hơn vẫn do nhà trường phân công.”
 
-### Màn hình phải thấy
+## 1:10-2:20 Giáo viên nộp minh chứng
 
-- Logo PDT Quality.
-- Nút **Đăng nhập** rõ ràng.
-- Trang đăng nhập không có thông báo lỗi.
+**Thao tác**
 
-## 0:20-0:55 - Giới thiệu cách hệ thống giải quyết vấn đề
+1. Mở **Việc của tôi** và chỉ vào tiêu chí được giao.
+2. Mở **Minh chứng**, chọn dấu cộng và **Tạo minh chứng**.
+3. Nhập tên, chọn tệp, ngày ban hành và một hoặc nhiều tiêu chí.
+4. Lưu minh chứng.
 
-### Lời thoại
+**Lời thoại**
 
-“PDT Quality kết nối minh chứng, tự đánh giá, kế hoạch cải tiến và báo cáo trong cùng một quy trình. Mỗi người làm đúng phần việc của mình; dữ liệu được giới hạn theo đơn vị, năm học và vai trò.”
+“Một tệp chỉ có một mã minh chứng nhưng có thể phục vụ nhiều tiêu chí. Nếu tài liệu đã có trong kho, người dùng dùng lại mã thay vì tải tệp trùng.”
 
-“Trong phần trình bày này, chúng ta sẽ đi theo đúng một minh chứng: từ lúc Giáo viên nộp, Thư ký xác minh và cập nhật tự đánh giá, đến khi Hiệu trưởng xem khoảng cách và xuất Mẫu 1.”
+**Tín hiệu thành công**
 
-### Thao tác
+- Tên tệp hiển thị trong control chọn tệp.
+- Minh chứng mới xuất hiện với trạng thái chờ xác minh.
 
-1. Đăng nhập bằng tài khoản Giáo viên.
-2. Chờ hệ thống chuyển tới **Việc của tôi**.
-3. Chỉ vào nhãn vai trò **Giáo viên** ở thanh bên.
+## 2:20-3:20 Thư ký xác minh
 
-### Màn hình phải thấy
+**Thao tác**
 
-- Trang **Việc của tôi**.
-- Vai trò Giáo viên.
-- Danh sách tiêu chí hoặc công việc đã được phân công.
+1. Đăng nhập tài khoản Thư ký.
+2. Mở **Minh chứng** rồi **Xác minh minh chứng**.
+3. Lọc hồ sơ chờ xác minh và chọn **Xem chi tiết**.
+4. Mở tệp, đọc tiêu chí liên quan rồi chọn **Xác minh**.
 
-### Chuyển cảnh
+**Lời thoại**
 
-“Bắt đầu từ công việc thường ngày của Giáo viên.”
+“Thư ký xem đầy đủ nội dung và tệp trước khi quyết định. Minh chứng đã xác minh không còn nút xác minh hoặc từ chối, chỉ giữ thao tác xem chi tiết.”
 
-## 0:55-2:35 - Giáo viên tạo minh chứng
+## 3:20-5:10 Nhập Phiếu nội hàm và tự đánh giá
 
-### Lời thoại trước thao tác
+**Thao tác**
 
-“Giáo viên không phải viết báo cáo kiểm định. Khi hoàn thành một công việc chuyên môn, Giáo viên chỉ cần nộp sản phẩm thật vào kho minh chứng.”
+1. Mở **Tự đánh giá** và chọn đúng cấp học.
+2. Chọn tiêu chí vừa gắn minh chứng trên Gap Board.
+3. Đọc nội dung quy định của Mức 1 và Mức 2.
+4. Chọn trạng thái thực tế của nội hàm.
+5. Nhập ghi nhận thực tế.
+6. Mở danh sách minh chứng và chọn mã vừa xác minh.
+7. Chọn mức, lưu và gửi duyệt.
 
-### Thao tác
+**Lời thoại**
 
-1. Mở **Minh chứng** ở thanh điều hướng.
-2. Chờ danh sách minh chứng tải xong.
-3. Chọn dấu **+** ở bên phải thanh chức năng.
-4. Xác nhận mục **Tạo minh chứng** xuất hiện cạnh **Xác minh minh chứng**.
-5. Chọn **Tạo minh chứng**.
-6. Nhập tên `Biên bản sinh hoạt tổ chuyên môn tháng 9`.
-7. Chọn nút chọn tệp và tải tệp đã chuẩn bị.
-8. Chọn ngày ban hành.
-9. Trong phần **Tiêu chí sử dụng minh chứng**, chọn tiêu chí đã được phân công.
-10. Chọn thêm một tiêu chí thứ hai nếu phù hợp.
-11. Chọn **Tải lên và gắn tiêu chí**.
-12. Chờ thông báo hoàn tất; không bấm nút lần thứ hai.
+“Nội dung quy định, ghi nhận thực tế và minh chứng nằm trong cùng một màn hình. Hệ thống chỉ hiển thị minh chứng đúng trường, đúng năm học, đúng tiêu chí, đã xác minh và còn hiệu lực.”
 
-### Lời thoại trong lúc chọn tiêu chí
+“Mức đạt cần cả mô tả và minh chứng. Mức 2 không thể hợp lệ nếu yêu cầu của Mức 1 chưa hoàn thành.”
 
-“Tên và nội dung đầy đủ của tiêu chí được hiển thị ngay tại đây để tránh gắn nhầm chỉ vì nhớ mã số.”
+**Tín hiệu thành công**
 
-“Một tệp có thể gắn với nhiều tiêu chí, nhưng hệ thống vẫn giữ đúng một mã minh chứng. Nhà trường không cần tải nhiều bản sao của cùng một tài liệu.”
+- Mã minh chứng đã chọn hiển thị ở phần tóm tắt.
+- Gap Board cập nhật sau khi lưu.
+- Tiêu chí xuất hiện trong hàng đợi chờ duyệt.
 
-### Màn hình phải thấy
+## 5:10-6:00 Hiệu trưởng duyệt tự đánh giá
 
-- Tên tệp sau khi chọn.
-- Ít nhất một tiêu chí được đánh dấu.
-- Thông báo **Đã tạo minh chứng và gắn tiêu chí**.
-- Minh chứng vừa tạo xuất hiện trong kho.
-
-### Lời thoại sau thao tác
-
-“Minh chứng vừa được tạo đang chờ người có trách nhiệm kiểm tra. Giáo viên chỉ nhìn thấy dữ liệu trong phạm vi công việc, không xem toàn bộ hồ sơ quản trị của trường.”
-
-### Chuyển cảnh
-
-Đăng xuất. Trong lúc chuyển tài khoản, dùng lời thoại:
-
-“Bây giờ hồ sơ được chuyển sang bước kiểm tra, không đi thẳng vào báo cáo.”
-
-## 2:35-3:50 - Thư ký kiểm tra và xác minh minh chứng
-
-### Thao tác
-
-1. Đăng nhập bằng tài khoản Thư ký Hội đồng.
-2. Mở **Minh chứng**.
-3. Chọn **Xác minh minh chứng** trên thanh chức năng.
-4. Lọc trạng thái **Chờ xác minh** nếu danh sách có nhiều bản ghi.
-5. Tìm `Biên bản sinh hoạt tổ chuyên môn tháng 9`.
-6. Mở phần chi tiết của minh chứng.
-7. Chỉ lần lượt vào mã minh chứng, ngày ban hành và danh sách tiêu chí đang dùng.
-8. Chọn **Mở tệp đính kèm** để kiểm tra nội dung.
-9. Quay lại màn hình xác minh.
-10. Chọn **Xác minh**.
-11. Xác nhận trong hộp thoại nếu hệ thống yêu cầu.
-
-### Lời thoại
-
-“Thư ký xem được đầy đủ tên, mã, tiêu chí liên quan và tệp đính kèm trước khi quyết định. Liên kết mở tệp chỉ có hiệu lực tạm thời.”
-
-“Nếu tài liệu sai, hết hiệu lực hoặc gắn nhầm tiêu chí, Thư ký chọn Từ chối để người nộp bổ sung. Trong ví dụ này, nội dung phù hợp nên tôi chọn Xác minh.”
-
-### Màn hình phải thấy
-
-- Chi tiết minh chứng đúng với tệp vừa nộp.
-- Trạng thái đổi từ **Chờ xác minh** sang **Đã xác minh**.
-- Không còn nút xử lý lặp lại cho cùng trạng thái.
-
-### Chuyển cảnh
-
-“Sau khi được xác minh, minh chứng mới đủ điều kiện dùng cho phép tính tự đánh giá và báo cáo.”
-
-## 3:50-5:30 - Thư ký cập nhật tự đánh giá
-
-### Thao tác
-
-1. Mở **Tự đánh giá**.
-2. Kiểm tra năm học đang hoạt động.
-3. Chọn đúng cấp học ở góc phải khu vực tổng hợp.
-4. Trên Gap Board, chọn tiêu chí vừa được gắn minh chứng.
-5. Đọc nội dung quy định tại **Mức 1**.
-6. Nhập mô tả hiện trạng ngắn, cụ thể và có thể đối chiếu với minh chứng.
-7. Chọn mã minh chứng vừa được xác minh.
-8. Nếu đánh giá Mức 2, hoàn thiện Mức 1 trước rồi nhập nội dung Mức 2.
-9. Chọn mức tự đánh giá phù hợp.
-10. Chọn **Lưu tự đánh giá**.
-11. Chờ Gap Board cập nhật trạng thái.
-12. Chọn **Gửi duyệt**.
-
-### Nội dung mô tả gợi ý
-
-“Tổ chuyên môn tổ chức sinh hoạt định kỳ theo kế hoạch năm học; nội dung cuộc họp, phân công thực hiện và kết quả thống nhất được ghi trong biên bản tháng 9.”
-
-Chỉ dùng câu trên nếu đúng với tệp thực tế. Không đọc hoặc nhập nội dung không có trong minh chứng.
-
-### Lời thoại
-
-“Nội dung quy định của từng mức nằm ngay trên màn hình. Người nhập chỉ mô tả hiện trạng thực tế của trường và liên kết minh chứng đã được xác minh.”
-
-“Hệ thống không cho một tiêu chí được tính là đạt nếu thiếu mô tả hoặc thiếu minh chứng hợp lệ. Mức 2 cũng không thể hợp lệ khi Mức 1 chưa hoàn thành.”
-
-### Màn hình phải thấy
-
-- Mã và tên đầy đủ của tiêu chí.
-- Nội dung yêu cầu Mức 1 và Mức 2.
-- Mã minh chứng đã được chọn.
-- Thông báo lưu thành công.
-- Trạng thái tiêu chí chuyển sang chờ duyệt sau khi gửi.
-
-### Chuyển cảnh
-
-Đăng xuất và nói:
-
-“Dữ liệu đã được nhập nhưng chưa trở thành kết quả chính thức; bước tiếp theo thuộc về người có thẩm quyền duyệt.”
-
-## 5:30-6:30 - Hiệu trưởng duyệt tự đánh giá
-
-### Thao tác
+**Thao tác**
 
 1. Đăng nhập bằng tài khoản Hiệu trưởng.
-2. Mở **Việc của tôi**.
-3. Chỉ vào số lượng tiêu chí chờ duyệt.
-4. Mở **Tự đánh giá chờ duyệt**.
-5. Chọn tiêu chí vừa gửi.
-6. Đối chiếu mô tả, cấp học và mã minh chứng.
-7. Chọn **Phê duyệt**.
-8. Xác nhận trong hộp thoại.
+2. Mở **Việc của tôi**, sau đó **Tự đánh giá chờ duyệt**.
+3. Đối chiếu nội hàm, mô tả và minh chứng.
+4. Chọn **Chốt mức**.
 
-### Lời thoại
+**Lời thoại**
 
-“Hiệu trưởng không duyệt một con số rời rạc. Mô tả hiện trạng và minh chứng được đặt trong cùng ngữ cảnh để có thể kiểm tra trước khi chốt.”
+“Người duyệt nhìn thấy đầy đủ căn cứ trước khi chốt. Nếu dữ liệu chưa phù hợp, có thể trả về rà soát thay vì sửa thay người nhập.”
 
-“Nếu nội dung chưa đủ, Hiệu trưởng trả lại kèm yêu cầu chỉnh sửa. Ở đây dữ liệu phù hợp nên tôi phê duyệt.”
+## 6:00-6:50 Gap Board và mô phỏng
 
-### Màn hình phải thấy
-
-- Đúng tiêu chí và cấp học.
-- Nội dung mô tả cùng danh sách minh chứng.
-- Thông báo phê duyệt thành công.
-
-## 6:30-7:55 - Hiệu trưởng xem Gap Board và mô phỏng lộ trình
-
-### Thao tác
+**Thao tác**
 
 1. Quay lại **Tự đánh giá**.
-2. Chỉ vào kết quả hiện tại ở đầu trang.
-3. Chỉ vào một ô xanh, một ô vàng hoặc đỏ nếu dữ liệu có đủ các trạng thái.
-4. Chọn **Mô phỏng phương án** ở tiêu đề Gap Board.
-5. Giữ mục tiêu do hệ thống đề xuất hoặc chuyển giữa **Mục tiêu Mức 1** và **Mục tiêu Mức 2**.
-6. Chỉ vào ba kết quả: **Hiện tại**, **Sau mô phỏng** và **Toàn trường**.
-7. Bỏ chọn một tiêu chí và quan sát kết quả thay đổi.
-8. Chọn lại tiêu chí đó.
-9. Với mục tiêu Mức 2, thử thay đổi một tiêu chí giữa Mức 1 và Mức 2.
-10. Cuộn tới **Kết luận mô phỏng**.
-11. Chỉ vào danh sách điều kiện còn chặn mức tiếp theo.
-12. Đóng ngăn mô phỏng bằng nút **×**.
+2. Chỉ vào tiêu chí bắt buộc và kết quả hiện tại.
+3. Mở **Mô phỏng phương án**, thử thay đổi một tiêu chí rồi đóng.
 
-### Lời thoại
+**Lời thoại**
 
-“Gap Board cho biết tiêu chí nào đang đạt, tiêu chí nào còn thiếu và tiêu chí bắt buộc nào đang chặn mức tiếp theo.”
+“Gap Board chỉ ra khoảng cách đang chặn mức tiếp theo. Mô phỏng giúp thử phương án nhưng không ghi vào cơ sở dữ liệu và không làm thay đổi kết quả thật.”
 
-“Mô phỏng lộ trình không đơn giản là đổi thử một con số. Hệ thống đề xuất tổ hợp tối thiểu theo quy tắc 8 tiêu chí bắt buộc và nhóm tiêu chí còn lại. Hiệu trưởng có thể thử thêm hoặc bỏ nhiều tiêu chí để so sánh phương án.”
+## 6:50-7:50 Kế hoạch cải tiến
 
-“Mọi thay đổi trong ngăn này chỉ là dự kiến trên trình duyệt. Không có mô tả giả, không có mã minh chứng giả và không có dữ liệu nào được lưu xuống cơ sở dữ liệu.”
+**Thao tác**
 
-### Màn hình phải thấy
+1. Mở **Kế hoạch cải tiến**.
+2. Chuyển qua ba tab **Nội dung Mẫu 2**, **Nhiệm vụ cải tiến**, **Rà soát và xuất**.
+3. Tại tab nhiệm vụ, tìm kiếm và mở một nhiệm vụ.
+4. Tại tab rà soát, chỉ vào điều kiện đạt và điều kiện cần xử lý.
 
-- Ngăn **Mô phỏng lộ trình nâng mức** mở từ bên phải.
-- Phương án có nhiều tiêu chí được chọn.
-- Kết quả **Sau mô phỏng** thay đổi ngay khi lựa chọn thay đổi.
-- Sau khi đóng, Gap Board trở về hoàn toàn dữ liệu thật.
+**Lời thoại**
 
-### Chuyển cảnh
+“Nội dung Mẫu 2 được chia thành ba bước rõ ràng. Sáu phần thuyết minh, bảng nhiệm vụ và checklist xuất đều lấy từ dữ liệu của phạm vi đang chọn.”
 
-“Sau khi biết khoảng cách cần xử lý, ban giám hiệu có thể đưa các việc ưu tiên vào kế hoạch cải tiến; còn báo cáo luôn lấy từ dữ liệu thật, không lấy từ mô phỏng.”
+## 7:50-9:15 Báo cáo và phê duyệt
 
-## 7:55-9:25 - Kiểm tra và xuất Mẫu 1
-
-### Thao tác
+**Thao tác**
 
 1. Mở **Báo cáo**.
-2. Chọn đúng năm học và cấp học.
-3. Chỉ vào **Mức sẵn sàng của Mẫu 1**.
-4. Nếu có mục cần rà soát, mở nhanh một mục để cho thấy nguyên nhân.
-5. Cuộn tới **Nhận xét theo tiêu chuẩn cho Mẫu 1**.
-6. Chỉ vào ba trường: Điểm mạnh, Hạn chế và Định hướng cải tiến.
-7. Chọn **Lưu nhận xét Mẫu 1** nếu vừa thay đổi nội dung.
-8. Chọn **Mẫu 1 - Báo cáo tự đánh giá (.docx)**.
-9. Chờ tải xong; không bấm lặp lại.
-10. Mở file Word vừa tải.
-11. Chỉ vào tên đơn vị, năm học, tiêu chí, mô tả hiện trạng và mã minh chứng.
-12. Nếu có cảnh báo đỏ, chỉ rõ đó là dữ liệu thật còn thiếu, không phải lỗi định dạng.
+2. Đọc **Mức sẵn sàng của Mẫu 1** và chọn một liên kết **Xử lý**.
+3. Quay lại, chọn **Tải bản nháp** hoặc **Tạo bản gửi duyệt**.
+4. Mở **Báo cáo chờ duyệt**, phê duyệt phiên bản.
+5. Mở **Báo cáo đã phê duyệt**.
 
-### Lời thoại
+**Lời thoại**
 
-“Trước khi xuất, hệ thống cho biết Mẫu 1 đã sẵn sàng hay còn mục nào cần rà soát. Nhà trường vẫn có thể xuất bản nháp để kiểm tra, nhưng không nên phê duyệt khi còn cảnh báo.”
+“Checklist được tính từ dữ liệu thật và dẫn thẳng tới nơi cần bổ sung. Bản nháp dùng để rà soát; bản gửi duyệt được tạo và niêm phong từ dữ liệu hiện tại.”
 
-“File Word được tạo từ dữ liệu đã nhập và minh chứng đã liên kết. Hệ thống không tự viết thay nội dung của nhà trường. Chỗ nào thiếu sẽ được đánh dấu để người phụ trách bổ sung.”
+“Bản đã phê duyệt là snapshot chỉ đọc. Hệ thống không ghi đè bản chính thức khi dữ liệu nguồn thay đổi.”
 
-### Màn hình phải thấy
+## 9:15-9:45 Quản trị hệ thống
 
-- Đúng năm học và cấp học.
-- Checklist sẵn sàng hiển thị rõ số mục cần rà soát.
-- File tải thành công.
-- Mẫu 1 có dữ liệu vừa thao tác hoặc dữ liệu thật tương ứng.
+**Thao tác**
 
-## 9:25-9:50 - Phê duyệt và xem báo cáo chính thức
+1. Chuyển workspace sang **Quản trị hệ thống**.
+2. Chỉ nhanh vào danh mục trường, người tham gia, minh chứng theo trường, bộ tiêu chuẩn và vận hành.
 
-### Thao tác
+**Lời thoại**
 
-1. Quay lại trang **Báo cáo**.
-2. Chọn **Gửi duyệt** nếu báo cáo chưa ở trạng thái chờ duyệt.
-3. Chọn **Phê duyệt**.
-4. Xác nhận hộp thoại.
-5. Mở **Xem báo cáo đã phê duyệt**.
-6. Chỉ vào thời điểm phê duyệt và bản snapshot có thể tải xuống.
+“Khu vực quản trị hệ thống được tách khỏi nghiệp vụ nhà trường. Quản trị viên theo dõi metadata và sức khỏe vận hành, không dùng màn hình này để mở nội dung tệp minh chứng.”
 
-### Lời thoại
+## 9:45-10:00 Kết thúc
 
-“Sau khi phê duyệt, hệ thống tạo một bản snapshot chỉ đọc. Bản chính thức không bị thay đổi âm thầm khi dữ liệu làm việc tiếp tục được cập nhật.”
+**Lời thoại**
 
-### Màn hình phải thấy
+“PDT Quality biến hồ sơ hằng ngày thành dữ liệu kiểm định có thể kiểm tra, phân công và truy vết từ báo cáo về minh chứng gốc.”
 
-- Báo cáo chuyển sang trạng thái đã phê duyệt.
-- Báo cáo xuất hiện trong danh sách **Báo cáo đã phê duyệt**.
+## 3. Phương án rút gọn khi thao tác chậm
 
-## 9:50-10:00 - Kết thúc
+Ưu tiên giữ bốn cảnh sau:
 
-### Lời thoại
+1. Tạo và xác minh một minh chứng.
+2. Gắn minh chứng vào Phiếu nội hàm.
+3. Rà soát Kế hoạch cải tiến.
+4. Tạo bản gửi duyệt và mở báo cáo đã phê duyệt.
 
-“PDT Quality không tạo thêm một lớp hồ sơ; hệ thống giúp nhà trường biến minh chứng thật thành tự đánh giá có thể kiểm tra, biết đúng việc cần cải tiến và xuất báo cáo có thể truy vết.”
+Không bỏ lời giải thích về phạm vi trường, điều kiện minh chứng hợp lệ và sự khác nhau giữa bản nháp với snapshot đã phê duyệt.
 
-Giữ màn hình **Báo cáo đã phê duyệt** trong hai giây rồi kết thúc.
+## 4. Xử lý sự cố khi demo
 
-## 5. Phương án rút gọn khi thao tác chậm
+### Không thấy trường khi đăng ký
 
-Nếu mạng chậm hoặc chỉ có đúng 10 phút, rút ngắn theo thứ tự sau:
-
-1. Không mở file đính kèm ở bước xác minh; chỉ chỉ vào nút mở tệp.
-2. Không mở file Word; dùng file đã xuất sẵn nhưng phải nói rõ đây là file được tạo từ cùng bộ dữ liệu.
-3. Không đổi nhiều lựa chọn trong mô phỏng; chỉ bỏ một tiêu chí rồi chọn lại.
-4. Không trình bày chi tiết Hội đồng và Kế hoạch cải tiến trong video 10 phút.
-
-Không được bỏ ba cảnh chính: Giáo viên nộp minh chứng, Hiệu trưởng xem Gap Board, xuất Mẫu 1.
-
-## 6. Xử lý sự cố khi demo
+- Tìm bằng mã trường hoặc phường xã.
+- Kiểm tra trường đang hoạt động và được phép tự đăng ký.
 
 ### Không thấy tiêu chí để chọn
 
-Nói: “Tài khoản này chưa được phân công tiêu chí trong năm học đang chọn.”
+- Kiểm tra năm học, cấp học và phân công của tài khoản.
 
-Sau đó kiểm tra tài khoản, năm học và phân công tại **Cài đặt**. Không tự cấp vai trò Hiệu trưởng để xử lý nhanh.
+### Minh chứng đã xác minh nhưng không gắn được
 
-### Minh chứng không xuất hiện ở hàng đợi xác minh
+- Kiểm tra minh chứng có đúng trường, năm học và tiêu chí hay không.
+- Kiểm tra ngày hết giá trị.
+- Chọn **Tải lại kho** sau khi vừa xác minh.
 
-1. Kiểm tra đúng năm học.
-2. Xóa bộ lọc trạng thái.
-3. Tìm theo mã hoặc tên minh chứng.
-4. Nếu vẫn không thấy, dừng thao tác và dùng minh chứng dự phòng đã chuẩn bị.
+### Không thể gửi hoặc phê duyệt báo cáo
 
-### Không thể đánh dấu đạt
+- Đọc từng mục cần xử lý trong checklist.
+- Bổ sung dữ liệu tại liên kết **Xử lý**.
+- Tạo lại bản gửi duyệt nếu dữ liệu nguồn đã thay đổi.
 
-Giải thích đúng nguyên nhân đang hiển thị: thiếu mô tả, thiếu minh chứng hợp lệ hoặc Mức 1 chưa đạt. Không gọi đây là lỗi hệ thống nếu validation đang hoạt động đúng.
+### Tải file chậm
 
-### Không thấy nút Mô phỏng phương án
+- Chờ thao tác hiện tại kết thúc, không bấm liên tục.
+- Với ZIP lớn, thử lại sau khi hệ thống hết giới hạn tải đồng thời.
 
-Kiểm tra tài khoản có một trong ba vai trò: Hiệu trưởng, Chủ tịch Hội đồng TĐG hoặc Thư ký Hội đồng. Ủy viên và Giáo viên không có công cụ này.
+## 5. Checklist sau khi quay
 
-### Không thể phê duyệt báo cáo
-
-Kiểm tra trạng thái báo cáo và vai trò. Thư ký được chuẩn bị, xuất và gửi duyệt nhưng không được phê duyệt chính thức.
-
-### Tải báo cáo chậm
-
-Chờ thông báo hiện tại kết thúc. Không bấm nút xuất nhiều lần vì endpoint có giới hạn tần suất để bảo vệ hệ thống.
-
-## 7. Những điều không được làm trong video
-
-- Không dùng dữ liệu có tên, ảnh, số điện thoại hoặc hồ sơ cá nhân của học sinh.
-- Không mở `.env.local`, Supabase Dashboard, JWT, signed URL hoặc khóa API.
-- Không mô tả dữ liệu `[DEMO]` là dữ liệu chính thức của nhà trường.
-- Không khẳng định mô phỏng là kết quả thật hoặc quyết định tự động.
-- Không phê duyệt báo cáo còn cảnh báo đỏ chỉ để hoàn thành video.
-- Không đăng nhập Giáo viên rồi nói rằng người này xem được toàn bộ dữ liệu trường.
-
-## 8. Checklist sau khi quay
-
-- [ ] Video dài từ 9 phút 30 giây đến 10 phút 15 giây.
-- [ ] Câu mở đầu chỉ có đúng một câu vấn đề.
-- [ ] Không lộ email, mật khẩu, dữ liệu học sinh hoặc secret.
-- [ ] Có cảnh Giáo viên tạo minh chứng.
-- [ ] Có cảnh Thư ký xem file và xác minh.
-- [ ] Có cảnh tự đánh giá dùng minh chứng đã xác minh.
-- [ ] Có cảnh Hiệu trưởng xem Gap Board.
-- [ ] Có cảnh mô phỏng nhiều tiêu chí và nói rõ không lưu dữ liệu.
-- [ ] Có cảnh xuất Mẫu 1.
-- [ ] Có cảnh xem báo cáo đã phê duyệt.
-- [ ] Nhãn nút và tên màn hình trong lời thoại khớp giao diện hiện tại.
+- [ ] Âm thanh rõ, không có thông báo ứng dụng khác.
+- [ ] Không lộ email cá nhân, dữ liệu học sinh hoặc thông tin bí mật.
+- [ ] Mỗi cảnh cho thấy đúng trường, năm học và cấp học.
+- [ ] Thông báo thành công hoặc lỗi đều đọc được.
+- [ ] Không có thao tác đọc nào bị mô tả nhầm là sự kiện nhật ký.
+- [ ] Không khẳng định dữ liệu `[DEMO]` là hồ sơ chính thức.

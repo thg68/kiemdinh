@@ -138,6 +138,22 @@ where standard_set.loai_hinh = 'mam_non'
 order by standard_set.version desc
 limit 1;
 
+insert into public.nam_hoc(
+  id, co_so_id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai, bo_tieu_chuan_id
+)
+select
+  '64000000-0000-0000-0000-000000000402',
+  '64000000-0000-0000-0000-000000000102',
+  '2097-2098',
+  '2097-08-01',
+  '2098-07-31',
+  'luu_tru',
+  standard_set.id
+from public.bo_tieu_chuan standard_set
+where standard_set.loai_hinh = 'mam_non'
+order by standard_set.version desc
+limit 1;
+
 set local role authenticated;
 select set_config('request.jwt.claim.role', 'authenticated', true);
 select set_config('request.jwt.claim.sub', '64000000-0000-0000-0000-000000000203', true);
@@ -207,6 +223,39 @@ select ok(
     where school.id = '64000000-0000-0000-0000-000000000102'
   ),
   'Admin thay co so khac trong danh sach toan he thong'
+);
+
+select ok(
+  exists (
+    select 1
+    from public.fn_admin_danh_sach_bo_tieu_chuan() standard_set
+    where standard_set.loai_hinh = 'mam_non'
+      and standard_set.so_co_so_su_dung > 0
+      and standard_set.so_luot_ap_dung > standard_set.so_co_so_su_dung
+  ),
+  'Thong ke bo tieu chuan dem co so rieng, khong nham thanh so nam hoc'
+);
+
+select ok(
+  exists (
+    select 1
+    from public.fn_admin_danh_sach_bo_tieu_chuan() standard_set
+    where standard_set.loai_hinh = 'mam_non'
+      and standard_set.so_luot_ap_dung >= standard_set.so_co_so_su_dung + 1
+  ),
+  'Luot ap dung duoc dem theo tung ban ghi co so-nam hoc'
+);
+
+select ok(
+  exists (
+    select 1
+    from public.fn_admin_danh_sach_bo_tieu_chuan() standard_set
+    where standard_set.loai_hinh = 'mam_non'
+      and standard_set.cac_ky_nam_hoc_su_dung @> array['2097-2098', '2098-2099']::text[]
+      and cardinality(standard_set.cac_ky_nam_hoc_su_dung)
+        < standard_set.so_luot_ap_dung
+  ),
+  'Danh sach ky nam hoc chi chua cac ky rieng biet'
 );
 
 select ok(

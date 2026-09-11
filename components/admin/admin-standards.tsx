@@ -20,8 +20,44 @@ type StandardSetRow = {
   ngay_het_hieu_luc: string | null;
   so_tieu_chuan: number;
   so_tieu_chi: number;
-  so_nam_hoc_su_dung: number;
+  so_co_so_su_dung: number;
+  so_luot_ap_dung: number;
+  cac_ky_nam_hoc_su_dung: string[];
 };
+
+type StandardDocument = {
+  key: string;
+  ma_van_ban: string;
+  version: number;
+  variants: StandardSetRow[];
+};
+
+function groupStandardDocuments(rows: StandardSetRow[]) {
+  const groups = new Map<string, StandardDocument>();
+
+  rows.forEach((row) => {
+    const key = `${row.ma_van_ban}:${row.version}`;
+    const current = groups.get(key);
+
+    if (current) {
+      current.variants.push(row);
+      return;
+    }
+
+    groups.set(key, {
+      key,
+      ma_van_ban: row.ma_van_ban,
+      version: row.version,
+      variants: [row],
+    });
+  });
+
+  return Array.from(groups.values());
+}
+
+function uniqueValues<T>(values: T[]) {
+  return Array.from(new Set(values));
+}
 
 export function AdminStandards() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -60,6 +96,7 @@ export function AdminStandards() {
     )),
     [rows, schoolType, status],
   );
+  const documents = useMemo(() => groupStandardDocuments(filteredRows), [filteredRows]);
 
   if (loading) {
     return <LoadingState label="Đang tải danh mục bộ tiêu chuẩn…" />;
@@ -98,12 +135,14 @@ export function AdminStandards() {
       <section className="admin-table-shell">
         <div className="admin-table-header">
           <div>
-            <h2>Danh mục phiên bản</h2>
-            <p>{filteredRows.length.toLocaleString("vi-VN")} phiên bản phù hợp</p>
+            <h2>Danh mục văn bản</h2>
+            <p>
+              {documents.length.toLocaleString("vi-VN")} văn bản · {filteredRows.length.toLocaleString("vi-VN")} phạm vi áp dụng
+            </p>
           </div>
         </div>
 
-        {filteredRows.length === 0 ? (
+        {documents.length === 0 ? (
           <div className="p-5">
             <EmptyState
               title="Không có bộ tiêu chuẩn phù hợp"
@@ -116,34 +155,96 @@ export function AdminStandards() {
               <thead>
                 <tr>
                   <th scope="col">Văn bản và phiên bản</th>
-                  <th scope="col">Loại hình</th>
+                  <th scope="col">Phạm vi áp dụng</th>
                   <th scope="col">Hiệu lực</th>
                   <th scope="col">Cấu trúc</th>
-                  <th scope="col">Đang sử dụng</th>
+                  <th scope="col">Mức sử dụng</th>
                   <th scope="col">Trạng thái</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredRows.map((row) => (
-                  <tr key={row.id}>
+                {documents.map((document) => {
+                  const firstVariant = document.variants[0];
+                  const statuses = uniqueValues(document.variants.map((variant) => variant.trang_thai));
+                  const startDates = uniqueValues(document.variants.map((variant) => variant.ngay_hieu_luc));
+                  const endDates = uniqueValues(document.variants.map((variant) => variant.ngay_het_hieu_luc));
+                  const structures = uniqueValues(document.variants.map(
+                    (variant) => `${variant.so_tieu_chuan}:${variant.so_tieu_chi}`,
+                  ));
+                  const schoolCount = document.variants.reduce(
+                    (total, variant) => total + variant.so_co_so_su_dung,
+                    0,
+                  );
+                  const usageCount = document.variants.reduce(
+                    (total, variant) => total + variant.so_luot_ap_dung,
+                    0,
+                  );
+                  const schoolYearPeriods = uniqueValues(
+                    document.variants.flatMap((variant) => variant.cac_ky_nam_hoc_su_dung),
+                  );
+
+                  return (
+                    <tr key={document.key}>
                     <td>
-                      <p className="admin-cell-title">{row.ma_van_ban}</p>
-                      <p className="admin-cell-meta">{row.ten}</p>
-                      <p className="admin-cell-meta">Phiên bản {row.version}</p>
-                    </td>
-                    <td>{schoolTypeLabels[row.loai_hinh] ?? row.loai_hinh}</td>
-                    <td>
-                      <p>Từ {formatDate(row.ngay_hieu_luc)}</p>
-                      <p className="admin-cell-meta">Đến {row.ngay_het_hieu_luc ? formatDate(row.ngay_het_hieu_luc) : "không ghi hạn"}</p>
+                      <p className="admin-cell-title">{document.ma_van_ban}</p>
+                      <p className="admin-cell-meta">Bộ tiêu chuẩn bảo đảm chất lượng giáo dục</p>
+                      <p className="admin-cell-meta">
+                        Phiên bản {document.version} · {document.variants.length} phạm vi
+                      </p>
                     </td>
                     <td>
-                      <p>{row.so_tieu_chuan} tiêu chuẩn</p>
-                      <p className="admin-cell-meta">{row.so_tieu_chi} tiêu chí</p>
+                      <div className="grid gap-3">
+                        {document.variants.map((variant) => (
+                          <div key={variant.id}>
+                            <p className="admin-cell-title">
+                              {schoolTypeLabels[variant.loai_hinh] ?? variant.loai_hinh}
+                            </p>
+                            <p className="admin-cell-meta">{variant.ten}</p>
+                            <p className="admin-cell-meta">
+                              {variant.so_co_so_su_dung.toLocaleString("vi-VN")} cơ sở · {variant.cac_ky_nam_hoc_su_dung.length.toLocaleString("vi-VN")} kỳ năm học
+                            </p>
+                          </div>
+                        ))}
+                      </div>
                     </td>
-                    <td>{row.so_nam_hoc_su_dung.toLocaleString("vi-VN")} năm học</td>
-                    <td><StatusBadge status={row.trang_thai} /></td>
-                  </tr>
-                ))}
+                    <td>
+                      <p>{startDates.length === 1 ? `Từ ${formatDate(startDates[0])}` : "Khác nhau theo phạm vi"}</p>
+                      <p className="admin-cell-meta">
+                        {endDates.length === 1
+                          ? `Đến ${endDates[0] ? formatDate(endDates[0]) : "không ghi hạn"}`
+                          : "Thời hạn khác nhau"}
+                      </p>
+                    </td>
+                    <td>
+                      {structures.length === 1 ? (
+                        <>
+                          <p>{firstVariant.so_tieu_chuan} tiêu chuẩn</p>
+                          <p className="admin-cell-meta">{firstVariant.so_tieu_chi} tiêu chí mỗi phạm vi</p>
+                        </>
+                      ) : (
+                        <div className="grid gap-2">
+                          {document.variants.map((variant) => (
+                            <p key={variant.id}>
+                              {schoolTypeLabels[variant.loai_hinh] ?? variant.loai_hinh}: {variant.so_tieu_chuan} tiêu chuẩn · {variant.so_tieu_chi} tiêu chí
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <p>{schoolCount.toLocaleString("vi-VN")} cơ sở</p>
+                      <p className="admin-cell-meta">
+                        {schoolYearPeriods.length.toLocaleString("vi-VN")} kỳ năm học · {usageCount.toLocaleString("vi-VN")} lượt áp dụng
+                      </p>
+                    </td>
+                    <td>
+                      {statuses.length === 1
+                        ? <StatusBadge status={statuses[0]} />
+                        : <StatusBadge tone="warning">Nhiều trạng thái</StatusBadge>}
+                    </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

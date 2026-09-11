@@ -49,12 +49,13 @@ Khi dùng lại minh chứng, hệ thống không cấp mã mới. Đây là cá
 
 1. Vào **Tự đánh giá**.
 2. Chọn tiêu chí trên Gap Board.
-3. Nhập mô tả hiện trạng Mức 1 hoặc Mức 2.
-4. Chọn mã minh chứng đính kèm.
-5. Chọn mức tự đánh giá.
-6. Bấm **Lưu tự đánh giá**.
+3. Đọc nội dung quy định của Mức 1 và Mức 2.
+4. Chọn trạng thái thực tế và nhập ghi nhận của nhà trường cho từng nội hàm.
+5. Mở khu vực minh chứng, chọn mã đã xác minh và còn hiệu lực.
+6. Chọn mức tự đánh giá rồi bấm **Lưu tự đánh giá**.
+7. Gửi tiêu chí sang hàng đợi chờ duyệt.
 
-Nếu chưa có mô tả hoặc chưa gắn mã minh chứng, hệ thống sẽ không cho lưu mức đạt.
+Nếu vừa xác minh nhưng chưa thấy minh chứng, bấm **Tải lại kho**. Hệ thống chỉ cho chọn minh chứng đúng trường, năm học, tiêu chí và thời hạn. Nếu chưa có ghi nhận hoặc minh chứng hợp lệ, hệ thống sẽ không công nhận mức đạt.
 
 [CHÈN ẢNH: Form tự đánh giá một tiêu chí]
 
@@ -71,10 +72,13 @@ Nếu chưa có mô tả hoặc chưa gắn mã minh chứng, hệ thống sẽ 
 
 ## 7. Xuất và kiểm tra file
 
-1. Xuất **Mẫu 1** để kiểm tra báo cáo tự đánh giá.
-2. Xuất **Mẫu 2** nếu đã có kế hoạch cải tiến.
-3. Xuất **Danh mục minh chứng** để rà lại danh sách mã.
-4. Xuất **Gói minh chứng** khi cần gom tệp gửi kèm.
+1. Đọc checklist **Mức sẵn sàng của Mẫu 1** và xử lý từng mục còn thiếu.
+2. Tải bản nháp Mẫu 1 hoặc Mẫu 2 để kiểm tra.
+3. Khi dữ liệu đã đủ, chọn **Tạo bản gửi duyệt**.
+4. Xuất **Danh mục minh chứng** để rà lại danh sách mã.
+5. Xuất **Gói minh chứng** khi cần gom tệp gửi kèm.
+
+Bản nháp chỉ dùng để rà soát. Bản gửi duyệt được tạo từ dữ liệu hiện tại và niêm phong phiên bản nguồn; nếu dữ liệu thay đổi, cần tạo lại bản gửi duyệt.
 
 [CHÈN ẢNH: Các nút xuất báo cáo]
 

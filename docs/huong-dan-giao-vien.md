@@ -5,12 +5,14 @@ Trang này dành cho giáo viên được phân công cung cấp minh chứng tr
 ## 1. Tạo tài khoản và tham gia đơn vị
 
 1. Mở ứng dụng và chọn **Tạo tài khoản**.
-2. Đăng ký bằng email công việc của bạn, sau đó xác nhận email.
-3. Đăng nhập và mở **Thiết lập**.
-4. Nếu nhà trường đã gửi lời mời, kiểm tra tên đơn vị và vai trò rồi chọn **Tham gia đơn vị**.
-5. Nếu chưa có lời mời, gửi đúng email đã đăng ký cho Hiệu trưởng hoặc người quản lý của trường. Không tự tạo đơn vị mới.
+2. Nhập họ tên, email và mật khẩu.
+3. Tìm trường bằng tên, mã trường hoặc phường/xã.
+4. Chọn đúng trường trong danh mục Quảng Ninh rồi tạo tài khoản.
+5. Xác nhận email và đăng nhập. Hệ thống tự tạo hồ sơ Giáo viên tại trường đã chọn.
 
-[CHÈN ẢNH: Màn hình lời mời tham gia đơn vị]
+[CHÈN ẢNH: Màn hình đăng ký và chọn trường]
+
+Nếu cần vai trò khác, liên hệ Hiệu trưởng hoặc người có thẩm quyền của trường. Không chọn hộ trường cho người khác và không tạo lại tài khoản khi đã đăng ký sai trường; hãy báo quản trị hệ thống để được kiểm tra.
 
 ## 2. Nộp minh chứng từ công việc thường ngày
 

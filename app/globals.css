@@ -692,6 +692,10 @@ button:disabled {
   outline: none;
 }
 
+.form-control.search-control {
+  padding-left: 42px;
+}
+
 .segmented-control {
   background: var(--color-lavender-mist);
   border-radius: var(--radius-pill);

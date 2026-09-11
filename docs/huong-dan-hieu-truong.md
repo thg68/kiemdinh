@@ -62,10 +62,11 @@ Mục dọn tệp chỉ xuất hiện với tài khoản được phép xóa min
 4. Chọn **Mẫu 1 - Báo cáo tự đánh giá (.docx)**.
 5. Mở file Word vừa tải về.
 6. Kiểm tra các dòng cảnh báo màu đỏ. Nếu còn cảnh báo, báo cáo chưa nên dùng chính thức.
-7. Khi báo cáo đã được rà soát, chọn **Phê duyệt** để chuyển báo cáo sang trạng thái khách chỉ đọc có thể xem.
-8. Mỗi lần phê duyệt tạo một phiên bản snapshot mới; phiên bản đã phê duyệt không thể ghi đè hoặc xóa.
+7. Khi checklist đã đạt, chọn **Tạo bản gửi duyệt**.
+8. Mở **Báo cáo chờ duyệt**, kiểm tra đúng phiên bản rồi chọn **Phê duyệt** hoặc trả lại.
+9. Mở **Báo cáo đã phê duyệt** để kiểm tra snapshot chỉ đọc.
 
-Để hoàn thiện Mẫu 2, vào **Kế hoạch cải tiến**, nhập sáu phần nội dung chung và bảng kế hoạch. Hệ thống sẽ báo rõ phần còn thiếu trước khi cho phê duyệt.
+Để hoàn thiện Mẫu 2, vào **Kế hoạch cải tiến** và làm lần lượt ba tab: **Nội dung Mẫu 2**, **Nhiệm vụ cải tiến**, **Rà soát và xuất**. Hệ thống theo dõi phần nội dung còn thiếu, người phụ trách, trạng thái và nhiệm vụ quá hạn.
 
 Hiệu trưởng có thể thêm, cập nhật hoặc xóa kế hoạch cải tiến, thông tin hội đồng và văn bản liên quan của đúng đơn vị mình; hệ thống tự từ chối dữ liệu thuộc đơn vị khác.
 
@@ -88,15 +89,15 @@ Hiệu trưởng có thể thêm, cập nhật hoặc xóa kế hoạch cải ti
 - Không dùng dữ liệu `[DEMO]` làm báo cáo chính thức.
 - Dữ liệu nhạy cảm của học sinh chỉ lưu dạng chỉ mục, không nhập nội dung chi tiết vào ứng dụng.
 
-## 7. Mời giáo viên và thành viên vào đơn vị
+## 7. Quản lý thành viên và vai trò
 
-1. Vào **Thiết lập** rồi chọn **Người dùng và vai trò**.
-2. Nhập email người nhận, họ và tên, sau đó chọn vai trò ban đầu.
-3. Chọn **Gửi lời mời**. Lời mời sẽ xuất hiện trong mục **Lời mời đang chờ**; có thể chọn **Hủy lời mời** nếu nhập nhầm.
-4. Người nhận đăng ký hoặc đăng nhập bằng đúng email được mời, mở **Thiết lập** và chọn **Tham gia đơn vị**.
-5. Sau khi họ tham gia, tài khoản chuyển sang danh sách thành viên; cập nhật thêm vai trò hoặc phân công tiêu chí nếu cần.
+1. Giáo viên tự chọn trường trong danh mục Quảng Ninh khi đăng ký và xác nhận email.
+2. Vào **Thiết lập** rồi mở **Danh sách thành viên**.
+3. Danh sách được sắp xếp theo mức độ quan trọng của vai trò.
+4. Chọn ô vai trò của một thành viên để mở danh sách lựa chọn.
+5. Thêm hoặc bỏ vai trò phù hợp; nút **Lưu vai trò** chỉ xuất hiện khi có thay đổi.
+6. Phân công tiêu chí cho Giáo viên, Ủy viên hoặc Tổ trưởng nếu cần.
 
-Tài khoản mới không tự nhận vai trò Hiệu trưởng. Đơn vị mới và Hiệu trưởng đầu tiên do Quản trị hệ thống thiết lập.
+Tài khoản mới chỉ nhận vai trò Giáo viên. Không cấp vai trò Hiệu trưởng, Chủ tịch Hội đồng hoặc Thư ký nếu chưa xác minh đúng người và trách nhiệm.
 
-[CHÈN ẢNH: Gửi lời mời trong màn hình Người dùng và vai trò]
-[CHÈN ẢNH: Thành viên đã tham gia đơn vị]
+[CHÈN ẢNH: Danh sách thành viên và ô chọn vai trò]

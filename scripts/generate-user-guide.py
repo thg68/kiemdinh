@@ -77,7 +77,7 @@ def add_cover(document: Document) -> None:
         )
 
     rows = [
-        ("Phiên bản", "1.0"),
+        ("Phiên bản", "2.0"),
         ("Cập nhật", date.today().strftime("%d/%m/%Y")),
         ("Phạm vi", "Các màn hình và quy trình đang có trong hệ thống PDT Quality"),
     ]
@@ -122,10 +122,10 @@ def add_contents(document: Document) -> None:
         "7. Hướng dẫn cho Hiệu trưởng / Giám đốc",
         "8. Hướng dẫn cho Ủy viên / Tổ trưởng và Khách chỉ đọc",
         "9. Kho minh chứng",
-        "10. Tự đánh giá, Gap Board và What-if",
+        "10. Phiếu nội hàm, Gap Board và mô phỏng phương án",
         "11. Kế hoạch cải tiến và Hội đồng TĐG",
         "12. Xuất báo cáo và dữ liệu",
-        "13. Cài đặt người dùng và phân công",
+        "13. Người dùng, vai trò và phân công",
         "14. Xử lý lỗi thường gặp",
         "15. Đường dẫn nhanh và checklist",
     ]
@@ -146,6 +146,7 @@ def add_role_path_table(document: Document) -> None:
         ["Thư ký Hội đồng", "Minh chứng -> Tự đánh giá -> Báo cáo", "Tổng hợp, xác minh và chuẩn bị báo cáo"],
         ["Chủ tịch Hội đồng", "Việc của tôi -> Chờ duyệt -> Hội đồng TĐG", "Duyệt nội dung và chốt mức"],
         ["Hiệu trưởng / Giám đốc", "Tổng quan -> Cài đặt -> Tự đánh giá -> Báo cáo", "Quản lý đơn vị và phê duyệt"],
+        ["Quản trị hệ thống", "Quản trị -> Cơ sở -> Vận hành", "Theo dõi toàn nền tảng, không xử lý thay trường"],
         ["Khách chỉ đọc", "Báo cáo đã phê duyệt", "Chỉ xem nội dung đã được duyệt"],
     ]
     guide.add_table(
@@ -195,18 +196,19 @@ def build_document() -> Document:
         "Mở màn hình Đăng nhập.",
         "Chọn Tạo tài khoản.",
         "Nhập họ tên, email và mật khẩu.",
+        "Tìm trường bằng tên, mã trường hoặc phường/xã rồi chọn đúng trường trong danh mục Quảng Ninh.",
         "Mở email xác nhận và bấm liên kết xác nhận.",
-        "Quay lại hệ thống để đăng nhập.",
+        "Quay lại hệ thống để đăng nhập vào đúng trường đã chọn.",
     ]:
         guide.add_step(document, step)
     guide.add_callout(
         document,
         "Lưu ý",
-        "Tài khoản mới không tự trở thành Hiệu trưởng. Sau khi đăng ký, người quản lý phải thêm tài khoản vào đúng đơn vị và gán vai trò.",
+        "Sau khi xác nhận email, tài khoản được tạo với vai trò Giáo viên tại trường đã chọn. Thư ký, Chủ tịch Hội đồng, Hiệu trưởng và các vai trò có thẩm quyền khác vẫn phải được nhà trường phân công.",
         fill=guide.LIGHT_GOLD,
         color="7A5A00",
     )
-    add_screenshot(document, "Màn hình Đăng nhập và tab Tạo tài khoản")
+    add_screenshot(document, "Tab Tạo tài khoản với ô tìm trường theo tên, mã hoặc phường xã")
 
     document.add_heading("2.2 Đăng nhập", level=2)
     for step in [
@@ -240,7 +242,7 @@ def build_document() -> Document:
         ["Báo cáo", "Xuất file và phê duyệt báo cáo theo quyền."],
         ["Văn bản liên quan", "Lưu danh mục văn bản do nhà trường tự quản lý."],
         ["Nhật ký", "Xem lịch sử thao tác khi có quyền."],
-        ["Cài đặt", "Quản lý đơn vị, năm học, người dùng, vai trò và phân công."],
+        ["Cài đặt", "Quản lý năm học, vai trò và phân công trong phạm vi nhà trường."],
     ]
     guide.add_table(
         document,
@@ -341,13 +343,14 @@ def build_document() -> Document:
     ]:
         guide.add_step(document, step)
     add_screenshot(document, "Gap Board hiển thị tiêu chí bắt buộc chưa đạt")
-    document.add_heading("7.2 Quản lý người dùng", level=2)
+    document.add_heading("7.2 Quản lý thành viên và vai trò", level=2)
     for step in [
         "Vào Cài đặt.",
-        "Nhập email của tài khoản đã đăng ký để thêm vào đơn vị.",
-        "Gán đúng vai trò.",
+        "Mở Danh sách thành viên đã đăng ký vào trường.",
+        "Chọn ô vai trò của một thành viên để mở danh sách lựa chọn.",
+        "Chỉ bấm Lưu vai trò khi có thay đổi.",
         "Phân công tiêu chí cho Giáo viên, Ủy viên hoặc Tổ trưởng.",
-        "Kiểm tra lại Vai trò của bạn trên tài khoản vừa được gán.",
+        "Yêu cầu người dùng tải lại phiên đăng nhập để kiểm tra quyền mới.",
     ]:
         guide.add_step(document, step)
     document.add_heading("7.3 Phê duyệt báo cáo", level=2)
@@ -401,48 +404,49 @@ def build_document() -> Document:
         font_size=8.6,
     )
 
-    guide.add_section_heading(document, 10, "Tự đánh giá, Gap Board và What-if")
-    document.add_heading("10.1 Lưu tự đánh giá", level=2)
+    guide.add_section_heading(document, 10, "Phiếu nội hàm, Gap Board và mô phỏng phương án")
+    document.add_heading("10.1 Cập nhật Phiếu nội hàm", level=2)
     for step in [
         "Chọn năm học và cấp học.",
         "Chọn tiêu chí trên Gap Board.",
         "Đọc nội dung quy định của Mức 1 và Mức 2.",
-        "Nhập mô tả hiện trạng thực tế của nhà trường.",
-        "Chọn các mã minh chứng phù hợp.",
+        "Chọn trạng thái thực tế và nhập ghi nhận của nhà trường cho từng nội hàm.",
+        "Mở khu vực minh chứng và chọn mã đã xác minh, còn hiệu lực, đúng tiêu chí.",
         "Chọn Chưa đạt, Mức 1 hoặc Mức 2 rồi bấm Lưu tự đánh giá.",
     ]:
         guide.add_step(document, step)
     guide.add_callout(
         document,
         "Hệ thống sẽ từ chối",
-        "Mức đạt khi mô tả trống, không có mã minh chứng hoặc chọn Mức 2 khi Mức 1 chưa đạt.",
+        "Mức đạt khi ghi nhận thực tế trống, không có mã minh chứng hợp lệ hoặc chọn Mức 2 khi điều kiện Mức 1 chưa hoàn thành.",
         fill=guide.LIGHT_RED,
         color="9B1C1C",
     )
-    add_screenshot(document, "Chi tiết một tiêu chí với nội dung quy định, ô mô tả và danh sách mã minh chứng")
+    add_screenshot(document, "Phiếu nội hàm của một tiêu chí với nội dung quy định, ghi nhận thực tế và minh chứng")
     document.add_heading("10.2 Đọc Gap Board", level=2)
     guide.add_bullet(document, "Mỗi ô là một tiêu chí và hiển thị trạng thái hiện tại.")
     guide.add_bullet(document, "Nhãn Bắt buộc cho biết tiêu chí cần ưu tiên.")
     guide.add_bullet(document, "Chọn một ô để mở phần nhập chi tiết phía dưới.")
     guide.add_bullet(document, "Phần tổng hợp cho biết tiêu chí nào đang chặn mức tiếp theo.")
-    document.add_heading("10.3 Sử dụng What-if", level=2)
+    document.add_heading("10.3 Mô phỏng phương án", level=2)
     for step in [
-        "Chọn tiêu chí giả định.",
-        "Chọn mức giả định.",
-        "Xem kết quả cấp học và toàn trường thay đổi ngay trên màn hình.",
-        "Chọn Không giả định hoặc tắt What-if để quay lại kết quả thật.",
+        "Chọn Mô phỏng phương án trên Gap Board.",
+        "Chọn mục tiêu Mức 1 hoặc Mức 2.",
+        "Thử thêm, bỏ hoặc thay đổi mức của các tiêu chí trong phương án.",
+        "So sánh kết quả hiện tại, sau mô phỏng và toàn trường rồi đóng panel để quay lại dữ liệu thật.",
     ]:
         guide.add_step(document, step)
-    guide.add_text(document, "What-if không lưu vào cơ sở dữ liệu và không thay đổi mức thật của tiêu chí.")
+    guide.add_text(document, "Mô phỏng phương án không lưu vào cơ sở dữ liệu và không thay đổi mức thật của tiêu chí.")
 
     guide.add_section_heading(document, 11, "Kế hoạch cải tiến và Hội đồng TĐG")
     document.add_heading("11.1 Kế hoạch cải tiến", level=2)
     for step in [
         "Chọn năm học và cấp học.",
-        "Nhập các phần nội dung chung của Mẫu 2.",
-        "Thêm từng nội dung cần cải tiến với mục tiêu, hoạt động, chỉ số, thời gian, người phụ trách và nguồn lực.",
-        "Cập nhật mức độ thực hiện trong quá trình triển khai.",
-        "Kiểm tra danh sách phần còn thiếu trước khi xuất Mẫu 2.",
+        "Mở Nội dung Mẫu 2 và hoàn thiện sáu phần thuyết minh; phần thông tin chung và bảng nhiệm vụ được tạo tự động.",
+        "Mở Nhiệm vụ cải tiến, tìm kiếm hoặc lọc theo tiêu chí, người phụ trách, trạng thái và quá hạn.",
+        "Chọn Thêm nhiệm vụ rồi nhập nội dung, mục tiêu, hoạt động, chỉ số, thời gian, người phụ trách, nguồn lực và minh chứng dự kiến.",
+        "Cập nhật trạng thái trong quá trình thực hiện; dùng lưu trữ cho nhiệm vụ không còn áp dụng.",
+        "Mở Rà soát và xuất để xử lý từng điều kiện còn thiếu trước khi tạo Mẫu 2.",
     ]:
         guide.add_step(document, step)
     document.add_heading("11.2 Hội đồng tự đánh giá", level=2)
@@ -463,13 +467,15 @@ def build_document() -> Document:
         ["Dữ liệu (.json)", "Bản dữ liệu của một năm học để dự phòng chuyển hệ thống."],
     ]
     guide.add_table(document, ["Tệp xuất", "Dùng khi nào"], export_rows, [2600, guide.CONTENT_WIDTH_DXA - 2600], font_size=9)
-    document.add_heading("12.1 Các bước xuất", level=2)
+    document.add_heading("12.1 Tạo và duyệt báo cáo", level=2)
     for step in [
         "Vào Báo cáo.",
         "Chọn năm học và cấp học.",
-        "Đọc danh sách dữ liệu còn thiếu.",
-        "Chọn loại tệp cần tải.",
-        "Mở file và kiểm tra trước khi gửi hoặc phê duyệt.",
+        "Đọc checklist mức sẵn sàng; chọn Xử lý để tới đúng màn hình còn thiếu dữ liệu.",
+        "Tải bản nháp để kiểm tra nội dung khi cần.",
+        "Khi checklist đã đạt, chọn Tạo bản gửi duyệt để hệ thống tạo file và niêm phong dữ liệu nguồn.",
+        "Người có thẩm quyền mở Báo cáo chờ duyệt, kiểm tra đúng phiên bản rồi phê duyệt hoặc trả lại.",
+        "Mở Báo cáo đã phê duyệt để xem snapshot chỉ đọc.",
     ]:
         guide.add_step(document, step)
     guide.add_callout(
@@ -481,14 +487,14 @@ def build_document() -> Document:
     )
     add_screenshot(document, "Các nút xuất Mẫu 1, Mẫu 2, XLSX, ZIP và JSON")
 
-    guide.add_section_heading(document, 13, "Cài đặt người dùng và phân công")
-    document.add_heading("13.1 Thêm người dùng vào đơn vị", level=2)
+    guide.add_section_heading(document, 13, "Người dùng, vai trò và phân công")
+    document.add_heading("13.1 Thành viên tự đăng ký vào trường", level=2)
     for step in [
-        "Yêu cầu người dùng đăng ký và xác nhận email trước.",
-        "Vào Cài đặt > Quản lý người dùng.",
-        "Nhập đúng email của người dùng.",
-        "Thêm người dùng vào đơn vị và gán vai trò.",
-        "Yêu cầu người dùng đăng nhập lại để kiểm tra vai trò.",
+        "Người dùng chọn đúng trường trong danh mục Quảng Ninh khi tạo tài khoản.",
+        "Sau khi xác nhận email, hệ thống tạo hồ sơ Giáo viên tại trường đã chọn.",
+        "Hiệu trưởng mở Cài đặt và tìm người dùng trong Danh sách thành viên.",
+        "Mở ô vai trò, chọn vai trò cần bổ sung rồi bấm Lưu vai trò.",
+        "Không cấp vai trò có thẩm quyền nếu chưa xác minh đúng người và nhiệm vụ.",
     ]:
         guide.add_step(document, step)
     document.add_heading("13.2 Phân công tiêu chí", level=2)
@@ -501,6 +507,8 @@ def build_document() -> Document:
     ]:
         guide.add_step(document, step)
     add_screenshot(document, "Màn hình quản lý người dùng, vai trò và phân công tiêu chí")
+    document.add_heading("13.3 Chuyển workspace quản trị", level=2)
+    guide.add_text(document, "Ô Vai trò đang sử dụng chỉ xuất hiện khi tài khoản có ít nhất hai vai trò và một trong số đó là Quản trị hệ thống. Chọn Quản trị hệ thống để quản lý cơ sở, người tham gia, metadata minh chứng theo trường, bộ tiêu chuẩn và vận hành; chọn Nghiệp vụ nhà trường để quay lại công việc của trường.")
 
     guide.add_section_heading(document, 14, "Xử lý lỗi thường gặp")
     issue_rows = [
@@ -510,7 +518,8 @@ def build_document() -> Document:
         ["Không mở được tệp", "Mở lại từ trang chi tiết để tạo đường dẫn mới; báo quản lý nếu vẫn bị từ chối."],
         ["Không lưu được mức", "Bổ sung mô tả và mã minh chứng; Mức 2 chỉ được chọn sau Mức 1."],
         ["Không phê duyệt được báo cáo", "Đọc danh sách phần thiếu và hoàn thiện dữ liệu trước."],
-        ["What-if không thay đổi dữ liệu", "Đúng thiết kế: đây chỉ là mô phỏng, không phải thao tác lưu."],
+        ["Mô phỏng không thay đổi dữ liệu", "Đúng thiết kế: đây chỉ là phương án tạm thời, không phải thao tác lưu."],
+        ["Minh chứng đã xác minh nhưng không chọn được", "Kiểm tra trường, năm học, tiêu chí và hạn sử dụng; sau đó bấm Tải lại kho."],
     ]
     guide.add_table(
         document,
@@ -530,7 +539,7 @@ def build_document() -> Document:
         guide.add_bullet(document, item)
 
     guide.add_section_heading(document, 15, "Đường dẫn nhanh và checklist")
-    base_url = "https://kiemdinh-app.thang-nh.workers.dev"
+    base_url = "https://kdclgd.io.vn"
     paragraph = document.add_paragraph()
     guide.add_hyperlink(paragraph, "Mở hệ thống PDT Quality", base_url)
     route_rows = [
@@ -551,6 +560,7 @@ def build_document() -> Document:
         ["Văn bản liên quan", "/van-ban-lien-quan"],
         ["Nhật ký", "/nhat-ky"],
         ["Cài đặt", "/thiet-lap"],
+        ["Quản trị hệ thống", "/quan-tri"],
     ]
     guide.add_table(document, ["Màn hình", "Đường dẫn"], route_rows, [4200, guide.CONTENT_WIDTH_DXA - 4200], font_size=8.8)
     document.add_heading("15.1 Checklist hằng ngày", level=2)
@@ -558,7 +568,7 @@ def build_document() -> Document:
         "[ ] Tôi đang chọn đúng năm học và cấp học.",
         "[ ] Tôi chỉ thao tác trong phạm vi được giao.",
         "[ ] Tôi đã tìm minh chứng cũ trước khi tạo mã mới.",
-        "[ ] Mô tả hiện trạng có mã minh chứng thật đi kèm.",
+        "[ ] Ghi nhận thực tế có mã minh chứng thật đi kèm.",
         "[ ] Tôi đã kiểm tra thông báo thành công hoặc lỗi sau khi lưu.",
         "[ ] Tôi đăng xuất nếu dùng máy tính chung.",
     ]:
@@ -569,7 +579,8 @@ def build_document() -> Document:
         "[ ] Đủ nội dung 15/15 tiêu chí.",
         "[ ] Không có tiêu chí đạt khi thiếu mô tả hoặc minh chứng.",
         "[ ] Đã xử lý minh chứng hết hạn, trùng và mồ côi.",
-        "[ ] Đã đọc toàn bộ file Word sau khi xuất.",
+        "[ ] Đã tải bản nháp và đọc toàn bộ file Word.",
+        "[ ] Bản gửi duyệt được tạo sau lần cập nhật dữ liệu cuối cùng.",
         "[ ] Không còn cảnh báo CHƯA CÓ DỮ LIỆU ở phần bắt buộc.",
     ]:
         guide.add_bullet(document, item)

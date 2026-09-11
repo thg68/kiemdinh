@@ -5,6 +5,20 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Archive,
+  CheckCircle2,
+  ChevronDown,
+  CircleAlert,
+  Database,
+  Download,
+  Eye,
+  FileSpreadsheet,
+  FileText,
+  LoaderCircle,
+  RotateCcw,
+  Send,
+} from "lucide-react";
+import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
@@ -92,17 +106,59 @@ const capHocLabels: Record<CapHoc, string> = {
 type ExportItem = {
   approvalWorkflow: boolean;
   endpoint: string;
-  label: string;
   reportType: string;
 };
 
+type ExportPresentation = {
+  description: string;
+  downloadLabel: string;
+  format: string;
+  title: string;
+};
+
 const exports: ExportItem[] = [
-  { approvalWorkflow: true, endpoint: "mau-1", label: "Mẫu 1 - Báo cáo tự đánh giá (.docx)", reportType: "mau_1_tu_danh_gia" },
-  { approvalWorkflow: true, endpoint: "mau-2", label: "Mẫu 2 - Kế hoạch cải tiến (.docx)", reportType: "mau_2_ke_hoach_cai_tien" },
-  { approvalWorkflow: false, endpoint: "danh-muc-minh-chung", label: "Danh mục minh chứng (.xlsx)", reportType: "danh_muc_minh_chung" },
-  { approvalWorkflow: false, endpoint: "goi-minh-chung", label: "Gói minh chứng (.zip)", reportType: "goi_minh_chung" },
-  { approvalWorkflow: false, endpoint: "export-json", label: "Dữ liệu đầy đủ năm học (.json)", reportType: "du_lieu_nam_hoc_json" },
+  { approvalWorkflow: true, endpoint: "mau-1", reportType: "mau_1_tu_danh_gia" },
+  { approvalWorkflow: true, endpoint: "mau-2", reportType: "mau_2_ke_hoach_cai_tien" },
+  { approvalWorkflow: false, endpoint: "danh-muc-minh-chung", reportType: "danh_muc_minh_chung" },
+  { approvalWorkflow: false, endpoint: "goi-minh-chung", reportType: "goi_minh_chung" },
+  { approvalWorkflow: false, endpoint: "export-json", reportType: "du_lieu_nam_hoc_json" },
 ];
+
+const exportPresentation: Record<string, ExportPresentation> = {
+  mau_1_tu_danh_gia: {
+    description: "Tổng hợp kết quả tự đánh giá, nhận xét theo tiêu chuẩn và danh mục minh chứng.",
+    downloadLabel: "Tải bản nháp",
+    format: "DOCX",
+    title: "Mẫu 1 - Báo cáo tự đánh giá",
+  },
+  mau_2_ke_hoach_cai_tien: {
+    description: "Kế hoạch khắc phục hạn chế và theo dõi hoạt động cải tiến chất lượng.",
+    downloadLabel: "Tải bản nháp",
+    format: "DOCX",
+    title: "Mẫu 2 - Kế hoạch cải tiến",
+  },
+  danh_muc_minh_chung: {
+    description: "Danh sách mã, tiêu chí và trạng thái minh chứng để rà soát trên Excel.",
+    downloadLabel: "Tải Excel",
+    format: "XLSX",
+    title: "Danh sách minh chứng",
+  },
+  goi_minh_chung: {
+    description: "Toàn bộ tệp minh chứng thuộc năm học và cấp học đang chọn.",
+    downloadLabel: "Tải tệp ZIP",
+    format: "ZIP",
+    title: "Tệp minh chứng đính kèm",
+  },
+  du_lieu_nam_hoc_json: {
+    description: "Bản sao dữ liệu có cấu trúc dành cho sao lưu hoặc trao đổi kỹ thuật.",
+    downloadLabel: "Tải JSON",
+    format: "JSON",
+    title: "Bản sao dữ liệu hệ thống",
+  },
+};
+
+const officialExports = exports.filter((item) => item.approvalWorkflow);
+const supportingExports = exports.filter((item) => !item.approvalWorkflow);
 
 function storagePathForReport(coSoId: string, namHocId: string, reportType: string, fileName: string) {
   const safeFileName = fileName.replace(/[\\/:*?"<>|]+/g, "-");
@@ -114,6 +170,35 @@ function storagePathForReport(coSoId: string, namHocId: string, reportType: stri
 async function sha256Blob(blob: Blob) {
   const digest = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer());
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function reportUpdatedAt(report?: ReportRecord) {
+  const value = report?.ngay_phe_duyet
+    ?? report?.export_metadata?.updated_at
+    ?? report?.export_metadata?.exported_at;
+
+  if (typeof value !== "string") return null;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function readinessBlockerCount(readiness?: ReportReadiness) {
+  if (!readiness) return 0;
+
+  return [
+    readiness.missing_criteria.length > 0,
+    readiness.missing_descriptions.length > 0,
+    readiness.missing_evidence.length > 0,
+    readiness.unverified_evidence.length > 0,
+    readiness.missing_council,
+    ...readiness.other_blockers.map(() => true),
+  ].filter(Boolean).length;
 }
 
 export function ReportExportWorkspace() {
@@ -131,6 +216,7 @@ export function ReportExportWorkspace() {
   const [standards, setStandards] = useState<Standard[]>([]);
   const [standardNotes, setStandardNotes] = useState<StandardNote[]>([]);
   const [reportRecords, setReportRecords] = useState<ReportRecord[]>([]);
+  const [reportReadiness, setReportReadiness] = useState<Record<string, ReportReadiness>>({});
   const [readinessItems, setReadinessItems] = useState<ReadinessItem[]>([]);
   const [selectedYearId, setSelectedYearId] = useState("");
   const [selectedCapHoc, setSelectedCapHoc] = useState<CapHoc>("mam_non");
@@ -315,20 +401,39 @@ export function ReportExportWorkspace() {
 
   const loadReadiness = useCallback(async () => {
     if (!supabase || !selectedYearId || !selectedCapHoc) {
+      setReportReadiness({});
       setReadinessItems([]);
       return;
     }
 
+    setReportReadiness({});
     setReadinessItems([]);
     const request = reportRequest.begin("readiness");
 
-    const { data, error } = await supabase.rpc("fn_kiem_tra_san_sang_bao_cao", {
-      p_nam_hoc_id: selectedYearId,
-      p_cap_hoc: selectedCapHoc,
-      p_loai_bao_cao: "mau_1_tu_danh_gia",
-    });
+    const checks = await Promise.all(officialExports.map(async (item) => {
+      const result = await supabase.rpc("fn_kiem_tra_san_sang_bao_cao", {
+        p_nam_hoc_id: selectedYearId,
+        p_cap_hoc: selectedCapHoc,
+        p_loai_bao_cao: item.reportType,
+      });
+
+      return { item, ...result };
+    }));
 
     if (!reportRequest.isCurrent(request)) return;
+
+    const readinessByType = checks.reduce<Record<string, ReportReadiness>>((accumulator, check) => {
+      if (!check.error && check.data) {
+        accumulator[check.item.reportType] = check.data as ReportReadiness;
+      }
+
+      return accumulator;
+    }, {});
+    setReportReadiness(readinessByType);
+
+    const assessmentCheck = checks.find((check) => check.item.reportType === "mau_1_tu_danh_gia");
+    const data = assessmentCheck?.data;
+    const error = assessmentCheck?.error;
 
     if (error || !data) {
       setReadinessItems([{
@@ -343,39 +448,38 @@ export function ReportExportWorkspace() {
     const readiness = data as ReportReadiness;
     const items: ReadinessItem[] = [
       {
-        id: "overall",
-        label: "Trạng thái phê duyệt",
-        detail: readiness.ready ? "Báo cáo đã đủ điều kiện nghiệp vụ để phê duyệt." : "Báo cáo chưa đủ điều kiện phê duyệt.",
-        status: readiness.ready ? "ready" : "blocked",
-      },
-      {
         id: "assessment-count",
         label: "Tự đánh giá đủ 15 tiêu chí",
         detail: readiness.missing_criteria.length === 0 ? "Tất cả tiêu chí đã có bản ghi." : `Còn thiếu: ${readiness.missing_criteria.join(", ")}.`,
+        href: "/tu-danh-gia",
         status: readiness.missing_criteria.length === 0 ? "ready" : "blocked",
       },
       {
         id: "assessment-description",
         label: "Mô tả hiện trạng",
         detail: readiness.missing_descriptions.length === 0 ? "Các tiêu chí đã có mô tả cần thiết." : `Cần bổ sung: ${readiness.missing_descriptions.join(", ")}.`,
+        href: "/tu-danh-gia",
         status: readiness.missing_descriptions.length === 0 ? "ready" : "blocked",
       },
       {
         id: "assessment-evidence",
         label: "Minh chứng hợp lệ",
         detail: readiness.missing_evidence.length === 0 ? "Tất cả tiêu chí đều có minh chứng đã xác minh, còn hiệu lực." : `Còn thiếu: ${readiness.missing_evidence.join(", ")}.`,
+        href: "/tu-danh-gia",
         status: readiness.missing_evidence.length === 0 ? "ready" : "blocked",
       },
       {
         id: "unverified-evidence",
         label: "Minh chứng chưa hoàn tất xác minh",
         detail: readiness.unverified_evidence.length === 0 ? "Không có minh chứng chờ xác minh hoặc bị từ chối." : `Cần xử lý: ${readiness.unverified_evidence.join(", ")}.`,
+        href: "/minh-chung/xac-minh",
         status: readiness.unverified_evidence.length === 0 ? "ready" : "blocked",
       },
       {
         id: "council",
         label: "Hội đồng tự đánh giá",
         detail: readiness.missing_council ? "Chưa có thành viên hội đồng cho năm học này." : "Hội đồng đã có thành viên.",
+        href: "/hoi-dong-tu-danh-gia",
         status: readiness.missing_council ? "blocked" : "ready",
       },
       ...readiness.other_blockers.map<ReadinessItem>((blocker, index) => ({
@@ -554,6 +658,32 @@ export function ReportExportWorkspace() {
 
     setDownloading("");
     setMessage("Đã tạo file. Nếu Mẫu 1 còn cảnh báo đỏ, chưa được coi là báo cáo xuất bản chính thức.");
+  }
+
+  async function downloadSealedReport(report: ReportRecord) {
+    if (!supabase || !report.storage_path) {
+      setMessage("Báo cáo chưa có tệp đã niêm phong để tải xuống.");
+      return;
+    }
+
+    const downloadKey = `sealed:${report.id}`;
+    setDownloading(downloadKey);
+    setMessage("");
+
+    const { data, error } = await supabase.storage
+      .from("reports")
+      .createSignedUrl(report.storage_path, 60);
+
+    setDownloading("");
+
+    if (error || !data?.signedUrl) {
+      void reportStorageFailure("pending_report_signed_url");
+      setMessage(toUserMessage(error, "Không tạo được liên kết tải báo cáo. Vui lòng thử lại."));
+      return;
+    }
+
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    setMessage("Đã mở tệp báo cáo đúng với phiên bản đã niêm phong.");
   }
 
   async function updateReportStatus(
@@ -743,61 +873,133 @@ export function ReportExportWorkspace() {
     );
   }
 
+  const canApproveReports = hasCapability(roleCodes, "action.report.approve");
+  const selectedYear = years.find((year) => year.id === selectedYearId);
+
   return (
     <div className="grid gap-6">
       <ReportSubnav
         active="compose"
-        canApprove={hasCapability(roleCodes, "action.report.approve")}
+        canApprove={canApproveReports}
       />
-      <section className="surface-card grid gap-4 p-5 lg:grid-cols-2">
-        <label className="text-sm font-medium">
-          Năm học
-          <select
-            className="form-control mt-2"
-            value={selectedYearId}
-            onChange={(event) => setSelectedYearId(event.target.value)}
-          >
-            {years.map((year) => (
-              <option key={year.id} value={year.id}>
-                {year.ten} {year.trang_thai === "dang_hoat_dong" ? "(đang hoạt động)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+      <section className="surface-card overflow-hidden">
+        <div className="grid gap-4 border-b border-[var(--color-border)] px-5 py-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--color-ink-navy)]">Phạm vi báo cáo</p>
+            <p className="mt-1 truncate text-sm leading-6 text-[var(--color-graphite)]/70">
+              {school?.ten ?? "Đơn vị hiện tại"} · {selectedYear?.ten ?? "Chưa chọn năm học"} · {capHocLabels[selectedCapHoc]}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link className="button-secondary" href="/bao-cao/da-phe-duyet">
+              <Eye aria-hidden="true" className="mr-2 size-4" />
+              Báo cáo đã duyệt
+            </Link>
+            <Link className="button-secondary" href="/ke-hoach-cai-tien">
+              Kế hoạch cải tiến
+            </Link>
+          </div>
+        </div>
+        <div className="grid gap-4 p-5 lg:grid-cols-2">
+          <label className="text-sm font-medium">
+            Năm học
+            <select
+              className="form-control mt-2"
+              value={selectedYearId}
+              onChange={(event) => setSelectedYearId(event.target.value)}
+            >
+              {years.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.ten} {year.trang_thai === "dang_hoat_dong" ? "(đang hoạt động)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="text-sm font-medium">
-          Cấp học
-          <select
-            className="form-control mt-2"
-            value={selectedCapHoc}
-            onChange={(event) => setSelectedCapHoc(event.target.value as CapHoc)}
-          >
-            {capHocList.map((capHoc) => (
-              <option key={capHoc} value={capHoc}>
-                {capHocLabels[capHoc] ?? capHoc}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="text-sm font-medium">
+            Cấp học
+            <select
+              className="form-control mt-2"
+              value={selectedCapHoc}
+              onChange={(event) => setSelectedCapHoc(event.target.value as CapHoc)}
+            >
+              {capHocList.map((capHoc) => (
+                <option key={capHoc} value={capHoc}>
+                  {capHocLabels[capHoc] ?? capHoc}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </section>
-
-      <div className="flex flex-wrap gap-3">
-        <Link className="button-secondary" href="/bao-cao/da-phe-duyet">
-          Xem báo cáo đã phê duyệt
-        </Link>
-        <Link className="button-secondary" href="/ke-hoach-cai-tien">
-          Nhập kế hoạch cải tiến
-        </Link>
-      </div>
 
       {message ? <Message text={message} /> : null}
 
+      <section className="surface-card overflow-hidden" aria-labelledby="official-reports-title">
+        <div className="border-b border-[var(--color-border)] px-5 py-4">
+          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]" id="official-reports-title">
+            Báo cáo chính thức
+          </h2>
+          <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--color-graphite)]/70">
+            Theo dõi từng báo cáo từ lúc chuẩn bị dữ liệu đến khi được phê duyệt. Mỗi hàng chỉ hiển thị hành động cần làm tiếp theo.
+          </p>
+        </div>
+        <div className="divide-y divide-[var(--color-border)]">
+          {officialExports.map((item) => {
+            const currentReport = reportRecords.find(
+              (record) => record.loai_bao_cao === item.reportType && record.cap_hoc === selectedCapHoc,
+            );
+
+            return (
+              <OfficialReportCard
+                blockingCount={readinessBlockerCount(reportReadiness[item.reportType])}
+                canApprove={canApproveReports}
+                currentReport={currentReport}
+                isDownloading={downloading === item.endpoint || downloading === `sealed:${currentReport?.id ?? ""}`}
+                isLocked={Boolean(downloading)}
+                item={item}
+                key={item.endpoint}
+                readinessKnown={Boolean(reportReadiness[item.reportType])}
+                onDownloadDraft={() => download(item.endpoint)}
+                onDownloadSealed={() => currentReport && downloadSealedReport(currentReport)}
+                onUpdateStatus={updateReportStatus}
+              />
+            );
+          })}
+        </div>
+      </section>
+
+      <details className="surface-card group overflow-hidden">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--color-electric-cobalt)]">
+          <div>
+            <h2 className="text-base font-semibold text-[var(--color-ink-navy)]">Dữ liệu hỗ trợ</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+              Excel, tệp minh chứng và bản sao kỹ thuật.
+            </p>
+          </div>
+          <ChevronDown aria-hidden="true" className="size-5 shrink-0 transition-transform duration-200 group-open:rotate-180" />
+        </summary>
+        <div className="divide-y divide-[var(--color-border)] border-t border-[var(--color-border)]">
+          {supportingExports.map((item) => (
+            <SupportingExportRow
+              isDownloading={downloading === item.endpoint}
+              isLocked={Boolean(downloading)}
+              item={item}
+              key={item.endpoint}
+              onDownload={() => download(item.endpoint)}
+            />
+          ))}
+        </div>
+      </details>
+
       {readinessItems.length > 0 ? (
-        <ReadinessChecklist
-          description="Checklist này giúp tránh xuất hoặc phê duyệt Mẫu 1 khi dữ liệu thật còn thiếu. Hệ thống vẫn cho xuất file để rà soát, nhưng báo cáo chính thức cần xử lý hết mục chặn."
-          items={readinessItems}
-          title="Mức sẵn sàng của Mẫu 1"
-        />
+        <div className="scroll-mt-6" id="muc-san-sang-mau-1">
+          <ReadinessChecklist
+            description="Checklist này giúp tránh gửi duyệt Mẫu 1 khi dữ liệu thật còn thiếu. Bạn vẫn có thể tải bản nháp để rà soát."
+            items={readinessItems}
+            title="Mức sẵn sàng của Mẫu 1"
+          />
+        </div>
       ) : null}
 
       <StandardNotesForm
@@ -806,68 +1008,50 @@ export function ReportExportWorkspace() {
         onUpdate={updateNote}
         standards={standards}
       />
-
-      <section className="surface-card overflow-hidden">
-        <div className="border-b border-[var(--color-border)] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[var(--color-ink-navy)]">Xuất dữ liệu</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
-            Mẫu 1 chỉ hoàn chỉnh khi dữ liệu thật đã đủ mô tả hiện trạng và mã minh chứng.
-          </p>
-        </div>
-        <div className="grid gap-3 p-5 sm:grid-cols-2">
-          {exports.map((item) => {
-            const currentReport = reportRecords.find(
-              (record) => record.loai_bao_cao === item.reportType && record.cap_hoc === selectedCapHoc,
-            );
-
-            return (
-              <ReportExportCard
-              currentReport={currentReport}
-              isDownloading={downloading === item.endpoint}
-              isLocked={Boolean(downloading)}
-              item={item}
-              key={item.endpoint}
-              canApprove={hasCapability(roleCodes, "action.report.approve")}
-              onDownload={() => download(item.endpoint)}
-              onUpdateStatus={updateReportStatus}
-            />
-            );
-          })}
-        </div>
-      </section>
     </div>
   );
 }
 
-function ReportExportCard(props: {
+function OfficialReportCard(props: {
+  blockingCount: number;
   canApprove: boolean;
   currentReport?: ReportRecord;
   isDownloading: boolean;
   isLocked: boolean;
   item: (typeof exports)[number];
-  onDownload: () => void;
+  onDownloadDraft: () => void;
+  onDownloadSealed: () => void;
+  readinessKnown: boolean;
   onUpdateStatus: (
     reportType: string,
     status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai",
     returnReason?: string,
   ) => Promise<boolean>;
 }) {
-  const [pendingStatus, setPendingStatus] = useState<"nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai" | null>(null);
-  const [returnReason, setReturnReason] = useState("");
-  const [dialogError, setDialogError] = useState("");
+  const [pendingStatus, setPendingStatus] = useState<"nhap" | "cho_duyet" | null>(null);
   const currentStatus = props.currentReport?.trang_thai ?? "chua_tao";
+  const presentation = exportPresentation[props.item.reportType];
   const hasSealedFile = Boolean(
     props.currentReport?.storage_path
       && props.currentReport?.source_digest
       && props.currentReport?.sha256,
   );
+  const isEditable = ["chua_tao", "nhap", "tra_lai"].includes(currentStatus);
+  const hasReadinessBlockers = props.readinessKnown && props.blockingCount > 0;
+  const isBlocked = isEditable && hasReadinessBlockers;
+  const remediationHref = props.item.reportType === "mau_1_tu_danh_gia"
+    ? "#muc-san-sang-mau-1"
+    : "/ke-hoach-cai-tien?view=review&focus=blockers";
+  const stageIndex = currentStatus === "da_phe_duyet"
+    ? 3
+    : currentStatus === "cho_duyet"
+      ? 2
+      : props.readinessKnown && !isBlocked
+        ? 1
+        : 0;
+  const steps = ["Chuẩn bị dữ liệu", "Sẵn sàng", "Chờ duyệt", "Đã phê duyệt"];
+  const updatedAt = reportUpdatedAt(props.currentReport);
   const statusCopy = {
-    da_phe_duyet: {
-      confirmLabel: "Phê duyệt báo cáo",
-      description: "Hệ thống sẽ kiểm tra lại dữ liệu nguồn và checklist trước khi khóa bản gửi duyệt thành báo cáo chính thức.",
-      title: "Phê duyệt báo cáo này?",
-      tone: "danger" as const,
-    },
     cho_duyet: {
       confirmLabel: "Tạo bản gửi duyệt",
       description: "Hệ thống sẽ tạo file từ dữ liệu hiện tại, niêm phong phiên bản nguồn và chuyển đúng file này sang hàng đợi chờ duyệt.",
@@ -880,146 +1064,304 @@ function ReportExportCard(props: {
       title: "Tạo phiên bản báo cáo mới?",
       tone: "warning" as const,
     },
-    tra_lai: {
-      confirmLabel: "Trả lại báo cáo",
-      description: "Nêu rõ nội dung cần chỉnh để người lập báo cáo biết phải xử lý trước khi gửi lại.",
-      title: "Trả báo cáo về để chỉnh sửa?",
-      tone: "warning" as const,
-    },
   };
   const pendingCopy = pendingStatus ? statusCopy[pendingStatus] : null;
 
   async function handleConfirmStatus() {
     if (!pendingStatus) return;
 
-    if (pendingStatus === "tra_lai" && returnReason.trim().length < 5) {
-      setDialogError("Lý do trả lại cần có ít nhất 5 ký tự.");
-      return;
-    }
-
     const success = await props.onUpdateStatus(
       props.item.reportType,
       pendingStatus,
-      pendingStatus === "tra_lai" ? returnReason : undefined,
     );
 
     if (success) {
       setPendingStatus(null);
-      setReturnReason("");
-      setDialogError("");
     }
   }
 
   function openStatusDialog(status: NonNullable<typeof pendingStatus>) {
-    setDialogError("");
     setPendingStatus(status);
   }
 
+  function renderActions() {
+    if (isEditable && !props.readinessKnown) {
+      return (
+        <button className="button-secondary" disabled={props.isLocked} type="button" onClick={props.onDownloadDraft}>
+          <Download aria-hidden="true" className="mr-2 size-4" />
+          Tải bản nháp
+        </button>
+      );
+    }
+
+    if (isBlocked) {
+      return (
+        <>
+          <Link className="button-primary" href={remediationHref}>
+            <CircleAlert aria-hidden="true" className="mr-2 size-4" />
+            Hoàn thiện {props.blockingCount} mục
+          </Link>
+          <button className="button-secondary" disabled={props.isLocked} type="button" onClick={props.onDownloadDraft}>
+            <Download aria-hidden="true" className="mr-2 size-4" />
+            Tải bản nháp
+          </button>
+        </>
+      );
+    }
+
+    if (isEditable) {
+      return (
+        <>
+          <button className="button-primary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
+            <Send aria-hidden="true" className="mr-2 size-4" />
+            {currentStatus === "tra_lai" ? "Gửi duyệt lại" : "Tạo bản gửi duyệt"}
+          </button>
+          <button className="button-secondary" disabled={props.isLocked} type="button" onClick={props.onDownloadDraft}>
+            <Download aria-hidden="true" className="mr-2 size-4" />
+            Tải bản nháp
+          </button>
+        </>
+      );
+    }
+
+    if (currentStatus === "cho_duyet" && !hasSealedFile && !props.readinessKnown) {
+      return (
+        <span className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--color-ink-navy)]">
+          <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+          Đang kiểm tra điều kiện gửi duyệt…
+        </span>
+      );
+    }
+
+    if (currentStatus === "cho_duyet" && !hasSealedFile && hasReadinessBlockers) {
+      return (
+        <Link className="button-primary" href={remediationHref}>
+          <CircleAlert aria-hidden="true" className="mr-2 size-4" />
+          Hoàn thiện {props.blockingCount} mục
+        </Link>
+      );
+    }
+
+    if (currentStatus === "cho_duyet" && !hasSealedFile) {
+      return (
+        <button className="button-primary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
+          <RotateCcw aria-hidden="true" className="mr-2 size-4" />
+          Tạo lại và gửi duyệt
+        </button>
+      );
+    }
+
+    if (currentStatus === "cho_duyet" && props.canApprove) {
+      return (
+        <>
+          <Link className="button-primary" href="/bao-cao/cho-duyet">
+            <Eye aria-hidden="true" className="mr-2 size-4" />
+            Xem và phê duyệt
+          </Link>
+          <button className="button-secondary" disabled={props.isLocked} type="button" onClick={props.onDownloadSealed}>
+            <Download aria-hidden="true" className="mr-2 size-4" />
+            Tải bản gửi duyệt
+          </button>
+        </>
+      );
+    }
+
+    if (currentStatus === "cho_duyet") {
+      return (
+        <button className="button-primary" disabled={props.isLocked} type="button" onClick={props.onDownloadSealed}>
+          <Download aria-hidden="true" className="mr-2 size-4" />
+          Tải bản gửi duyệt
+        </button>
+      );
+    }
+
+    if (currentStatus === "da_phe_duyet" && hasSealedFile) {
+      return (
+        <>
+          <button className="button-primary" disabled={props.isLocked} type="button" onClick={props.onDownloadSealed}>
+            <Download aria-hidden="true" className="mr-2 size-4" />
+            Tải bản chính thức
+          </button>
+          <Link className="button-secondary" href="/bao-cao/da-phe-duyet">
+            Xem kho báo cáo
+          </Link>
+          <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("nhap")}>
+            Tạo phiên bản mới
+          </button>
+        </>
+      );
+    }
+
+    return (
+      <button className="button-primary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("nhap")}>
+        <RotateCcw aria-hidden="true" className="mr-2 size-4" />
+        Tạo phiên bản mới
+      </button>
+    );
+  }
+
   return (
-    <article className="surface-card grid gap-3 p-4">
-      <div>
-        <p className="text-sm font-semibold text-[var(--color-ink-navy)]">{props.item.label}</p>
-        {props.item.approvalWorkflow ? (
-          <div className="mt-2"><StatusBadge status={currentStatus} /></div>
-        ) : (
-          <p className="mt-2 text-xs text-[var(--color-graphite)]/70">
-            Tệp xuất bổ trợ, không thuộc quy trình phê duyệt.
-          </p>
-        )}
+    <article className="grid gap-5 px-5 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(25rem,0.9fr)] lg:gap-8">
+      <div className="grid min-w-0 content-start gap-4">
+        <div className="flex items-start gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-[6px] bg-[var(--color-lavender-mist)] text-[var(--color-ink-navy)]">
+            <FileText aria-hidden="true" className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-base font-semibold text-[var(--color-ink-navy)]">{presentation.title}</h3>
+              <span className="text-xs font-semibold text-[var(--color-graphite)]/60">{presentation.format}</span>
+              <StatusBadge status={currentStatus} />
+            </div>
+            <p className="mt-1 max-w-[65ch] text-sm leading-6 text-[var(--color-graphite)]/70">
+              {presentation.description}
+            </p>
+          </div>
+        </div>
+
+        <ol className="grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label={`Tiến độ ${presentation.title}`}>
+          {steps.map((step, index) => {
+            const isComplete = index < stageIndex || currentStatus === "da_phe_duyet";
+            const isCurrent = index === stageIndex && currentStatus !== "da_phe_duyet";
+
+            return (
+              <li
+                aria-current={isCurrent ? "step" : undefined}
+                className={`flex min-h-11 items-center gap-2 rounded-[6px] px-2.5 py-2 text-xs font-semibold ${
+                  isComplete
+                    ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+                    : isCurrent
+                      ? "bg-[var(--color-lavender-mist)] text-[var(--color-ink-navy)]"
+                      : "bg-[var(--color-canvas)] text-[var(--color-graphite)]/55"
+                }`}
+                key={step}
+              >
+                <span className="grid size-5 shrink-0 place-items-center rounded-full border border-current" aria-hidden="true">
+                  {isComplete ? <CheckCircle2 className="size-3.5" /> : index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            );
+          })}
+        </ol>
       </div>
 
-      <button
-        aria-busy={props.isDownloading}
-        className="button-primary"
-        disabled={props.isLocked}
-        type="button"
-        onClick={props.onDownload}
-      >
-        {props.isDownloading ? "Đang tạo file…" : "Xuất file"}
-      </button>
-
-      {props.item.approvalWorkflow ? (
+      <div className="grid content-between gap-4 border-t border-[var(--color-border)] pt-4 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
         <div className="grid gap-2">
+          {isBlocked ? (
+            <p className="text-sm font-semibold text-[var(--color-danger)]">
+              Còn {props.blockingCount} mục cần hoàn thiện trước khi gửi duyệt.
+            </p>
+          ) : isEditable && !props.readinessKnown ? (
+            <p className="text-sm font-semibold text-[var(--color-ink-navy)]">
+              Đang kiểm tra mức sẵn sàng của báo cáo.
+            </p>
+          ) : currentStatus === "cho_duyet" && !hasSealedFile ? (
+            <p className="text-sm font-semibold text-[var(--color-danger)]">
+              {hasReadinessBlockers
+                ? `Bản gửi duyệt cũ chưa có tệp và còn ${props.blockingCount} mục cần hoàn thiện.`
+                : "Bản gửi duyệt cũ chưa có tệp niêm phong."}
+            </p>
+          ) : currentStatus === "cho_duyet" ? (
+            <p className="text-sm font-semibold text-[var(--color-ink-navy)]">
+              Bản đã được niêm phong và đang chờ xử lý.
+            </p>
+          ) : currentStatus === "da_phe_duyet" ? (
+            <p className="text-sm font-semibold text-[var(--color-success)]">
+              Đây là bản chính thức đã được phê duyệt.
+            </p>
+          ) : (
+            <p className="text-sm font-semibold text-[var(--color-ink-navy)]">
+              Dữ liệu hiện tại đã có thể tạo thành bản gửi duyệt.
+            </p>
+          )}
+
           {props.currentReport?.ly_do_tra_lai ? (
-            <p className="rounded-[6px] bg-[var(--color-danger-soft)] px-3 py-2 text-xs leading-5 text-[var(--color-danger)]">
+            <p className="rounded-[6px] bg-[var(--color-danger-soft)] px-3 py-2 text-sm leading-6 text-[var(--color-danger)]">
               Lý do trả lại: {props.currentReport.ly_do_tra_lai}
             </p>
           ) : null}
 
-          {["chua_tao", "nhap", "tra_lai"].includes(currentStatus) ? (
-            <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
-              {currentStatus === "tra_lai" ? "Gửi duyệt lại" : "Gửi duyệt"}
-            </button>
-          ) : null}
-
-          {currentStatus === "cho_duyet" && !hasSealedFile ? (
-            <>
-              <p className="text-xs leading-5 text-[var(--color-danger)]">
-                Bản chờ duyệt cũ chưa có tệp niêm phong. Hãy tạo lại trước khi xử lý.
-              </p>
-              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
-                Tạo lại bản gửi duyệt
-              </button>
-            </>
-          ) : null}
-
-          {currentStatus === "cho_duyet" && hasSealedFile && props.canApprove ? (
-            <div className="grid gap-2 sm:grid-cols-2">
-              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("tra_lai")}>
-                Trả lại
-              </button>
-              <button className="button-danger" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("da_phe_duyet")}>
-                Phê duyệt
-              </button>
-            </div>
-          ) : null}
-
-          {currentStatus === "cho_duyet" && hasSealedFile && !props.canApprove ? (
-            <p className="text-xs leading-5 text-[var(--color-graphite)]/70">
-              Bản đã được niêm phong và đang chờ người có thẩm quyền xử lý.
+          {props.currentReport ? (
+            <p className="text-xs leading-5 text-[var(--color-graphite)]/65">
+              Phiên bản {props.currentReport.version}{updatedAt ? ` · Cập nhật ${updatedAt}` : ""}
             </p>
-          ) : null}
-
-          {currentStatus === "da_phe_duyet" ? (
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Link className="button-secondary" href="/bao-cao/da-phe-duyet">Xem bản đã duyệt</Link>
-              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("nhap")}>
-                Tạo phiên bản mới
-              </button>
-            </div>
-          ) : null}
+          ) : (
+            <p className="text-xs leading-5 text-[var(--color-graphite)]/65">Chưa tạo phiên bản báo cáo.</p>
+          )}
         </div>
-      ) : null}
+
+        <div className="flex flex-wrap gap-2" aria-busy={props.isDownloading}>
+          {props.isDownloading ? (
+            <span className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--color-ink-navy)]">
+              <LoaderCircle aria-hidden="true" className="size-4 animate-spin" />
+              Đang chuẩn bị tệp…
+            </span>
+          ) : renderActions()}
+        </div>
+      </div>
 
       <ConfirmDialog
         confirmLabel={pendingCopy?.confirmLabel}
-        description={pendingStatus === "tra_lai" ? (
-          <label className="block font-medium text-[var(--color-ink-navy)]">
-            Lý do trả lại
-            <textarea
-              className="form-control mt-2 min-h-28 font-normal"
-              maxLength={1000}
-              placeholder="Ví dụ: Bổ sung nhận xét Tiêu chuẩn 2 và thay minh chứng đã hết hiệu lực."
-              value={returnReason}
-              onChange={(event) => {
-                setReturnReason(event.target.value);
-                setDialogError("");
-              }}
-            />
-            {dialogError ? <span className="mt-2 block text-xs text-[var(--color-danger)]">{dialogError}</span> : null}
-          </label>
-        ) : pendingCopy?.description ?? ""}
+        description={pendingCopy?.description ?? ""}
         isOpen={Boolean(pendingCopy)}
         isWorking={props.isLocked}
         title={pendingCopy?.title ?? ""}
         tone={pendingCopy?.tone}
-        onCancel={() => {
-          setPendingStatus(null);
-          setDialogError("");
-        }}
+        onCancel={() => setPendingStatus(null)}
         onConfirm={handleConfirmStatus}
       />
     </article>
+  );
+}
+
+function SupportingExportRow(props: {
+  isDownloading: boolean;
+  isLocked: boolean;
+  item: (typeof exports)[number];
+  onDownload: () => void;
+}) {
+  const presentation = exportPresentation[props.item.reportType];
+  const Icon = props.item.reportType === "danh_muc_minh_chung"
+    ? FileSpreadsheet
+    : props.item.reportType === "goi_minh_chung"
+      ? Archive
+      : Database;
+
+  return (
+    <div className="grid gap-4 px-5 py-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:items-center">
+      <span className="grid size-10 place-items-center rounded-[6px] bg-[var(--color-canvas)] text-[var(--color-ink-navy)]">
+        <Icon aria-hidden="true" className="size-5" />
+      </span>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-semibold text-[var(--color-ink-navy)]">{presentation.title}</h3>
+          <span className="text-xs font-semibold text-[var(--color-graphite)]/60">{presentation.format}</span>
+          {props.item.reportType === "du_lieu_nam_hoc_json" ? (
+            <span className="rounded-[6px] bg-[var(--color-canvas)] px-2 py-1 text-xs font-semibold text-[var(--color-graphite)]/70">
+              Dành cho kỹ thuật
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 max-w-[72ch] text-sm leading-6 text-[var(--color-graphite)]/70">
+          {presentation.description}
+        </p>
+      </div>
+      <button
+        aria-busy={props.isDownloading}
+        className="button-secondary w-full sm:w-auto"
+        disabled={props.isLocked}
+        type="button"
+        onClick={props.onDownload}
+      >
+        {props.isDownloading ? (
+          <LoaderCircle aria-hidden="true" className="mr-2 size-4 animate-spin" />
+        ) : (
+          <Download aria-hidden="true" className="mr-2 size-4" />
+        )}
+        {props.isDownloading ? "Đang chuẩn bị…" : presentation.downloadLabel}
+      </button>
+    </div>
   );
 }
 

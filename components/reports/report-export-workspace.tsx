@@ -17,6 +17,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { ReadinessChecklist, ReadinessItem } from "@/components/ui/readiness-checklist";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useScopedRequest } from "@/components/shared/use-scoped-request";
+import { ReportSubnav } from "@/components/reports/report-subnav";
 import { hasCapability } from "@/lib/auth/capabilities";
 
 type Profile = {
@@ -58,8 +59,15 @@ type ReportRecord = {
   cap_hoc: CapHoc | null;
   version: number;
   trang_thai: string;
+  source_digest: string | null;
+  ten_tep_goc: string | null;
+  mime_type: string | null;
+  kich_thuoc: number | null;
+  sha256: string | null;
+  export_metadata: Record<string, unknown> | null;
   ngay_phe_duyet: string | null;
   storage_path: string | null;
+  ly_do_tra_lai: string | null;
 };
 
 type ReportReadiness = {
@@ -290,7 +298,7 @@ export function ReportExportWorkspace() {
 
     const { data, error } = await supabase
       .from("bao_cao")
-      .select("id, loai_bao_cao, cap_hoc, version, trang_thai, ngay_phe_duyet, storage_path")
+      .select("id, loai_bao_cao, cap_hoc, version, trang_thai, source_digest, ten_tep_goc, mime_type, kich_thuoc, sha256, export_metadata, ngay_phe_duyet, storage_path, ly_do_tra_lai")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", selectedYearId)
       .order("version", { ascending: false });
@@ -355,7 +363,7 @@ export function ReportExportWorkspace() {
       {
         id: "assessment-evidence",
         label: "Minh chứng hợp lệ",
-        detail: readiness.missing_evidence.length === 0 ? "15/15 tiêu chí đều có minh chứng đã xác minh, còn hiệu lực." : `Còn thiếu: ${readiness.missing_evidence.join(", ")}.`,
+        detail: readiness.missing_evidence.length === 0 ? "Tất cả tiêu chí đều có minh chứng đã xác minh, còn hiệu lực." : `Còn thiếu: ${readiness.missing_evidence.join(", ")}.`,
         status: readiness.missing_evidence.length === 0 ? "ready" : "blocked",
       },
       {
@@ -548,15 +556,34 @@ export function ReportExportWorkspace() {
     setMessage("Đã tạo file. Nếu Mẫu 1 còn cảnh báo đỏ, chưa được coi là báo cáo xuất bản chính thức.");
   }
 
-  async function updateReportStatus(reportType: string, status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai") {
+  async function updateReportStatus(
+    reportType: string,
+    status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai",
+    returnReason?: string,
+  ) {
     if (!supabase || !profile || !selectedYearId) {
       setMessage("Hãy chọn năm học trước khi cập nhật trạng thái báo cáo.");
-      return;
+      return false;
     }
 
-    if (status === "da_phe_duyet" && !hasCapability(roleCodes, "action.report.approve")) {
-      setMessage("Bạn không có quyền phê duyệt báo cáo.");
-      return;
+    const currentReport = reportRecords.find(
+      (record) => record.loai_bao_cao === reportType && record.cap_hoc === selectedCapHoc,
+    );
+    const isApprovalAction = status === "da_phe_duyet" || status === "tra_lai";
+
+    if (isApprovalAction && !hasCapability(roleCodes, "action.report.approve")) {
+      setMessage("Bạn không có quyền xử lý báo cáo chờ duyệt.");
+      return false;
+    }
+
+    if (isApprovalAction && currentReport?.trang_thai !== "cho_duyet") {
+      setMessage("Chỉ báo cáo đang ở trạng thái chờ duyệt mới được phê duyệt hoặc trả lại.");
+      return false;
+    }
+
+    if (status === "tra_lai" && (returnReason?.trim().length ?? 0) < 5) {
+      setMessage("Hãy nhập lý do trả lại ít nhất 5 ký tự.");
+      return false;
     }
 
     setDownloading(`${reportType}:${status}`);
@@ -567,23 +594,45 @@ export function ReportExportWorkspace() {
     let mimeType: string | null = null;
     let fileSize: number | null = null;
     let fileHash: string | null = null;
-    let reportId: string | null = null;
+    const reportId: string | null = currentReport?.trang_thai === "da_phe_duyet"
+      ? null
+      : currentReport?.id ?? null;
     let sourceDigest: string | null = null;
+    let uploadedPath: string | null = null;
 
-    if (status === "da_phe_duyet") {
+    if (status === "cho_duyet") {
       const item = exports.find((exportItem) => exportItem.reportType === reportType);
 
       if (!item) {
         setDownloading("");
         setMessage("Không xác định được loại báo cáo cần phê duyệt.");
-        return;
+        return false;
+      }
+
+      const { data: readinessData, error: readinessError } = await supabase.rpc(
+        "fn_kiem_tra_san_sang_bao_cao",
+        {
+          p_nam_hoc_id: selectedYearId,
+          p_cap_hoc: selectedCapHoc,
+          p_loai_bao_cao: reportType,
+        },
+      );
+      const readiness = readinessData as ReportReadiness | null;
+
+      if (readinessError || !readiness?.ready) {
+        setDownloading("");
+        setMessage(toUserMessage(
+          readinessError,
+          "Báo cáo chưa đáp ứng đầy đủ checklist nên chưa thể gửi duyệt.",
+        ));
+        return false;
       }
 
       const reportFile = await fetchReportFile(item.endpoint);
 
       if (!reportFile) {
         setDownloading("");
-        return;
+        return false;
       }
 
       storagePath = storagePathForReport(profile.co_so_id, selectedYearId, reportType, reportFile.fileName);
@@ -592,37 +641,6 @@ export function ReportExportWorkspace() {
       fileSize = reportFile.blob.size;
       fileHash = await sha256Blob(reportFile.blob);
       sourceDigest = reportFile.sourceDigest;
-
-      // Niem phong dung phien ban nguon da tao file truoc khi dua snapshot len Storage.
-      const { data: sealedReportId, error: sealError } = await supabase.rpc(
-        "fn_luu_trang_thai_bao_cao",
-        {
-          p_nam_hoc_id: selectedYearId,
-          p_cap_hoc: selectedCapHoc,
-          p_loai_bao_cao: reportType,
-          p_trang_thai: "cho_duyet",
-          p_storage_path: null,
-          p_ten_tep_goc: originalFileName,
-          p_mime_type: mimeType,
-          p_kich_thuoc: fileSize,
-          p_sha256: fileHash,
-          p_export_metadata: {
-            nam_hoc_id: selectedYearId,
-            cap_hoc: selectedCapHoc,
-            exported_at: new Date().toISOString(),
-          },
-          p_bao_cao_id: null,
-          p_source_digest: sourceDigest,
-        },
-      );
-
-      if (sealError || !sealedReportId) {
-        setDownloading("");
-        setMessage(toUserMessage(sealError, "Du lieu da thay doi. Vui long xuat lai bao cao truoc khi phe duyet."));
-        return;
-      }
-
-      reportId = sealedReportId as string;
 
       const { error: uploadError } = await supabase.storage
         .from("reports")
@@ -634,8 +652,23 @@ export function ReportExportWorkspace() {
       if (uploadError) {
         void reportStorageFailure("report_upload");
         setDownloading("");
-        setMessage(toUserMessage(uploadError, "Không lưu được tệp báo cáo đã phê duyệt. Vui lòng thử lại."));
-        return;
+        setMessage(toUserMessage(uploadError, "Không lưu được tệp gửi duyệt. Vui lòng thử lại."));
+        return false;
+      }
+
+      uploadedPath = storagePath;
+    } else if (status === "da_phe_duyet") {
+      storagePath = currentReport?.storage_path ?? null;
+      originalFileName = currentReport?.ten_tep_goc ?? null;
+      mimeType = currentReport?.mime_type ?? null;
+      fileSize = currentReport?.kich_thuoc ?? null;
+      fileHash = currentReport?.sha256 ?? null;
+      sourceDigest = currentReport?.source_digest ?? null;
+
+      if (!storagePath || !originalFileName || !fileHash || !sourceDigest) {
+        setDownloading("");
+        setMessage("Bản gửi duyệt chưa có tệp niêm phong. Hãy tạo lại bản gửi duyệt trước khi phê duyệt.");
+        return false;
       }
     }
 
@@ -652,17 +685,19 @@ export function ReportExportWorkspace() {
       p_export_metadata: {
         nam_hoc_id: selectedYearId,
         cap_hoc: selectedCapHoc,
-        exported_at: new Date().toISOString(),
+        ...(currentReport?.export_metadata ?? {}),
+        updated_at: new Date().toISOString(),
       },
       p_bao_cao_id: reportId,
       p_source_digest: sourceDigest,
+      p_ly_do_tra_lai: status === "tra_lai" ? returnReason?.trim() : null,
     });
 
     if (error) {
-      if (storagePath) {
+      if (uploadedPath) {
         const { error: cleanupError } = await supabase.storage
           .from("reports")
-          .remove([storagePath]);
+          .remove([uploadedPath]);
 
         if (cleanupError) {
           void reportStorageFailure("report_cleanup");
@@ -670,8 +705,15 @@ export function ReportExportWorkspace() {
       }
 
       setDownloading("");
-      setMessage(toUserMessage(error));
-      return;
+      setMessage(toUserMessage(
+        error,
+        status === "da_phe_duyet"
+          ? "Không thể phê duyệt: dữ liệu nguồn đã thay đổi hoặc checklist chưa đạt. Hãy trả lại để đơn vị gửi lại bản mới."
+          : status === "cho_duyet"
+            ? "Không thể gửi duyệt báo cáo. Hãy kiểm tra checklist và thử lại."
+            : "Không thể cập nhật trạng thái báo cáo.",
+      ));
+      return false;
     }
 
     setDownloading("");
@@ -685,6 +727,7 @@ export function ReportExportWorkspace() {
             : "Đã lưu trạng thái bản nháp báo cáo.",
     );
     await loadReportRecords();
+    return true;
   }
 
   if (loading) {
@@ -702,6 +745,10 @@ export function ReportExportWorkspace() {
 
   return (
     <div className="grid gap-6">
+      <ReportSubnav
+        active="compose"
+        canApprove={hasCapability(roleCodes, "action.report.approve")}
+      />
       <section className="surface-card grid gap-4 p-5 lg:grid-cols-2">
         <label className="text-sm font-medium">
           Năm học
@@ -768,9 +815,14 @@ export function ReportExportWorkspace() {
           </p>
         </div>
         <div className="grid gap-3 p-5 sm:grid-cols-2">
-          {exports.map((item) => (
-            <ReportExportCard
-              currentStatus={reportRecords.find((record) => record.loai_bao_cao === item.reportType && record.cap_hoc === selectedCapHoc)?.trang_thai ?? "chưa tạo"}
+          {exports.map((item) => {
+            const currentReport = reportRecords.find(
+              (record) => record.loai_bao_cao === item.reportType && record.cap_hoc === selectedCapHoc,
+            );
+
+            return (
+              <ReportExportCard
+              currentReport={currentReport}
               isDownloading={downloading === item.endpoint}
               isLocked={Boolean(downloading)}
               item={item}
@@ -779,7 +831,8 @@ export function ReportExportWorkspace() {
               onDownload={() => download(item.endpoint)}
               onUpdateStatus={updateReportStatus}
             />
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>
@@ -788,44 +841,78 @@ export function ReportExportWorkspace() {
 
 function ReportExportCard(props: {
   canApprove: boolean;
-  currentStatus: string;
+  currentReport?: ReportRecord;
   isDownloading: boolean;
   isLocked: boolean;
   item: (typeof exports)[number];
   onDownload: () => void;
-  onUpdateStatus: (reportType: string, status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai") => Promise<void>;
+  onUpdateStatus: (
+    reportType: string,
+    status: "nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai",
+    returnReason?: string,
+  ) => Promise<boolean>;
 }) {
-  const [pendingStatus, setPendingStatus] = useState<"nhap" | "cho_duyet" | "da_phe_duyet" | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<"nhap" | "cho_duyet" | "da_phe_duyet" | "tra_lai" | null>(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [dialogError, setDialogError] = useState("");
+  const currentStatus = props.currentReport?.trang_thai ?? "chua_tao";
+  const hasSealedFile = Boolean(
+    props.currentReport?.storage_path
+      && props.currentReport?.source_digest
+      && props.currentReport?.sha256,
+  );
   const statusCopy = {
     da_phe_duyet: {
       confirmLabel: "Phê duyệt báo cáo",
-      description: "Báo cáo sau khi phê duyệt sẽ xuất hiện ở khu vực báo cáo đã phê duyệt cho vai trò chỉ đọc. Hãy chắc chắn Mẫu 1 không còn cảnh báo đỏ trước khi chốt chính thức.",
+      description: "Hệ thống sẽ kiểm tra lại dữ liệu nguồn và checklist trước khi khóa bản gửi duyệt thành báo cáo chính thức.",
       title: "Phê duyệt báo cáo này?",
       tone: "danger" as const,
     },
     cho_duyet: {
-      confirmLabel: "Gửi duyệt",
-      description: "Báo cáo sẽ chuyển sang hàng đợi chờ duyệt để người có thẩm quyền xem xét.",
-      title: "Gửi báo cáo sang trạng thái chờ duyệt?",
+      confirmLabel: "Tạo bản gửi duyệt",
+      description: "Hệ thống sẽ tạo file từ dữ liệu hiện tại, niêm phong phiên bản nguồn và chuyển đúng file này sang hàng đợi chờ duyệt.",
+      title: "Tạo và gửi bản báo cáo để duyệt?",
       tone: "primary" as const,
     },
     nhap: {
-      confirmLabel: "Chuyển về bản nháp",
-      description: "Báo cáo sẽ quay về trạng thái bản nháp để tiếp tục chỉnh sửa trước khi gửi duyệt lại.",
-      title: "Chuyển báo cáo về bản nháp?",
+      confirmLabel: "Tạo phiên bản mới",
+      description: "Hệ thống sẽ tạo một bản nháp mới; báo cáo đã phê duyệt trước đó vẫn được giữ nguyên trong kho.",
+      title: "Tạo phiên bản báo cáo mới?",
+      tone: "warning" as const,
+    },
+    tra_lai: {
+      confirmLabel: "Trả lại báo cáo",
+      description: "Nêu rõ nội dung cần chỉnh để người lập báo cáo biết phải xử lý trước khi gửi lại.",
+      title: "Trả báo cáo về để chỉnh sửa?",
       tone: "warning" as const,
     },
   };
   const pendingCopy = pendingStatus ? statusCopy[pendingStatus] : null;
 
   async function handleConfirmStatus() {
-    if (!pendingStatus) {
+    if (!pendingStatus) return;
+
+    if (pendingStatus === "tra_lai" && returnReason.trim().length < 5) {
+      setDialogError("Lý do trả lại cần có ít nhất 5 ký tự.");
       return;
     }
 
-    const status = pendingStatus;
-    setPendingStatus(null);
-    await props.onUpdateStatus(props.item.reportType, status);
+    const success = await props.onUpdateStatus(
+      props.item.reportType,
+      pendingStatus,
+      pendingStatus === "tra_lai" ? returnReason : undefined,
+    );
+
+    if (success) {
+      setPendingStatus(null);
+      setReturnReason("");
+      setDialogError("");
+    }
+  }
+
+  function openStatusDialog(status: NonNullable<typeof pendingStatus>) {
+    setDialogError("");
+    setPendingStatus(status);
   }
 
   return (
@@ -833,46 +920,103 @@ function ReportExportCard(props: {
       <div>
         <p className="text-sm font-semibold text-[var(--color-ink-navy)]">{props.item.label}</p>
         {props.item.approvalWorkflow ? (
-          <div className="mt-2">
-            <StatusBadge status={props.currentStatus} />
-          </div>
+          <div className="mt-2"><StatusBadge status={currentStatus} /></div>
         ) : (
           <p className="mt-2 text-xs text-[var(--color-graphite)]/70">
             Tệp xuất bổ trợ, không thuộc quy trình phê duyệt.
           </p>
         )}
       </div>
+
       <button
+        aria-busy={props.isDownloading}
         className="button-primary"
         disabled={props.isLocked}
-        aria-busy={props.isDownloading}
         type="button"
         onClick={props.onDownload}
       >
         {props.isDownloading ? "Đang tạo file…" : "Xuất file"}
       </button>
+
       {props.item.approvalWorkflow ? (
-        <div className={`grid gap-2 ${props.canApprove ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-          <button className="button-secondary" type="button" onClick={() => setPendingStatus("nhap")}>
-            Bản nháp
-          </button>
-          <button className="button-secondary" type="button" onClick={() => setPendingStatus("cho_duyet")}>
-            Gửi duyệt
-          </button>
-          {props.canApprove ? (
-            <button className="button-danger" type="button" onClick={() => setPendingStatus("da_phe_duyet")}>
-              Phê duyệt
+        <div className="grid gap-2">
+          {props.currentReport?.ly_do_tra_lai ? (
+            <p className="rounded-[6px] bg-[var(--color-danger-soft)] px-3 py-2 text-xs leading-5 text-[var(--color-danger)]">
+              Lý do trả lại: {props.currentReport.ly_do_tra_lai}
+            </p>
+          ) : null}
+
+          {["chua_tao", "nhap", "tra_lai"].includes(currentStatus) ? (
+            <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
+              {currentStatus === "tra_lai" ? "Gửi duyệt lại" : "Gửi duyệt"}
             </button>
+          ) : null}
+
+          {currentStatus === "cho_duyet" && !hasSealedFile ? (
+            <>
+              <p className="text-xs leading-5 text-[var(--color-danger)]">
+                Bản chờ duyệt cũ chưa có tệp niêm phong. Hãy tạo lại trước khi xử lý.
+              </p>
+              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("cho_duyet")}>
+                Tạo lại bản gửi duyệt
+              </button>
+            </>
+          ) : null}
+
+          {currentStatus === "cho_duyet" && hasSealedFile && props.canApprove ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("tra_lai")}>
+                Trả lại
+              </button>
+              <button className="button-danger" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("da_phe_duyet")}>
+                Phê duyệt
+              </button>
+            </div>
+          ) : null}
+
+          {currentStatus === "cho_duyet" && hasSealedFile && !props.canApprove ? (
+            <p className="text-xs leading-5 text-[var(--color-graphite)]/70">
+              Bản đã được niêm phong và đang chờ người có thẩm quyền xử lý.
+            </p>
+          ) : null}
+
+          {currentStatus === "da_phe_duyet" ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Link className="button-secondary" href="/bao-cao/da-phe-duyet">Xem bản đã duyệt</Link>
+              <button className="button-secondary" disabled={props.isLocked} type="button" onClick={() => openStatusDialog("nhap")}>
+                Tạo phiên bản mới
+              </button>
+            </div>
           ) : null}
         </div>
       ) : null}
+
       <ConfirmDialog
         confirmLabel={pendingCopy?.confirmLabel}
-        description={pendingCopy?.description ?? ""}
+        description={pendingStatus === "tra_lai" ? (
+          <label className="block font-medium text-[var(--color-ink-navy)]">
+            Lý do trả lại
+            <textarea
+              className="form-control mt-2 min-h-28 font-normal"
+              maxLength={1000}
+              placeholder="Ví dụ: Bổ sung nhận xét Tiêu chuẩn 2 và thay minh chứng đã hết hiệu lực."
+              value={returnReason}
+              onChange={(event) => {
+                setReturnReason(event.target.value);
+                setDialogError("");
+              }}
+            />
+            {dialogError ? <span className="mt-2 block text-xs text-[var(--color-danger)]">{dialogError}</span> : null}
+          </label>
+        ) : pendingCopy?.description ?? ""}
         isOpen={Boolean(pendingCopy)}
+        isWorking={props.isLocked}
         title={pendingCopy?.title ?? ""}
         tone={pendingCopy?.tone}
-        onCancel={() => setPendingStatus(null)}
+        onCancel={() => {
+          setPendingStatus(null);
+          setDialogError("");
+        }}
         onConfirm={handleConfirmStatus}
       />
     </article>

@@ -1,5 +1,8 @@
 export const AUDIT_ACTION_LABELS: Record<string, string> = {
   ACTIVE_SCHOOL_YEAR_CHANGED: "Đổi năm học đang hoạt động",
+  ADMIN_EVIDENCE_TECHNICAL_FLAG_UPDATED: "Cập nhật cờ kỹ thuật minh chứng",
+  ADMIN_SCHOOL_STATUS_UPDATED: "Cập nhật trạng thái cơ sở",
+  ADMIN_USER_STATUS_UPDATED: "Cập nhật trạng thái tài khoản",
   ASSESSMENT_SAVED_ATOMIC: "Lưu nội dung tự đánh giá",
   ASSESSMENT_STATUS_UPDATED: "Cập nhật trạng thái tự đánh giá",
   ASSIGNMENT_UPDATED: "Cập nhật phân công tiêu chí",

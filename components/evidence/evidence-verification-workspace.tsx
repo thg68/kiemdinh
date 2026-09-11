@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EvidenceSubnav } from "@/components/evidence/evidence-subnav";
 import { useAppContext } from "@/components/shared/use-app-context";
 import { Alert } from "@/components/ui/alert";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
+import { evaluateEvidenceEligibility } from "@/lib/assessment/evidence-eligibility";
 import { formatEvidenceStatus } from "@/lib/evidence";
 import { toUserMessage } from "@/lib/errors/user-message";
 
@@ -50,6 +51,7 @@ type EvidenceRow = {
   storage_path: string | null;
   hash_tep: string | null;
   kich_thuoc: number | null;
+  la_du_lieu_demo: boolean;
   ngay_ban_hanh: string | null;
   ngay_het_gia_tri: string | null;
   trang_thai_xac_minh: string;
@@ -111,6 +113,10 @@ export function EvidenceVerificationWorkspace() {
   } | null>(null);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
+  const effectiveYear = useMemo(
+    () => years.find((year) => year.id === effectiveYearId) ?? activeYear,
+    [activeYear, effectiveYearId, years],
+  );
 
   const loadRows = useCallback(async () => {
     if (!supabase || !profile || !effectiveYearId) {
@@ -123,7 +129,7 @@ export function EvidenceVerificationWorkspace() {
     let query = supabase
       .from("minh_chung")
       .select(
-        "id, ma, ten, loai_tep, duong_dan, storage_path, hash_tep, kich_thuoc, ngay_ban_hanh, ngay_het_gia_tri, trang_thai_xac_minh, created_at, nguoi_tai_len:nguoi_tai_len(ho_ten, email), minh_chung_tieu_chi(la_tieu_chi_goc, tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan:tieu_chuan_id(so_thu_tu, ten), muc_tieu_chi(muc, noi_dung_yeu_cau)))",
+        "id, ma, ten, loai_tep, duong_dan, storage_path, hash_tep, kich_thuoc, la_du_lieu_demo, ngay_ban_hanh, ngay_het_gia_tri, trang_thai_xac_minh, created_at, nguoi_tai_len:nguoi_tai_len(ho_ten, email), minh_chung_tieu_chi(la_tieu_chi_goc, tieu_chi:tieu_chi_id(id, ma, ten, la_bat_buoc, tieu_chuan:tieu_chuan_id(so_thu_tu, ten), muc_tieu_chi(muc, noi_dung_yeu_cau)))",
       )
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", effectiveYearId)
@@ -313,6 +319,12 @@ export function EvidenceVerificationWorkspace() {
               const externalUrl = safeExternalUrl(row.duong_dan);
               const isExpanded = expandedId === row.id;
               const detailId = `evidence-verification-detail-${row.id}`;
+              const eligibility = effectiveYear
+                ? evaluateEvidenceEligibility(row, effectiveYear.ngay_ket_thuc)
+                : null;
+              const verifiedButUnavailable = row.trang_thai_xac_minh === "da_xac_minh"
+                && eligibility
+                && !eligibility.eligible;
 
               return (
                 <article key={row.id}>
@@ -331,6 +343,11 @@ export function EvidenceVerificationWorkspace() {
                         >
                           {formatEvidenceStatus(row.trang_thai_xac_minh)}
                         </Badge>
+                        {verifiedButUnavailable ? (
+                          <Badge tone="danger">
+                            {row.la_du_lieu_demo ? "Dữ liệu demo" : "Hết hiệu lực"}
+                          </Badge>
+                        ) : null}
                         <span className="text-xs text-[var(--color-graphite)]/65">
                           {criteria.length} tiêu chí
                         </span>
@@ -343,6 +360,11 @@ export function EvidenceVerificationWorkspace() {
                         {row.ngay_ban_hanh ?? "Chưa nhập"} · Hết giá trị:{" "}
                         {row.ngay_het_gia_tri ?? "Không ghi hạn"}
                       </p>
+                      {verifiedButUnavailable ? (
+                        <p className="mt-2 text-sm font-medium leading-6 text-[var(--color-danger)]">
+                          {eligibility.reason} Minh chứng này không thể gắn vào tự đánh giá chính thức.
+                        </p>
+                      ) : null}
                       <div className="mt-3 flex flex-wrap gap-2">
                         {criteria.length === 0 ? (
                           <Badge>Chưa gắn tiêu chí</Badge>
@@ -366,22 +388,26 @@ export function EvidenceVerificationWorkspace() {
                       >
                         {isExpanded ? "Thu gọn" : "Xem chi tiết"}
                       </button>
-                      <button
-                        className="button-secondary"
-                        disabled={Boolean(updatingId)}
-                        type="button"
-                        onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "tu_choi" })}
-                      >
-                        {updatingId === row.id ? "Đang lưu…" : "Từ chối"}
-                      </button>
-                      <button
-                        className="button-primary"
-                        disabled={Boolean(updatingId)}
-                        type="button"
-                        onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "da_xac_minh" })}
-                      >
-                        {updatingId === row.id ? "Đang lưu…" : "Xác minh"}
-                      </button>
+                      {row.trang_thai_xac_minh !== "da_xac_minh" ? (
+                        <>
+                          <button
+                            className="button-secondary"
+                            disabled={Boolean(updatingId)}
+                            type="button"
+                            onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "tu_choi" })}
+                          >
+                            {updatingId === row.id ? "Đang lưu…" : "Từ chối"}
+                          </button>
+                          <button
+                            className="button-primary"
+                            disabled={Boolean(updatingId)}
+                            type="button"
+                            onClick={() => setPendingAction({ id: row.id, name: row.ten, status: "da_xac_minh" })}
+                          >
+                            {updatingId === row.id ? "Đang lưu…" : "Xác minh"}
+                          </button>
+                        </>
+                      ) : null}
                     </div>
                   </div>
 

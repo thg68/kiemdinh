@@ -1,5 +1,6 @@
 export const STORAGE_FAILURE_OPERATIONS = [
   "approved_report_signed_url",
+  "pending_report_signed_url",
   "evidence_cleanup",
   "evidence_upload",
   "report_cleanup",

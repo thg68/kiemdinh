@@ -8,6 +8,12 @@ export type AppRole =
   | "VIEWER";
 
 export type PageCapability =
+  | "page.admin.overview"
+  | "page.admin.schools"
+  | "page.admin.participants"
+  | "page.admin.evidence"
+  | "page.admin.standards"
+  | "page.admin.operations"
   | "page.dashboard"
   | "page.work"
   | "page.standards"
@@ -19,6 +25,7 @@ export type PageCapability =
   | "page.improvement"
   | "page.council"
   | "page.reports"
+  | "page.report_approval"
   | "page.approved_reports"
   | "page.legal"
   | "page.audit"
@@ -38,9 +45,15 @@ const managementRoles: AppRole[] = ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRE
 const evidenceRoles: AppRole[] = [...managementRoles, "MEMBER", "TEACHER"];
 
 export const capabilityRoles: Record<Capability, readonly AppRole[]> = {
+  "page.admin.overview": ["SYSTEM_ADMIN"],
+  "page.admin.schools": ["SYSTEM_ADMIN"],
+  "page.admin.participants": ["SYSTEM_ADMIN"],
+  "page.admin.evidence": ["SYSTEM_ADMIN"],
+  "page.admin.standards": ["SYSTEM_ADMIN"],
+  "page.admin.operations": ["SYSTEM_ADMIN"],
   "page.dashboard": managementRoles,
   "page.work": [...managementRoles, "MEMBER", "TEACHER"],
-  "page.standards": ["SYSTEM_ADMIN", ...managementRoles, "MEMBER", "TEACHER"],
+  "page.standards": [...managementRoles, "MEMBER", "TEACHER"],
   "page.evidence": evidenceRoles,
   "page.evidence.health": managementRoles,
   "page.evidence.verify": managementRoles,
@@ -49,10 +62,11 @@ export const capabilityRoles: Record<Capability, readonly AppRole[]> = {
   "page.improvement": managementRoles,
   "page.council": ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"],
   "page.reports": managementRoles,
+  "page.report_approval": ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"],
   "page.approved_reports": [...managementRoles, "VIEWER"],
   "page.legal": managementRoles,
   "page.audit": ["PRINCIPAL"],
-  "page.settings": ["SYSTEM_ADMIN", "PRINCIPAL", "SELF_ASSESSMENT_CHAIR"],
+  "page.settings": ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"],
   "action.evidence.verify": managementRoles,
   "action.assessment.approve": ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"],
   "action.assessment.simulate": managementRoles,
@@ -62,6 +76,13 @@ export const capabilityRoles: Record<Capability, readonly AppRole[]> = {
 };
 
 const routeCapabilities: Array<{ match: RegExp; capability: PageCapability }> = [
+  { match: /^\/quan-tri\/co-so(?:\/|$)/, capability: "page.admin.schools" },
+  { match: /^\/quan-tri\/nguoi-tham-gia(?:\/|$)/, capability: "page.admin.participants" },
+  { match: /^\/quan-tri\/minh-chung(?:\/|$)/, capability: "page.admin.evidence" },
+  { match: /^\/quan-tri\/bo-tieu-chuan(?:\/|$)/, capability: "page.admin.standards" },
+  { match: /^\/quan-tri\/van-hanh(?:\/|$)/, capability: "page.admin.operations" },
+  { match: /^\/quan-tri(?:\/|$)/, capability: "page.admin.overview" },
+  { match: /^\/bao-cao\/cho-duyet(?:\/|$)/, capability: "page.report_approval" },
   { match: /^\/bao-cao\/da-phe-duyet(?:\/|$)/, capability: "page.approved_reports" },
   { match: /^\/minh-chung\/suc-khoe(?:\/|$)/, capability: "page.evidence.health" },
   { match: /^\/minh-chung\/xac-minh(?:\/|$)/, capability: "page.evidence.verify" },

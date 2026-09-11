@@ -4,8 +4,24 @@ import { capabilityForPath, capabilityRoles, hasCapability } from "./capabilitie
 
 describe("capability registry", () => {
   it("ưu tiên route con trước route cha", () => {
+    expect(capabilityForPath("/quan-tri/nguoi-tham-gia")).toBe("page.admin.participants");
+    expect(capabilityForPath("/quan-tri")).toBe("page.admin.overview");
     expect(capabilityForPath("/minh-chung/xac-minh")).toBe("page.evidence.verify");
+    expect(capabilityForPath("/bao-cao/cho-duyet")).toBe("page.report_approval");
     expect(capabilityForPath("/bao-cao/da-phe-duyet/123")).toBe("page.approved_reports");
+  });
+
+  it("tách quyền quản trị hệ thống khỏi nghiệp vụ nhà trường", () => {
+    expect(hasCapability(["SYSTEM_ADMIN"], "page.admin.evidence")).toBe(true);
+    expect(hasCapability(["PRINCIPAL"], "page.admin.evidence")).toBe(false);
+    expect(hasCapability(["SYSTEM_ADMIN"], "page.standards")).toBe(false);
+    expect(hasCapability(["SYSTEM_ADMIN"], "page.settings")).toBe(false);
+  });
+
+  it("chỉ người có thẩm quyền được mở hàng đợi báo cáo", () => {
+    expect(hasCapability(["PRINCIPAL"], "page.report_approval")).toBe(true);
+    expect(hasCapability(["SELF_ASSESSMENT_CHAIR"], "page.report_approval")).toBe(true);
+    expect(hasCapability(["SECRETARY"], "page.report_approval")).toBe(false);
   });
 
   it("giáo viên không được xác minh minh chứng hoặc phê duyệt báo cáo", () => {

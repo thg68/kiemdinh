@@ -102,6 +102,19 @@ test.describe("Sprint 12 - xác nhận tài khoản thực tế của 7 vai trò
     expect(response.status()).toBe(403);
   });
 
+  test("Hiệu trưởng xuất được dữ liệu năm học dạng JSON", async ({ page, request }) => {
+    await loginAs(page, "PRINCIPAL");
+    const token = await accessToken(page);
+    const response = await request.get(
+      `/api/bao-cao/export-json?namHocId=${process.env.E2E_YEAR_ID}&capHoc=${process.env.E2E_CAP_HOC}`,
+      { headers: { authorization: `Bearer ${token}` } },
+    );
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toContain("application/json");
+    expect(response.headers()["content-disposition"]).toContain("attachment");
+  });
+
   test("Khách chỉ đọc mở được kho báo cáo đã phê duyệt", async ({ page }) => {
     await loginAs(page, "VIEWER");
     await page.goto("/bao-cao/da-phe-duyet");

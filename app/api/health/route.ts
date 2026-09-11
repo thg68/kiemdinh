@@ -47,7 +47,7 @@ async function probe(path: string) {
 
 const READINESS_PROBES: Record<ReadinessCheck, string> = {
   supabaseAuth: "/auth/v1/health",
-  database: "/rest/v1/bo_tieu_chuan?select=id&limit=1",
+  database: "/rest/v1/rpc/fn_health_database",
   storage: "/storage/v1/status",
 };
 

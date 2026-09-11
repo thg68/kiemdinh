@@ -8,6 +8,7 @@ import {
   CurrentUserRoles,
   type RoleLabel,
 } from "@/components/layout/current-user-roles";
+import { WorkspaceSwitcher } from "@/components/layout/workspace-switcher";
 import { Alert } from "@/components/ui/alert";
 import { LoadingState } from "@/components/ui/loading-state";
 import { capabilityForPath, hasCapability } from "@/lib/auth/capabilities";
@@ -49,11 +50,19 @@ export function ApplicationShell({
     [configured],
   );
   const roleCodes = useMemo(() => roles.map((role) => role.ma), [roles]);
-  const navigation = navigationForRoles(roleCodes);
+  const schoolRoles = useMemo(
+    () => roles.filter((role) => role.ma !== "SYSTEM_ADMIN"),
+    [roles],
+  );
+  const schoolRoleCodes = useMemo(
+    () => schoolRoles.map((role) => role.ma),
+    [schoolRoles],
+  );
+  const navigation = navigationForRoles(schoolRoleCodes);
   const requiredCapability = capabilityForPath(pathname);
   const isOnboardingAccount = pathname.startsWith("/thiet-lap") && roleCodes.length === 0;
   const canAccess =
-    !requiredCapability || isOnboardingAccount || hasCapability(roleCodes, requiredCapability);
+    !requiredCapability || isOnboardingAccount || hasCapability(schoolRoleCodes, requiredCapability);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -187,6 +196,8 @@ export function ApplicationShell({
             Quản trị chất lượng nhà trường từ vận hành hằng ngày.
           </p>
 
+          <WorkspaceSwitcher current="school" roleCodes={roleCodes} />
+
           <nav
             aria-busy={rolesLoading || undefined}
             aria-label="Điều hướng nghiệp vụ"
@@ -220,7 +231,7 @@ export function ApplicationShell({
           </nav>
 
           {roleMessage ? <Alert className="mt-4" tone="warning">{roleMessage}</Alert> : null}
-          <CurrentUserRoles roles={roles} />
+          <CurrentUserRoles roles={schoolRoles} title="Vai trò tại trường" />
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
             <LogoutButton />

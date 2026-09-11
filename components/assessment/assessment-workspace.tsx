@@ -3,7 +3,7 @@
 import { toUserMessage } from "@/lib/errors/user-message";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   createBrowserSupabaseClient,
   isSupabaseConfigured,
@@ -32,6 +32,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingState } from "@/components/ui/loading-state";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { InternalContentAssessment } from "@/components/assessment/internal-content-assessment";
+import { evaluateEvidenceEligibility } from "@/lib/assessment/evidence-eligibility";
 
 type Profile = {
   id: string;
@@ -50,6 +52,7 @@ type SchoolYear = {
   id: string;
   ten: string;
   trang_thai: string;
+  ngay_ket_thuc: string;
 };
 
 type Criterion = {
@@ -80,11 +83,41 @@ type AssessmentRow = {
 };
 
 type EvidenceOption = {
+  eligible: boolean;
   id: string;
   ma: string;
+  reason: string | null;
   ten: string;
   tuDanhGiaIds: string[];
 };
+
+type EvidenceRow = {
+  id: string;
+  la_du_lieu_demo: boolean;
+  ma: string;
+  ngay_het_gia_tri: string | null;
+  ten: string;
+  trang_thai_xac_minh: string;
+};
+
+type AssessmentEvidenceLink = {
+  minh_chung_id: string;
+  tu_danh_gia_id: string;
+};
+
+function mapEvidenceOptions(
+  evidence: EvidenceRow[],
+  links: AssessmentEvidenceLink[],
+  schoolYearEnd: string,
+) {
+  return evidence.map<EvidenceOption>((item) => ({
+    ...item,
+    ...evaluateEvidenceEligibility(item, schoolYearEnd),
+    tuDanhGiaIds: links
+      .filter((link) => link.minh_chung_id === item.id)
+      .map((link) => link.tu_danh_gia_id),
+  }));
+}
 
 const capHocLabels: Record<CapHoc, string> = {
   mam_non: "Mầm non",
@@ -112,7 +145,7 @@ function toKetQuaTieuChi(
       moTaMuc1: row?.mo_ta_muc_1 ?? "",
       moTaMuc2: row?.mo_ta_muc_2 ?? "",
       maMinhChung: evidence
-        .filter((item) => row && item.tuDanhGiaIds.includes(row.id))
+        .filter((item) => item.eligible && row && item.tuDanhGiaIds.includes(row.id))
         .map((item) => item.ma),
     };
   });
@@ -120,6 +153,7 @@ function toKetQuaTieuChi(
 
 export function AssessmentWorkspace() {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = useMemo(() => {
     if (!isSupabaseConfigured()) {
       return null;
@@ -187,6 +221,13 @@ export function AssessmentWorkspace() {
     setSimulationChanges([]);
   }, []);
 
+  const syncScopeUrl = useCallback((capHoc: CapHoc, criterionId: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("cap_hoc", capHoc);
+    if (criterionId) params.set("tieu_chi_id", criterionId);
+    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
+  }, [pathname]);
+
   const loadData = useCallback(async () => {
     if (!supabase) {
       setMessage("Chưa cấu hình Supabase trong .env.local.");
@@ -234,7 +275,7 @@ export function AssessmentWorkspace() {
           .maybeSingle(),
         supabase
           .from("nam_hoc")
-          .select("id, ten, trang_thai")
+          .select("id, ten, trang_thai, ngay_ket_thuc")
           .eq("co_so_id", profileData.co_so_id)
           .order("ngay_bat_dau", { ascending: false }),
       ]);
@@ -281,17 +322,26 @@ export function AssessmentWorkspace() {
         : [],
     }));
 
+    const locationParams = new URLSearchParams(window.location.search);
+    const requestedCapHoc = locationParams.get("cap_hoc") as CapHoc | null;
+    const nextCapHoc = requestedCapHoc && loadedSchool?.cap_hoc.includes(requestedCapHoc)
+      ? requestedCapHoc
+      : loadedSchool?.cap_hoc?.[0] ?? "mam_non";
+    const requestedCriterionId = locationParams.get("tieu_chi_id");
+    const nextCriterionId = requestedCriterionId
+      && loadedCriteria.some((criterion) => criterion.id === requestedCriterionId)
+      ? requestedCriterionId
+      : loadedCriteria[0]?.id ?? "";
+
     setSchool(loadedSchool);
     setYears(loadedYears);
     setCriteria(loadedCriteria);
-    setSelectedCriterionId((current) => current || loadedCriteria[0]?.id || "");
-
-    if (loadedSchool?.cap_hoc?.[0]) {
-      setSelectedCapHoc(loadedSchool.cap_hoc[0]);
-    }
+    setSelectedCriterionId(nextCriterionId);
+    setSelectedCapHoc(nextCapHoc);
+    syncScopeUrl(nextCapHoc, nextCriterionId);
 
     setLoading(false);
-  }, [router, supabase]);
+  }, [router, supabase, syncScopeUrl]);
 
   const loadAssessmentData = useCallback(async () => {
     if (!supabase || !profile || !activeYear) {
@@ -313,10 +363,11 @@ export function AssessmentWorkspace() {
           .eq("nam_hoc_id", activeYear.id)
           .eq("cap_hoc", selectedCapHoc),
         supabase
-          .from("v_minh_chung_hop_le_danh_gia")
-          .select("id, ma, ten")
+          .from("minh_chung")
+          .select("id, ma, ten, trang_thai_xac_minh, ngay_het_gia_tri, la_du_lieu_demo")
           .eq("co_so_id", profile.co_so_id)
           .eq("nam_hoc_id", activeYear.id)
+          .is("deleted_at", null)
           .order("ma", { ascending: true }),
       ]);
 
@@ -346,16 +397,11 @@ export function AssessmentWorkspace() {
       return;
     }
 
-    setEvidence(
-      ((evidenceData ?? []) as { id: string; ma: string; ten: string }[]).map((item) => ({
-        id: item.id,
-        ma: item.ma,
-        ten: item.ten,
-        tuDanhGiaIds: (linkData ?? [])
-          .filter((link) => link.minh_chung_id === item.id)
-          .map((link) => link.tu_danh_gia_id),
-      })),
-    );
+    setEvidence(mapEvidenceOptions(
+      (evidenceData ?? []) as EvidenceRow[],
+      (linkData ?? []) as AssessmentEvidenceLink[],
+      activeYear.ngay_ket_thuc,
+    ));
 
     try {
       const allCapResults = await Promise.all(
@@ -373,6 +419,40 @@ export function AssessmentWorkspace() {
     }
     if (requestGeneration === assessmentRequestGeneration.current) setLoadingAssessment(false);
   }, [activeYear, capHocList, profile, selectedCapHoc, supabase]);
+
+  const refreshEvidence = useCallback(async () => {
+    if (!supabase || !profile || !activeYear) return;
+
+    const assessmentIds = assessments.map((item) => item.id);
+    const [{ data: evidenceData, error: evidenceError }, { data: linkData, error: linkError }] =
+      await Promise.all([
+        supabase
+          .from("minh_chung")
+          .select("id, ma, ten, trang_thai_xac_minh, ngay_het_gia_tri, la_du_lieu_demo")
+          .eq("co_so_id", profile.co_so_id)
+          .eq("nam_hoc_id", activeYear.id)
+          .is("deleted_at", null)
+          .order("ma", { ascending: true }),
+        assessmentIds.length
+          ? supabase
+              .from("tu_danh_gia_minh_chung")
+              .select("minh_chung_id, tu_danh_gia_id")
+              .in("tu_danh_gia_id", assessmentIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+    if (evidenceError || linkError) {
+      setMessage(toUserMessage(evidenceError ?? linkError, "Không tải lại được kho minh chứng. Vui lòng thử lại."));
+      return;
+    }
+
+    setEvidence(mapEvidenceOptions(
+      (evidenceData ?? []) as EvidenceRow[],
+      (linkData ?? []) as AssessmentEvidenceLink[],
+      activeYear.ngay_ket_thuc,
+    ));
+    setMessage("Đã tải lại kho minh chứng.");
+  }, [activeYear, assessments, profile, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -423,9 +503,11 @@ export function AssessmentWorkspace() {
             className="form-control mt-2 min-w-48"
             value={selectedCapHoc}
             onChange={(event) => {
+              const nextCapHoc = event.target.value as CapHoc;
               setSimulationOpen(false);
               setSimulationChanges([]);
-              setSelectedCapHoc(event.target.value as CapHoc);
+              setSelectedCapHoc(nextCapHoc);
+              syncScopeUrl(nextCapHoc, selectedCriterion?.id ?? "");
             }}
           >
             {capHocList.map((capHoc) => (
@@ -457,7 +539,10 @@ export function AssessmentWorkspace() {
         selectedCriterionId={selectedCriterion?.id ?? ""}
         canSimulate={canSimulate}
         simulatedLevels={simulationOpen ? simulatedLevels : undefined}
-        onSelect={setSelectedCriterionId}
+        onSelect={(id) => {
+          setSelectedCriterionId(id);
+          syncScopeUrl(selectedCapHoc, id);
+        }}
         onOpenSimulation={openSimulation}
       />
 
@@ -475,6 +560,7 @@ export function AssessmentWorkspace() {
               setMessage(text);
               await loadAssessmentData();
             }}
+            onRefreshEvidence={refreshEvidence}
           />
         ) : (
           <p className="surface-card surface-card-pad text-sm text-[var(--color-graphite)]/70">
@@ -498,6 +584,7 @@ export function AssessmentWorkspace() {
         onOpenCriterion={(id) => {
           setSelectedCriterionId(id);
           setSimulationOpen(false);
+          syncScopeUrl(selectedCapHoc, id);
           document.getElementById("criterion-assessment")?.scrollIntoView({ behavior: "smooth" });
         }}
         onTarget={changeSimulationTarget}
@@ -595,6 +682,31 @@ function GapBoard(props: {
 }
 
 function CriterionAssessmentForm(props: {
+  activeYearId: string;
+  criterion: Criterion;
+  evidence: EvidenceOption[];
+  profile: Profile;
+  row: AssessmentRow | null;
+  selectedCapHoc: CapHoc;
+  supabase: ReturnType<typeof createBrowserSupabaseClient> | null;
+  onDone: (message: string) => Promise<void>;
+  onRefreshEvidence: () => Promise<void>;
+}) {
+  return (
+    <InternalContentAssessment
+      activeYearId={props.activeYearId}
+      criterion={props.criterion}
+      evidence={props.evidence}
+      row={props.row}
+      selectedCapHoc={props.selectedCapHoc}
+      supabase={props.supabase}
+      onDone={props.onDone}
+      onRefreshEvidence={props.onRefreshEvidence}
+    />
+  );
+}
+
+export function LegacyCriterionAssessmentForm(props: {
   activeYearId: string;
   criterion: Criterion;
   evidence: EvidenceOption[];

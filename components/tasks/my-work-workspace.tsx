@@ -82,11 +82,14 @@ export function MyWorkWorkspace() {
   const isManager = useMemo(
     () =>
       roles.some((role) =>
-        ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY", "SYSTEM_ADMIN"].includes(role.ma),
+        ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY"].includes(role.ma),
       ),
     [roles],
   );
   const canEditAssessment = isManager || roles.some((role) => role.ma === "MEMBER");
+  const canApproveReports = roles.some((role) =>
+    ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"].includes(role.ma),
+  );
 
   const loadWork = useCallback(async () => {
     if (!supabase || !profile || !activeYear) {
@@ -237,7 +240,11 @@ export function MyWorkWorkspace() {
       <section className="grid gap-3 md:grid-cols-3">
         <ActionCard count={pendingEvidence} href="/minh-chung/xac-minh" label="Minh chứng chờ xác minh" />
         <ActionCard count={pendingAssessments} href="/tu-danh-gia/cho-duyet" label="Tiêu chí chờ duyệt" />
-        <ActionCard count={pendingReports} href="/bao-cao" label="Báo cáo chờ duyệt" />
+        <ActionCard
+          count={pendingReports}
+          href={canApproveReports ? "/bao-cao/cho-duyet" : "/bao-cao"}
+          label="Báo cáo chờ duyệt"
+        />
       </section>
 
       <section className="surface-card overflow-hidden">

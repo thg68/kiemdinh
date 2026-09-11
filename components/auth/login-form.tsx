@@ -10,7 +10,10 @@ import {
 } from "@/lib/supabase/client";
 import { classifyLoginFailure } from "@/lib/observability/auth-events";
 import { Alert } from "@/components/ui/alert";
+import { SchoolPicker } from "@/components/auth/school-picker";
 import { firstRouteForRoles } from "@/lib/auth/navigation";
+import { toUserMessage } from "@/lib/errors/user-message";
+import type { RegistrationSchool } from "@/lib/schools/directory";
 
 type AuthMode = "dang_nhap" | "dang_ky";
 type MessageTone = "danger" | "info" | "success" | "warning";
@@ -63,6 +66,10 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hoTen, setHoTen] = useState("");
+  const [schools, setSchools] = useState<RegistrationSchool[]>([]);
+  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [schoolsLoading, setSchoolsLoading] = useState(() => Boolean(supabase));
+  const [schoolsError, setSchoolsError] = useState("");
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<MessageTone>("info");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,7 +79,7 @@ export function LoginForm() {
 
     if (search.has("xac_nhan_email")) {
       const timer = window.setTimeout(() => {
-        setMessage("Email đã được xác nhận. Bạn có thể đăng nhập vào hệ thống thật.");
+        setMessage("Email đã được xác nhận. Hãy đăng nhập để hoàn tất việc tham gia trường.");
         setMessageTone("success");
         setMode("dang_nhap");
       }, 0);
@@ -81,11 +88,68 @@ export function LoginForm() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    const client = supabase;
+    let active = true;
+
+    async function loadSchools() {
+      const { data, error } = await client.rpc("fn_danh_sach_truong_dang_ky", {
+        p_limit: 500,
+        p_tu_khoa: null,
+      });
+
+      if (!active) return;
+
+      if (error) {
+        setSchoolsError("Không tải được danh mục trường Quảng Ninh. Vui lòng tải lại trang.");
+      } else {
+        setSchools((data ?? []) as RegistrationSchool[]);
+      }
+      setSchoolsLoading(false);
+    }
+
+    void loadSchools();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
+
+  async function finishSchoolRegistration(schoolId: string) {
+    if (!supabase || !schoolId) return null;
+
+    const { error } = await supabase.rpc("fn_tu_dang_ky_vao_co_so", {
+      p_co_so_id: schoolId,
+    });
+    return error;
+  }
+
+  async function routeAuthenticatedUser() {
+    if (!supabase) return;
+
+    const { data: roleData, error: roleError } = await supabase.rpc("fn_user_role_labels");
+    const roleCodes = roleError
+      ? []
+      : ((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma);
+
+    router.replace(firstRouteForRoles(roleCodes));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!supabase) {
       setMessage("Chưa cấu hình Supabase trong .env.local.");
+      setMessageTone("warning");
+      return;
+    }
+
+    if (mode === "dang_ky" && !selectedSchoolId) {
+      setMessage("Hãy chọn trường đang công tác trước khi tạo tài khoản.");
       setMessageTone("warning");
       return;
     }
@@ -102,14 +166,15 @@ export function LoginForm() {
             options: {
               emailRedirectTo: `${getPublicAppUrl()}/login?xac_nhan_email=1`,
               data: {
-                ho_ten: hoTen,
+                ho_ten: hoTen.trim(),
+                co_so_id: selectedSchoolId,
+                ma_truong: schools.find((school) => school.id === selectedSchoolId)?.ma_truong,
               },
             },
           });
 
-    setIsSubmitting(false);
-
     if (result.error) {
+      setIsSubmitting(false);
       setMessage(authErrorMessage(result.error.message));
       setMessageTone("danger");
       void reportLoginFailure(result.error.message);
@@ -117,32 +182,59 @@ export function LoginForm() {
     }
 
     if (mode === "dang_nhap") {
-      const { data: roleData, error: roleError } = await supabase.rpc("fn_user_role_labels");
-      const roleCodes = roleError
-        ? []
-        : ((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma);
+      const schoolId = result.data.user?.user_metadata?.co_so_id;
+      if (typeof schoolId === "string" && schoolId) {
+        const joinError = await finishSchoolRegistration(schoolId);
+        if (joinError) {
+          setIsSubmitting(false);
+          setMessage(
+            toUserMessage(
+              joinError,
+              "Không thể hoàn tất việc tham gia trường đã chọn. Vui lòng kiểm tra lại với quản trị hệ thống.",
+            ),
+          );
+          setMessageTone("danger");
+          return;
+        }
+      }
 
-      router.replace(firstRouteForRoles(roleCodes));
+      await routeAuthenticatedUser();
+      setIsSubmitting(false);
       return;
     }
 
-    setMessage("Tài khoản đã được tạo. Hãy xác nhận email rồi đăng nhập để nhận lời mời tham gia đơn vị.");
+    if (result.data.session) {
+      const joinError = await finishSchoolRegistration(selectedSchoolId);
+      if (joinError) {
+        setIsSubmitting(false);
+        setMessage(toUserMessage(joinError));
+        setMessageTone("danger");
+        return;
+      }
+
+      await routeAuthenticatedUser();
+      setIsSubmitting(false);
+      return;
+    }
+
+    setIsSubmitting(false);
+    setMessage("Tài khoản đã được tạo. Hãy xác nhận email, sau đó đăng nhập để vào đúng trường đã chọn.");
     setMessageTone("success");
     setMode("dang_nhap");
   }
 
   return (
-    <div className="surface-card w-full max-w-md p-6">
+    <div className="surface-card w-full max-w-xl p-6">
       <div>
         <h2 className="section-title text-2xl">Tài khoản</h2>
         <p className="muted mt-2 text-sm">
-          Dùng email công việc của bạn để đăng nhập hoặc tạo tài khoản tham gia đơn vị.
+          Dùng email công việc để đăng nhập hoặc tạo tài khoản trong đơn vị của bạn.
         </p>
       </div>
 
       {mode === "dang_ky" ? (
         <Alert className="mt-4" tone="info">
-          Đăng ký chỉ tạo tài khoản đăng nhập, không tự cấp vai trò. Đơn vị sẽ gửi lời mời đến email này và phân công vai trò phù hợp.
+          Chọn đúng trường để được tạo hồ sơ Giáo viên sau khi xác nhận email. Các vai trò nghiệp vụ khác do người có thẩm quyền của đơn vị phân công.
         </Alert>
       ) : null}
 
@@ -151,7 +243,10 @@ export function LoginForm() {
           type="button"
           aria-pressed={mode === "dang_nhap"}
           className={`segmented-option ${mode === "dang_nhap" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
-          onClick={() => setMode("dang_nhap")}
+          onClick={() => {
+            setMode("dang_nhap");
+            setMessage("");
+          }}
         >
           Đăng nhập
         </button>
@@ -159,7 +254,10 @@ export function LoginForm() {
           type="button"
           aria-pressed={mode === "dang_ky"}
           className={`segmented-option ${mode === "dang_ky" ? "segmented-option-active" : "text-[var(--color-graphite)]"}`}
-          onClick={() => setMode("dang_ky")}
+          onClick={() => {
+            setMode("dang_ky");
+            setMessage("");
+          }}
         >
           Tạo tài khoản
         </button>
@@ -167,20 +265,32 @@ export function LoginForm() {
 
       <form aria-describedby={message ? "login-status" : undefined} className="mt-6 space-y-4" onSubmit={handleSubmit}>
         {mode === "dang_ky" ? (
-          <label className="block text-sm font-medium text-[var(--color-charcoal)]">
-            Họ và tên
-            <input
-              className="form-control mt-2"
-              value={hoTen}
-              onChange={(event) => setHoTen(event.target.value)}
-              required
+          <>
+            <label className="block text-sm font-medium text-[var(--color-charcoal)]">
+              Họ và tên
+              <input
+                autoComplete="name"
+                className="form-control mt-2"
+                value={hoTen}
+                onChange={(event) => setHoTen(event.target.value)}
+                required
+              />
+            </label>
+            <SchoolPicker
+              disabled={isSubmitting}
+              error={schoolsError}
+              loading={schoolsLoading}
+              schools={schools}
+              selectedSchoolId={selectedSchoolId}
+              onSelect={setSelectedSchoolId}
             />
-          </label>
+          </>
         ) : null}
 
         <label className="block text-sm font-medium text-[var(--color-charcoal)]">
           Email
           <input
+            autoComplete="email"
             className="form-control mt-2"
             type="email"
             value={email}
@@ -200,6 +310,7 @@ export function LoginForm() {
             </Link>
           </span>
           <input
+            autoComplete={mode === "dang_nhap" ? "current-password" : "new-password"}
             className="form-control mt-2"
             type="password"
             value={password}
@@ -211,8 +322,8 @@ export function LoginForm() {
 
         <button
           type="submit"
-          className="button-primary w-full disabled:cursor-not-allowed"
-          disabled={isSubmitting}
+          className="button-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isSubmitting || (mode === "dang_ky" && (schoolsLoading || !selectedSchoolId))}
         >
           {isSubmitting
             ? "Đang xử lý…"

@@ -2,6 +2,17 @@
 
 Tài liệu này ghi lại các màn hình đã bổ sung sau đợt rà soát UI/UX theo phân quyền Phụ lục B. Mục tiêu là để mỗi quyền nghiệp vụ đều có nơi thao tác rõ ràng trong giao diện, không phụ thuộc vào việc người dùng nhớ đường dẫn.
 
+## Quản trị hệ thống PDT
+
+- `/quan-tri`: xem quy mô và các điểm vận hành cần chú ý trên toàn nền tảng.
+- `/quan-tri/co-so`: lọc, phân trang, kích hoạt hoặc tạm ngừng cơ sở giáo dục.
+- `/quan-tri/nguoi-tham-gia`: theo dõi tài khoản theo trường, vai trò và trạng thái; khóa hoặc khôi phục truy cập. Vai trò nghiệp vụ vẫn do Hiệu trưởng quản lý.
+- `/quan-tri/minh-chung`: chỉ xem metadata kỹ thuật và đánh dấu mục cần rà soát; không xem nội dung hoặc tải tệp minh chứng.
+- `/quan-tri/bo-tieu-chuan`: theo dõi phiên bản, hiệu lực, số tiêu chuẩn, tiêu chí và năm học đang sử dụng.
+- `/quan-tri/van-hanh`: kiểm tra endpoint sức khỏe và nhật ký thao tác quản trị đã loại bỏ payload nhạy cảm.
+
+Tài khoản có đồng thời vai trò hệ thống và vai trò nhà trường dùng ô “Khu vực làm việc” để chuyển workspace. Việc chuyển này chỉ thay đổi ngữ cảnh giao diện; RLS/RPC vẫn quyết định quyền dữ liệu cuối cùng.
+
 ## Hiệu trưởng / Giám đốc
 
 - `/dashboard`: xem điểm vào chung và các nhóm việc chính.
@@ -47,6 +58,7 @@ Tài liệu này ghi lại các màn hình đã bổ sung sau đợt rà soát U
 ## Ghi chú kiểm soát
 
 - Các màn hình nghiệp vụ chỉ là lớp giao diện. Quyền đọc/ghi vẫn phải được kiểm soát bằng RLS hoặc RPC ở Supabase.
+- Namespace `/quan-tri` không được dùng để mở, tải hoặc xác minh nội dung minh chứng thay cho nhà trường.
 - Các dữ liệu ngoài TT57 không được hardcode trong mã nguồn. Nhà trường tự nhập tại `/van-ban-lien-quan`.
 - Nếu bổ sung vai trò hoặc quyền mới, cần cập nhật đồng thời: migration phân quyền, navigation, tài liệu này và checklist kiểm thử thủ công.
 - Ma trận đầy đủ được kiểm tra tự động với mã nguồn tại `docs/MATRAN-NANG-LUC-VAI-TRO.md`.

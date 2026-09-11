@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ReportSubnav } from "@/components/reports/report-subnav";
 import { useAppContext } from "@/components/shared/use-app-context";
 import { useScopedRequest } from "@/components/shared/use-scoped-request";
 import { Alert } from "@/components/ui/alert";
@@ -11,6 +12,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { toUserMessage } from "@/lib/errors/user-message";
 import { reportStorageFailure } from "@/lib/observability/client-alerts";
+import { hasCapability } from "@/lib/auth/capabilities";
 import {
   ApprovedReportRow,
   formatApprovedAt,
@@ -35,6 +37,7 @@ export function ApprovedReportsWorkspace() {
   const [rows, setRows] = useState<ApprovedReportRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [downloadingId, setDownloadingId] = useState("");
+  const [roleCodes, setRoleCodes] = useState<string[]>([]);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
   const rowsRequest = useScopedRequest(`${profile?.co_so_id ?? ""}:${effectiveYearId}`);
@@ -47,14 +50,17 @@ export function ApprovedReportsWorkspace() {
     setRows([]);
     const request = rowsRequest.begin("approved-reports");
 
-    const { data, error } = await supabase
-      .from("bao_cao")
-      .select(reportSelect)
-      .eq("co_so_id", profile.co_so_id)
-      .eq("nam_hoc_id", effectiveYearId)
-      .eq("trang_thai", "da_phe_duyet")
-      .in("loai_bao_cao", ["mau_1_tu_danh_gia", "mau_2_ke_hoach_cai_tien"])
-      .order("ngay_phe_duyet", { ascending: false });
+    const [{ data, error }, { data: roleData }] = await Promise.all([
+      supabase
+        .from("bao_cao")
+        .select(reportSelect)
+        .eq("co_so_id", profile.co_so_id)
+        .eq("nam_hoc_id", effectiveYearId)
+        .eq("trang_thai", "da_phe_duyet")
+        .in("loai_bao_cao", ["mau_1_tu_danh_gia", "mau_2_ke_hoach_cai_tien"])
+        .order("ngay_phe_duyet", { ascending: false }),
+      supabase.rpc("fn_user_role_labels"),
+    ]);
 
     if (!rowsRequest.isCurrent(request)) return;
 
@@ -64,6 +70,7 @@ export function ApprovedReportsWorkspace() {
     } else {
       setRows((data ?? []) as unknown as ApprovedReportRow[]);
     }
+    setRoleCodes(((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma));
 
     setLoadingRows(false);
   }, [effectiveYearId, profile, rowsRequest, setMessage, supabase]);
@@ -111,6 +118,11 @@ export function ApprovedReportsWorkspace() {
 
   return (
     <div className="grid gap-6">
+      <ReportSubnav
+        active="approved"
+        canApprove={hasCapability(roleCodes, "action.report.approve")}
+        canCompose={hasCapability(roleCodes, "page.reports")}
+      />
       {message ? <Alert tone="warning">{message}</Alert> : null}
 
       <section className="surface-card grid gap-4 p-5 md:grid-cols-2">

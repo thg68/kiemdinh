@@ -13,14 +13,14 @@ export default function LoginPage() {
         </Link>
       </div>
 
-      <div className="content-wrap grid min-h-[calc(100vh-9rem)] items-center gap-10 px-5 py-12 md:grid-cols-[minmax(0,1fr)_430px]">
-        <section>
+      <div className="content-wrap grid min-h-[calc(100vh-9rem)] items-center gap-10 px-5 py-12 md:grid-cols-[minmax(0,1fr)_520px]">
+        <section className="order-2 md:order-1">
           <h1 className="page-title">
             Đăng nhập hệ thống quản trị nhà trường
           </h1>
           <p className="page-copy mt-6">
-            Tài khoản được mời sẽ tham gia đúng đơn vị và nhận vai trò đã được phân công.
-            Người có quyền quản trị mới có thể tạo đơn vị hoặc thiết lập năm học.
+            Chọn trường trong danh mục Quảng Ninh khi đăng ký để bắt đầu với vai trò Giáo viên.
+            Các vai trò quản lý và nghiệp vụ được người có thẩm quyền của đơn vị phân công sau.
           </p>
           <div className="mt-8 grid gap-3 text-sm text-[var(--color-graphite)]/78 sm:grid-cols-3">
             <div className="surface-card p-4">Phân quyền theo đơn vị</div>
@@ -29,7 +29,9 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <LoginForm />
+        <div className="order-1 md:order-2">
+          <LoginForm />
+        </div>
       </div>
     </main>
   );

@@ -61,6 +61,12 @@ from public.v_tieu_chi_nam_hoc criterion
 where criterion.nam_hoc_id = '47000000-0000-0000-0000-000000000002'
   and criterion.ma = '1.1';
 
+insert into storage.objects(bucket_id, name)
+values (
+  'reports',
+  '47000000-0000-0000-0000-000000000001/47000000-0000-0000-0000-000000000002/mau_1_tu_danh_gia/snapshots/mau-1.docx'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '47000000-0000-0000-0000-000000000003', true);
 select set_config('request.jwt.claim.role', 'authenticated', true);
@@ -83,20 +89,34 @@ select is(
   'Nguon khong doi tao digest on dinh'
 );
 
+set local role postgres;
+
 select lives_ok(
-  $$select public.fn_luu_trang_thai_bao_cao(
-    '47000000-0000-0000-0000-000000000002', 'mam_non', 'mau_1_tu_danh_gia',
-    'cho_duyet', null, 'mau-1.docx',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    100, repeat('a', 64), '{}'::jsonb, null,
-    (public.fn_lay_niem_phong_nguon_bao_cao(
-      '47000000-0000-0000-0000-000000000002', 'mam_non', 'mau_1_tu_danh_gia'
-    ) ->> 'digest')
-  )$$,
+  $$insert into public.bao_cao(
+      co_so_id, nam_hoc_id, cap_hoc, loai_bao_cao, version, trang_thai,
+      storage_path, ten_tep_goc, mime_type, kich_thuoc, sha256,
+      source_manifest, source_digest, nguoi_tao, nguoi_gui_duyet, ngay_gui_duyet
+    )
+    select
+      '47000000-0000-0000-0000-000000000001',
+      '47000000-0000-0000-0000-000000000002',
+      'mam_non', 'mau_1_tu_danh_gia', 1, 'cho_duyet',
+      '47000000-0000-0000-0000-000000000001/47000000-0000-0000-0000-000000000002/mau_1_tu_danh_gia/snapshots/mau-1.docx',
+      'mau-1.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      100, repeat('a', 64), seal -> 'manifest', seal ->> 'digest',
+      '47000000-0000-0000-0000-000000000004',
+      '47000000-0000-0000-0000-000000000004', now()
+    from (
+      select public.fn_lay_niem_phong_nguon_bao_cao(
+        '47000000-0000-0000-0000-000000000002',
+        'mam_non',
+        'mau_1_tu_danh_gia'
+      ) as seal
+    ) source$$,
   'Luu niem phong nguon vao ban bao cao cho duyet'
 );
 
-set local role postgres;
 update public.tu_danh_gia
 set mo_ta_muc_1 = 'Hien trang da bi thay doi sau khi xuat'
 where id = '47000000-0000-0000-0000-000000000005';
@@ -116,7 +136,7 @@ select throws_ok(
     (select source_digest from public.bao_cao where co_so_id = '47000000-0000-0000-0000-000000000001')
   )$$,
   '40001',
-  'Du lieu nguon da thay doi ke tu khi xuat file. Hay xuat lai bao cao.',
+  'Du lieu nguon da thay doi ke tu khi gui duyet. Hay tra lai bao cao.',
   'Tu choi phe duyet khi noi dung tu danh gia da thay doi'
 );
 

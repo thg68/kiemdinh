@@ -22,7 +22,7 @@ type PendingCounts = {
   reports: number;
 };
 
-const managerRoles = new Set(["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY", "SYSTEM_ADMIN"]);
+const managerRoles = new Set(["PRINCIPAL", "SELF_ASSESSMENT_CHAIR", "SECRETARY"]);
 
 export function DashboardWorkspace() {
   const { activeYear, loading, message, profile, school, setMessage, supabase } = useAppContext();
@@ -36,10 +36,13 @@ export function DashboardWorkspace() {
     [school],
   );
   const isManager = roles.some((role) => managerRoles.has(role.ma));
+  const canApproveReports = roles.some((role) =>
+    ["PRINCIPAL", "SELF_ASSESSMENT_CHAIR"].includes(role.ma),
+  );
   const result = xacDinhMucToanTruongTuKetQua(
     capHocList.map((capHoc) => ({ capHoc, ketQuaTieuChi: resultsByCapHoc.get(capHoc) ?? [] })),
   );
-  const blockers = result.chanLenMucTiepTheo.slice(0, 6);
+  const blockers = Array.from(new Set(result.chanLenMucTiepTheo)).slice(0, 6);
   const completedCriteria = Array.from(resultsByCapHoc.values())
     .flat()
     .filter((item) => item.mucDat > 0 && (item.maMinhChung?.length ?? 0) > 0).length;
@@ -146,7 +149,11 @@ export function DashboardWorkspace() {
         <MetricCard href="/tu-danh-gia" label="Tiêu chí theo cấp có dữ liệu" value={`${completedCriteria}/${totalCriteriaByCap}`} />
         <MetricCard href="/minh-chung/xac-minh" label="Minh chứng chờ xác minh" value={pendingCounts.evidence} />
         <MetricCard href="/tu-danh-gia/cho-duyet" label="Tiêu chí chờ duyệt" value={pendingCounts.assessments} />
-        <MetricCard href="/bao-cao" label="Báo cáo chờ duyệt" value={pendingCounts.reports} />
+        <MetricCard
+          href={canApproveReports ? "/bao-cao/cho-duyet" : "/bao-cao"}
+          label="Báo cáo chờ duyệt"
+          value={pendingCounts.reports}
+        />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">

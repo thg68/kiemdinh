@@ -108,7 +108,7 @@ select throws_ok(
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 10,
     repeat('a', 64), '{}'::jsonb
   )$$,
-  '22023', 'Phe duyet bao cao phai chi ro ban bao cao da duoc xuat.',
+  '22023', 'Thao tac duyet phai chi ro ban bao cao cho duyet.',
   'Cong phe duyet DB buoc chi ro dung ban bao cao da xuat'
 );
 
@@ -244,7 +244,10 @@ select lives_ok(
   $$select public.fn_luu_trang_thai_bao_cao(
     (select nh.id from public.nam_hoc nh join public.nguoi_dung nd on nd.co_so_id = nh.co_so_id
       where nd.auth_user_id = '00000000-0000-0000-0000-000000020001' and nh.ten = '2098-2099'),
-    'mam_non', 'mau_1_tu_danh_gia', 'cho_duyet', null,
+    'mam_non', 'mau_1_tu_danh_gia', 'cho_duyet',
+    (select nd.co_so_id || '/' || nh.id || '/mau_1_tu_danh_gia/snapshots/v1.docx'
+      from public.nguoi_dung nd join public.nam_hoc nh on nh.co_so_id = nd.co_so_id and nh.ten = '2098-2099'
+      where nd.auth_user_id = '00000000-0000-0000-0000-000000020001'),
     'Mau-1-v1.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 1024,
     repeat('a', 64), '{"schema_version":"1.0"}'::jsonb, null,
     (public.fn_lay_niem_phong_nguon_bao_cao(

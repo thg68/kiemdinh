@@ -39,7 +39,7 @@ export function requireE2ECredentials(roles: TestRole[]) {
 export async function loginAs(page: Page, role: TestRole) {
   const credentials = credentialsFor(role);
   const expectedRoutes: Record<TestRole, string> = {
-    SYSTEM_ADMIN: "/bo-tieu-chuan",
+    SYSTEM_ADMIN: "/quan-tri",
     PRINCIPAL: "/dashboard",
     SELF_ASSESSMENT_CHAIR: "/dashboard",
     SECRETARY: "/dashboard",

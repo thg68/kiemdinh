@@ -8,6 +8,7 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/alert";
+import { SchoolPicker } from "@/components/auth/school-picker";
 import { LoadingState } from "@/components/ui/loading-state";
 import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import {
@@ -16,6 +17,7 @@ import {
   type LoaiHinh,
   validateSchoolOnboarding,
 } from "@/lib/domain/school-metadata";
+import type { RegistrationSchool } from "@/lib/schools/directory";
 
 type Profile = {
   id: string;
@@ -71,6 +73,7 @@ type ManagedUser = {
   email: string | null;
   trang_thai: string;
   nguoi_dung_vai_tro?: UserRole[];
+  total_count?: number;
 };
 
 type PendingInvitation = {
@@ -99,6 +102,32 @@ const assignableRoleCodes = [
   "TEACHER",
   "VIEWER",
 ];
+
+const rolePriority: Record<string, number> = {
+  SYSTEM_ADMIN: 0,
+  PRINCIPAL: 1,
+  SELF_ASSESSMENT_CHAIR: 2,
+  SECRETARY: 3,
+  MEMBER: 4,
+  TEACHER: 5,
+  VIEWER: 6,
+};
+
+function highestRolePriority(roles: Role[]) {
+  return roles.reduce(
+    (priority, role) => Math.min(priority, rolePriority[role.ma] ?? Number.MAX_SAFE_INTEGER),
+    Number.MAX_SAFE_INTEGER,
+  );
+}
+
+function sameRoleCodes(left: string[], right: string[]) {
+  if (left.length !== right.length) return false;
+
+  const sortedLeft = [...left].sort();
+  const sortedRight = [...right].sort();
+
+  return sortedLeft.every((roleCode, index) => roleCode === sortedRight[index]);
+}
 
 const capHocOptions = [
   { value: "mam_non", label: "Mầm non" },
@@ -133,6 +162,9 @@ export function SchoolYearSetup() {
   const [canManageAssignments, setCanManageAssignments] = useState(false);
   const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
+  const [registrationSchools, setRegistrationSchools] = useState<RegistrationSchool[]>([]);
+  const [selectedRegistrationSchoolId, setSelectedRegistrationSchoolId] = useState("");
+  const [isJoiningSchool, setIsJoiningSchool] = useState(false);
   const [managedInvitations, setManagedInvitations] = useState<ManagedInvitation[]>([]);
   const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
 
@@ -194,12 +226,26 @@ export function SchoolYearSetup() {
     }
 
     if (!profileData) {
-      const { data: invitationData, error: invitationError } = await supabase.rpc(
-        "fn_danh_sach_loi_moi_cua_toi",
-      );
+      const [
+        { data: invitationData, error: invitationError },
+        { data: registrationSchoolData, error: registrationSchoolError },
+      ] = await Promise.all([
+        supabase.rpc("fn_danh_sach_loi_moi_cua_toi"),
+        supabase.rpc("fn_danh_sach_truong_dang_ky", {
+          p_limit: 500,
+          p_tu_khoa: null,
+        }),
+      ]);
       setPendingInvitations((invitationData ?? []) as PendingInvitation[]);
-      if (invitationError) {
-        setMessage(toUserMessage(invitationError, "Không tải được lời mời tham gia đơn vị."));
+      setRegistrationSchools((registrationSchoolData ?? []) as RegistrationSchool[]);
+      const onboardingError = invitationError ?? registrationSchoolError;
+      if (onboardingError) {
+        setMessage(
+          toUserMessage(
+            onboardingError,
+            "Không tải được danh mục trường. Vui lòng tải lại trang.",
+          ),
+        );
       }
       setLoading(false);
       return;
@@ -210,7 +256,7 @@ export function SchoolYearSetup() {
     const [
       { data: schoolData, error: schoolError },
       { data: yearData, error: yearError },
-      { count: loadedUserCount, data: userData, error: userError },
+      { data: userData, error: userError },
       { data: assignmentUserData, error: assignmentUserError },
       { data: roleData, error: roleError },
       { data: canManage, error: canManageError },
@@ -227,18 +273,10 @@ export function SchoolYearSetup() {
         .select("id, ten, ngay_bat_dau, ngay_ket_thuc, trang_thai")
         .eq("co_so_id", profileData.co_so_id)
         .order("ngay_bat_dau", { ascending: false }),
-      supabase
-        .from("nguoi_dung")
-        .select(
-          "id, ho_ten, email, trang_thai, nguoi_dung_vai_tro!nguoi_dung_vai_tro_nguoi_dung_id_co_so_id_fkey(vai_tro:vai_tro_id(id, ma, ten))",
-          { count: "exact" },
-        )
-        .eq("co_so_id", profileData.co_so_id)
-        .order("ho_ten", { ascending: true })
-        .range(
-          (userPage - 1) * DEFAULT_PAGE_SIZE,
-          userPage * DEFAULT_PAGE_SIZE - 1,
-        ),
+      supabase.rpc("fn_danh_sach_thanh_vien", {
+        p_limit: DEFAULT_PAGE_SIZE,
+        p_offset: (userPage - 1) * DEFAULT_PAGE_SIZE,
+      }),
       supabase
         .from("nguoi_dung")
         .select("id, ho_ten, email, trang_thai, nguoi_dung_vai_tro!nguoi_dung_vai_tro_nguoi_dung_id_co_so_id_fkey(vai_tro:vai_tro_id(id, ma, ten))")
@@ -282,9 +320,10 @@ export function SchoolYearSetup() {
 
     setSchool(schoolData ?? null);
     setYears(yearData ?? []);
-    setUsers((userData ?? []) as unknown as ManagedUser[]);
+    const loadedUsers = (userData ?? []) as unknown as ManagedUser[];
+    setUsers(loadedUsers);
     setAssignmentUsers((assignmentUserData ?? []) as ManagedUser[]);
-    setUserCount(loadedUserCount ?? 0);
+    setUserCount(Number(loadedUsers[0]?.total_count ?? 0));
     setRoles((roleData ?? []) as Role[]);
     setCanManageUsers(Boolean(canManage));
     setCanManageAssignments(Boolean(canManageAssignment));
@@ -404,6 +443,30 @@ export function SchoolYearSetup() {
     await loadData();
   }
 
+  async function joinSelectedSchool() {
+    if (!supabase || !selectedRegistrationSchoolId) return;
+
+    setIsJoiningSchool(true);
+    setMessage("");
+    const { error } = await supabase.rpc("fn_tu_dang_ky_vao_co_so", {
+      p_co_so_id: selectedRegistrationSchoolId,
+    });
+
+    if (error) {
+      setMessage(
+        toUserMessage(
+          error,
+          "Không thể tham gia trường đã chọn. Vui lòng tải lại trang hoặc liên hệ quản trị hệ thống.",
+        ),
+      );
+      setIsJoiningSchool(false);
+      return;
+    }
+
+    router.replace("/viec-cua-toi");
+    router.refresh();
+  }
+
   async function activateYear(yearId: string) {
     if (!supabase || !profile) {
       return;
@@ -478,10 +541,15 @@ export function SchoolYearSetup() {
 
   if (!profile) {
     return (
-      <PendingInvitationPanel
+      <SchoolRegistrationPanel
         invitations={pendingInvitations}
+        isJoining={isJoiningSchool}
         message={message}
+        schools={registrationSchools}
+        selectedSchoolId={selectedRegistrationSchoolId}
+        onJoin={joinSelectedSchool}
         onRespond={respondToInvitation}
+        onSelectSchool={setSelectedRegistrationSchoolId}
       />
     );
   }
@@ -646,27 +714,56 @@ export function SchoolYearSetup() {
   );
 }
 
-function PendingInvitationPanel({
+function SchoolRegistrationPanel({
   invitations,
+  isJoining,
   message,
+  schools,
+  selectedSchoolId,
+  onJoin,
   onRespond,
+  onSelectSchool,
 }: {
   invitations: PendingInvitation[];
+  isJoining: boolean;
   message: string;
+  schools: RegistrationSchool[];
+  selectedSchoolId: string;
+  onJoin: () => Promise<void>;
   onRespond: (invitationId: string, accept: boolean) => Promise<void>;
+  onSelectSchool: (schoolId: string) => void;
 }) {
   return (
     <section className="surface-card overflow-hidden">
       <div className="border-b border-[var(--color-border)] p-6">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-electric-cobalt)]">Tài khoản đã sẵn sàng</p>
-        <h2 className="section-title mt-2 text-2xl">Tham gia đơn vị của bạn</h2>
-        <p className="muted mt-2 max-w-2xl text-sm leading-6">Đơn vị sẽ xuất hiện tại đây sau khi Hiệu trưởng hoặc Quản trị hệ thống gửi lời mời đến đúng email bạn đã đăng ký.</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-electric-cobalt)]">Hoàn tất hồ sơ</p>
+        <h2 className="section-title mt-2 text-2xl">Chọn trường đang công tác</h2>
+        <p className="muted mt-2 max-w-2xl text-sm leading-6">
+          Tìm trường trong danh mục Quảng Ninh. Hệ thống sẽ tạo hồ sơ Giáo viên và đưa bạn vào đúng đơn vị ngay sau khi xác nhận.
+        </p>
       </div>
-      {invitations.length === 0 ? (
-        <div className="p-6">
-          <Alert tone="info">Hiện chưa có lời mời nào. Bạn không cần tạo đơn vị mới; hãy gửi email đăng ký cho người quản lý của trường.</Alert>
-        </div>
-      ) : (
+      <div className="grid gap-4 p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <SchoolPicker
+          disabled={isJoining}
+          schools={schools}
+          selectedSchoolId={selectedSchoolId}
+          onSelect={onSelectSchool}
+        />
+        <button
+          className="button-primary min-h-12 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={!selectedSchoolId || isJoining}
+          type="button"
+          onClick={() => void onJoin()}
+        >
+          {isJoining ? "Đang tham gia…" : "Tham gia trường"}
+        </button>
+      </div>
+      {invitations.length > 0 ? (
+        <div className="border-t border-[var(--color-border)]">
+          <div className="px-6 py-4">
+            <h3 className="font-semibold text-[var(--color-ink-navy)]">Lời mời vai trò đang chờ</h3>
+            <p className="muted mt-1 text-sm">Bạn cũng có thể nhận lời mời đã được đơn vị gửi trước đó.</p>
+          </div>
         <div className="divide-y divide-[var(--color-border)]">
           {invitations.map((invitation) => (
             <div className="grid gap-4 p-6 sm:grid-cols-[1fr_auto] sm:items-center" key={invitation.id}>
@@ -682,7 +779,8 @@ function PendingInvitationPanel({
             </div>
           ))}
         </div>
-      )}
+        </div>
+      ) : null}
       {message ? <div className="border-t border-[var(--color-border)] p-6"><Message text={message} /></div> : null}
     </section>
   );
@@ -740,6 +838,12 @@ function UserRoleManager(props: {
   const [hoTen, setHoTen] = useState("");
   const [roleCode, setRoleCode] = useState("TEACHER");
   const [saving, setSaving] = useState("");
+  const sortedUsers = [...props.users].sort((left, right) => {
+    const priorityDifference = highestRolePriority(props.userRoles(left))
+      - highestRolePriority(props.userRoles(right));
+
+    return priorityDifference || left.ho_ten.localeCompare(right.ho_ten, "vi");
+  });
 
   async function inviteUser(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -930,13 +1034,22 @@ function UserRoleManager(props: {
         </div>
       ) : null}
 
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
+        <h3 className="text-lg font-semibold text-[var(--color-ink-navy)]">
+          Danh sách thành viên
+        </h3>
+        <p className="mt-1 text-sm leading-6 text-[var(--color-graphite)]/70">
+          Thành viên được sắp xếp theo vai trò có mức ưu tiên cao nhất.
+        </p>
+      </div>
+
       <div className="divide-y divide-[var(--color-border)]">
         {props.users.length === 0 ? (
           <p className="px-5 py-6 text-sm text-[var(--color-graphite)]/70">
             Chưa có người dùng trong đơn vị.
           </p>
         ) : (
-          props.users.map((user) => (
+          sortedUsers.map((user) => (
             <UserRoleRow
               canManageUsers={props.canManageUsers}
               currentUserId={props.currentUserId}
@@ -969,8 +1082,24 @@ function UserRoleRow(props: {
   onSave: (roleCodes: string[]) => Promise<void>;
 }) {
   const [selectedRoleCodes, setSelectedRoleCodes] = useState<string[]>(
-    props.userRoles.map((role) => role.ma),
+    props.userRoles
+      .map((role) => role.ma)
+      .filter((roleCode) => assignableRoleCodes.includes(roleCode)),
   );
+  const [rolePickerOpen, setRolePickerOpen] = useState(false);
+
+  const originalRoleCodes = props.userRoles
+    .map((role) => role.ma)
+    .filter((roleCode) => assignableRoleCodes.includes(roleCode));
+  const fixedRoles = props.userRoles.filter((role) => !assignableRoleCodes.includes(role.ma));
+  const orderedRoles = [...props.roles].sort(
+    (left, right) => (rolePriority[left.ma] ?? 99) - (rolePriority[right.ma] ?? 99),
+  );
+  const selectedRoles = orderedRoles.filter((role) => selectedRoleCodes.includes(role.ma));
+  const roleSummary = [...fixedRoles, ...selectedRoles]
+    .sort((left, right) => (rolePriority[left.ma] ?? 99) - (rolePriority[right.ma] ?? 99))
+    .map((role) => role.ten)
+    .join(", ");
 
   function toggleRole(roleCode: string) {
     setSelectedRoleCodes((current) =>
@@ -982,9 +1111,10 @@ function UserRoleRow(props: {
 
   const isCurrentUser = props.user.id === props.currentUserId;
   const canEditRow = props.canManageUsers && !isCurrentUser;
+  const hasChanges = !sameRoleCodes(selectedRoleCodes, originalRoleCodes);
 
   return (
-    <article className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(220px,1fr)_2fr_auto]">
+    <article className="grid gap-4 px-5 py-4 lg:grid-cols-[minmax(220px,1fr)_minmax(320px,1.5fr)_auto] lg:items-start">
       <div>
         <p className="font-semibold text-[var(--color-ink-navy)]">{props.user.ho_ten}</p>
         <p className="mt-1 text-sm text-[var(--color-graphite)]/70">
@@ -997,36 +1127,69 @@ function UserRoleRow(props: {
         ) : null}
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {props.roles.map((role) => (
-          <label
-            className={`surface-card flex items-start gap-2 p-3 text-sm ${!canEditRow ? "opacity-70" : ""}`}
-            key={role.ma}
-          >
-            <input
-              checked={selectedRoleCodes.includes(role.ma)}
-              disabled={!canEditRow}
-              type="checkbox"
-              onChange={() => toggleRole(role.ma)}
-            />
-            <span>
-              <span className="block font-semibold text-[var(--color-ink-navy)]">{role.ten}</span>
-              <span className="text-xs text-[var(--color-graphite)]/60">{role.ma}</span>
+      <div>
+        <button
+          aria-controls={`role-options-${props.user.id}`}
+          aria-expanded={rolePickerOpen}
+          className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-[6px] border px-4 py-3 text-left text-sm transition-colors ${
+            rolePickerOpen
+              ? "border-[var(--color-electric-cobalt)] bg-[var(--color-lavender-mist)]/45"
+              : "border-[var(--color-border)] bg-white"
+          } ${canEditRow ? "hover:border-[var(--color-electric-cobalt)]" : "cursor-default opacity-75"}`}
+          disabled={!canEditRow}
+          type="button"
+          onClick={() => setRolePickerOpen((open) => !open)}
+        >
+          <span className={roleSummary ? "font-semibold text-[var(--color-ink-navy)]" : "text-[var(--color-graphite)]/70"}>
+            {roleSummary || "Chưa gán vai trò"}
+          </span>
+          {canEditRow ? (
+            <span
+              aria-hidden="true"
+              className={`shrink-0 text-lg leading-none transition-transform ${rolePickerOpen ? "rotate-180" : ""}`}
+            >
+              ⌄
             </span>
-          </label>
-        ))}
+          ) : null}
+        </button>
+
+        {rolePickerOpen && canEditRow ? (
+          <fieldset
+            className="mt-2 grid gap-1 rounded-[6px] border border-[var(--color-border)] bg-white p-2 sm:grid-cols-2"
+            id={`role-options-${props.user.id}`}
+          >
+            <legend className="sr-only">Chọn vai trò cho {props.user.ho_ten}</legend>
+            {orderedRoles.map((role) => (
+              <label
+                className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-[6px] px-3 py-2 text-sm transition-colors hover:bg-[var(--color-lavender-mist)]/45 ${
+                  selectedRoleCodes.includes(role.ma) ? "font-semibold text-[var(--color-ink-navy)]" : ""
+                }`}
+                key={role.ma}
+              >
+                <input
+                  checked={selectedRoleCodes.includes(role.ma)}
+                  type="checkbox"
+                  onChange={() => toggleRole(role.ma)}
+                />
+                <span>{role.ten}</span>
+              </label>
+            ))}
+          </fieldset>
+        ) : null}
       </div>
 
-      <div className="flex items-start lg:justify-end">
-        <button
-          className="button-secondary disabled:text-[var(--color-stone)]"
-          disabled={!canEditRow || props.isSaving}
-          type="button"
-          onClick={() => props.onSave(selectedRoleCodes)}
-        >
-          {props.isSaving ? "Đang lưu…" : "Lưu vai trò"}
-        </button>
-      </div>
+      {hasChanges && canEditRow ? (
+        <div className="flex items-start lg:justify-end">
+          <button
+            className="button-primary"
+            disabled={props.isSaving}
+            type="button"
+            onClick={() => props.onSave(selectedRoleCodes)}
+          >
+            {props.isSaving ? "Đang lưu…" : "Lưu vai trò"}
+          </button>
+        </div>
+      ) : null}
     </article>
   );
 }

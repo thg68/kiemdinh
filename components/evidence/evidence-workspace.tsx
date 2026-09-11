@@ -399,7 +399,7 @@ export function EvidenceWorkspace({ mode = "list" }: { mode?: "list" | "create" 
                 <div className="text-sm text-[var(--color-graphite)]/70">
                   <p>{formatEvidenceStatus(item.trang_thai_xac_minh)}</p>
                   <p>{item.ngay_ban_hanh ? `Ban hành: ${item.ngay_ban_hanh}` : "Chưa có ngày ban hành"}</p>
-                  <p>{item.ngay_het_gia_tri ? `Hết giá trị: ${item.ngay_het_gia_tri}` : "Không ghi hạn"}</p>
+                  <p>{item.ngay_het_gia_tri ? `Hết giá trị: ${item.ngay_het_gia_tri}` : "Không"}</p>
                 </div>
               </article>
             ))

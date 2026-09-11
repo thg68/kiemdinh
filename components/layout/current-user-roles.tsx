@@ -7,7 +7,13 @@ export type RoleLabel = {
   ten: string;
 };
 
-export function CurrentUserRoles({ roles }: { roles: RoleLabel[] }) {
+export function CurrentUserRoles({
+  roles,
+  title = "Vai trò của bạn",
+}: {
+  roles: RoleLabel[];
+  title?: string;
+}) {
   if (roles.length === 0) {
     return null;
   }
@@ -18,7 +24,7 @@ export function CurrentUserRoles({ roles }: { roles: RoleLabel[] }) {
       className="mt-6 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-white/70 p-3"
     >
       <h2 className="text-xs font-semibold text-[var(--color-graphite)]/65">
-        Vai trò của bạn
+        {title}
       </h2>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {roles.map((role) => (

@@ -55,5 +55,14 @@ export function navigationForRoles(roleCodes: string[]) {
 }
 
 export function firstRouteForRoles(roleCodes: string[]) {
-  return navigationForRoles(roleCodes)[0]?.href ?? "/thiet-lap";
+  if (roleCodes.includes("SYSTEM_ADMIN")) {
+    return "/quan-tri";
+  }
+
+  return firstSchoolRouteForRoles(roleCodes);
+}
+
+export function firstSchoolRouteForRoles(roleCodes: string[]) {
+  const schoolRoleCodes = roleCodes.filter((roleCode) => roleCode !== "SYSTEM_ADMIN");
+  return navigationForRoles(schoolRoleCodes)[0]?.href ?? "/thiet-lap";
 }

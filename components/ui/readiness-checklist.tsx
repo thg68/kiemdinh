@@ -15,7 +15,7 @@ type ReadinessChecklistProps = {
 
 const statusText: Record<ReadinessItem["status"], string> = {
   blocked: "Cần xử lý",
-  ready: "Đã đủ",
+  ready: "Hoàn Thành",
   warning: "Cần rà soát",
 };
 

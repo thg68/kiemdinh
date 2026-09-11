@@ -227,11 +227,6 @@ export function AuditLogWorkspace() {
                     <span className="font-semibold text-[var(--color-ink-navy)]">{actorName(row)}</span>
                     {" "}đã thực hiện thao tác này trong hệ thống.
                   </p>
-                  {row.doi_tuong_id ? (
-                    <p className="text-xs leading-5 text-[var(--color-graphite)]/60">
-                      Mã tham chiếu: <span className="font-mono">{row.doi_tuong_id}</span>
-                    </p>
-                  ) : null}
                 </div>
                 <time className="text-sm text-[var(--color-graphite)]/70 md:text-right" dateTime={row.thoi_diem}>
                   {new Date(row.thoi_diem).toLocaleString("vi-VN")}

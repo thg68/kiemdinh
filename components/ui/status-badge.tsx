@@ -16,6 +16,7 @@ const toneClassName: Record<StatusTone, string> = {
 };
 
 const statusLabelMap: Record<string, { label: string; tone: StatusTone }> = {
+  active: { label: "Đang hoạt động", tone: "success" },
   cho_duyet: { label: "Chờ duyệt", tone: "warning" },
   cho_xac_minh: { label: "Chờ xác minh", tone: "warning" },
   chua_nhap: { label: "Chưa nhập", tone: "default" },
@@ -29,11 +30,14 @@ const statusLabelMap: Record<string, { label: string; tone: StatusTone }> = {
   dang_ra_soat: { label: "Đang rà soát", tone: "info" },
   du_thao: { label: "Dự thảo", tone: "warning" },
   het_hieu_luc: { label: "Hết hiệu lực", tone: "danger" },
+  inactive: { label: "Tạm ngừng", tone: "default" },
+  invited: { label: "Đang chờ tham gia", tone: "warning" },
   ke_thua_cho_cap_nhat: { label: "Kế thừa, chờ cập nhật", tone: "warning" },
   khong_dat: { label: "Chưa đạt", tone: "danger" },
   mau_1_tu_danh_gia: { label: "Mẫu 1", tone: "info" },
   mau_2_ke_hoach_cai_tien: { label: "Mẫu 2", tone: "info" },
   nhap: { label: "Bản nháp", tone: "default" },
+  locked: { label: "Đã khóa", tone: "danger" },
   tra_lai: { label: "Trả lại", tone: "danger" },
   tu_choi: { label: "Từ chối", tone: "danger" },
 };

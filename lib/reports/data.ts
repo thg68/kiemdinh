@@ -297,26 +297,30 @@ export async function collectReportData(
       .order("version", { ascending: true }),
     supabase
       .from("hoi_dong_tu_danh_gia")
-      .select("id, thanh_vien_hoi_dong(thu_tu, chuc_vu, vai_tro_hoi_dong, nguoi_dung:nguoi_dung_id(ho_ten))")
+      .select("id, thanh_vien_hoi_dong!fk_thanh_vien_hoi_dong_scope(thu_tu, chuc_vu, vai_tro_hoi_dong, nguoi_dung:nguoi_dung!fk_thanh_vien_nguoi_dung_scope(ho_ten))")
       .eq("co_so_id", profile.co_so_id)
       .eq("nam_hoc_id", namHocId)
       .limit(1),
   ]);
 
-  const firstError =
-    schoolError ??
-    yearError ??
-    criterionError ??
-    assessmentError ??
-    evidenceError ??
-    planError ??
-    noteError ??
-    improvementSectionError ??
-    reportSnapshotError ??
-    councilError;
+  const failedSource = [
+    { error: schoolError, label: "cơ sở giáo dục" },
+    { error: yearError, label: "năm học" },
+    { error: criterionError, label: "tiêu chí" },
+    { error: assessmentError, label: "tự đánh giá" },
+    { error: evidenceError, label: "minh chứng" },
+    { error: planError, label: "kế hoạch cải tiến" },
+    { error: noteError, label: "nhận xét tiêu chuẩn" },
+    { error: improvementSectionError, label: "nội dung Mẫu 2" },
+    { error: reportSnapshotError, label: "lịch sử báo cáo" },
+    { error: councilError, label: "hội đồng tự đánh giá" },
+  ].find((source) => source.error);
 
-  if (firstError) {
-    throw databaseApiError(firstError, "Không tải được dữ liệu xuất báo cáo.");
+  if (failedSource) {
+    throw databaseApiError(
+      failedSource.error,
+      `Không tải được dữ liệu ${failedSource.label} để xuất báo cáo.`,
+    );
   }
 
   if (!schoolData || !yearData) {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { firstRouteForRoles, navigationForRoles } from "./navigation";
+import {
+  firstRouteForRoles,
+  firstSchoolRouteForRoles,
+  navigationForRoles,
+} from "./navigation";
 
 describe("navigationForRoles", () => {
   it("giáo viên chỉ thấy công việc, tiêu chuẩn và minh chứng", () => {
@@ -40,7 +44,17 @@ describe("navigationForRoles", () => {
     expect(firstRouteForRoles(["VIEWER"])).toBe("/bao-cao/da-phe-duyet");
   });
 
-  it("đưa tài khoản chưa có vai trò tới bước nhận lời mời", () => {
+  it("đưa tài khoản chưa có vai trò tới bước chọn trường", () => {
     expect(firstRouteForRoles([])).toBe("/thiet-lap");
+  });
+
+  it("đưa quản trị hệ thống vào đúng workspace sau khi đăng nhập", () => {
+    expect(firstRouteForRoles(["SYSTEM_ADMIN"])).toBe("/quan-tri");
+    expect(firstRouteForRoles(["SYSTEM_ADMIN", "PRINCIPAL"])).toBe("/quan-tri");
+  });
+
+  it("tìm đúng điểm vào nghiệp vụ cho tài khoản kiêm nhiệm", () => {
+    expect(firstSchoolRouteForRoles(["SYSTEM_ADMIN", "PRINCIPAL"])).toBe("/dashboard");
+    expect(firstSchoolRouteForRoles(["SYSTEM_ADMIN", "TEACHER"])).toBe("/viec-cua-toi");
   });
 });

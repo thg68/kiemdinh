@@ -9,6 +9,9 @@ function compactPolicy(value: string) {
 
 export function buildSecurityHeaders(isProduction = process.env.NODE_ENV === "production"): SecurityHeader[] {
   const scriptSources = ["'self'", "'unsafe-inline'"];
+  const localSupabaseSources = isProduction
+    ? ""
+    : " http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*";
 
   if (!isProduction) {
     scriptSources.push("'unsafe-eval'");
@@ -18,10 +21,10 @@ export function buildSecurityHeaders(isProduction = process.env.NODE_ENV === "pr
     default-src 'self';
     script-src ${scriptSources.join(" ")};
     style-src 'self' 'unsafe-inline';
-    img-src 'self' data: blob: https://*.supabase.co;
+    img-src 'self' data: blob: https://*.supabase.co${localSupabaseSources};
     font-src 'self' data:;
-    connect-src 'self' https://*.supabase.co wss://*.supabase.co;
-    media-src 'self' blob: https://*.supabase.co;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co${localSupabaseSources};
+    media-src 'self' blob: https://*.supabase.co${localSupabaseSources};
     worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';

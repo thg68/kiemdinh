@@ -6,7 +6,7 @@ export default function AdminParticipantsPage() {
     <>
       <AdminPageHeader
         title="Người tham gia"
-        description="Cấp quyền Hiệu trưởng, theo dõi vai trò và kiểm soát trạng thái tài khoản theo từng trường."
+        description="Quản lý trường tham gia, cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản."
       />
       <AdminParticipants />
     </>

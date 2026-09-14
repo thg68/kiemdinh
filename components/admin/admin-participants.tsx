@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Building2, Crown, Settings, UserRound, X } from "lucide-react";
+import { useCallback, useDeferredValue, useEffect, useId, useMemo, useRef, useState } from "react";
 import { formatDate, roleLabels } from "@/components/admin/admin-format";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -32,6 +33,12 @@ type ParticipantRow = {
   total_count: number;
 };
 
+type ParticipantSettingsDraft = {
+  isPrincipal: boolean;
+  schoolId: string;
+  status: Exclude<ParticipantStatus, "invited">;
+};
+
 const statusLabels: Record<ParticipantStatus, string> = {
   active: "Đang hoạt động",
   inactive: "Tạm ngừng",
@@ -60,11 +67,12 @@ export function AdminParticipants() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "warning">("warning");
-  const [pendingUpdate, setPendingUpdate] = useState<{
+  const [settingsRow, setSettingsRow] = useState<ParticipantRow | null>(null);
+  const [settingsDraft, setSettingsDraft] = useState<ParticipantSettingsDraft | null>(null);
+  const [pendingSettings, setPendingSettings] = useState<{
+    draft: ParticipantSettingsDraft;
     row: ParticipantRow;
-    status: Exclude<ParticipantStatus, "invited">;
   } | null>(null);
-  const [pendingPrincipal, setPendingPrincipal] = useState<ParticipantRow | null>(null);
   const deferredKeyword = useDeferredValue(keyword.trim());
 
   useEffect(() => {
@@ -115,51 +123,39 @@ export function AdminParticipants() {
     return () => window.clearTimeout(timer);
   }, [loadParticipants]);
 
-  async function updateStatus() {
-    if (!pendingUpdate) return;
-
-    setWorking(true);
-    const { error } = await supabase.rpc("fn_admin_cap_nhat_trang_thai_nguoi_dung", {
-      p_nguoi_dung_id: pendingUpdate.row.id,
-      p_trang_thai: pendingUpdate.status,
+  function openSettings(row: ParticipantRow) {
+    setSettingsRow(row);
+    setSettingsDraft({
+      isPrincipal: row.vai_tro_mas.includes("PRINCIPAL"),
+      schoolId: row.co_so_id,
+      status: row.trang_thai === "invited" ? "inactive" : row.trang_thai,
     });
-
-    if (error) {
-      setMessageTone("warning");
-      setMessage(toUserMessage(error, "Không cập nhật được trạng thái tài khoản."));
-      setWorking(false);
-      setPendingUpdate(null);
-      return;
-    }
-
-    const successMessage = `Đã chuyển ${pendingUpdate.row.ho_ten} sang trạng thái “${statusLabels[pendingUpdate.status]}”.`;
-    setWorking(false);
-    setPendingUpdate(null);
-    await loadParticipants();
-    setMessageTone("success");
-    setMessage(successMessage);
   }
 
-  async function assignPrincipal() {
-    if (!pendingPrincipal) return;
+  async function saveSettings() {
+    if (!pendingSettings) return;
 
     setWorking(true);
-    const { error } = await supabase.rpc("fn_admin_gan_hieu_truong", {
-      p_co_so_id: pendingPrincipal.co_so_id,
-      p_nguoi_dung_id: pendingPrincipal.id,
+    const { error } = await supabase.rpc("fn_admin_cap_nhat_nguoi_tham_gia", {
+      p_co_so_id: pendingSettings.draft.schoolId,
+      p_la_hieu_truong: pendingSettings.draft.isPrincipal,
+      p_nguoi_dung_id: pendingSettings.row.id,
+      p_trang_thai: pendingSettings.draft.status,
     });
 
     if (error) {
       setMessageTone("warning");
-      setMessage(toUserMessage(error, "Không cấp được quyền Hiệu trưởng."));
+      setMessage(toUserMessage(error, "Không lưu được cài đặt người dùng."));
       setWorking(false);
-      setPendingPrincipal(null);
+      setPendingSettings(null);
       return;
     }
 
-    const successMessage = `Đã cấp quyền Hiệu trưởng của ${pendingPrincipal.co_so_ten} cho ${pendingPrincipal.ho_ten}.`;
+    const successMessage = `Đã cập nhật cài đặt của ${pendingSettings.row.ho_ten}.`;
     setWorking(false);
-    setPendingPrincipal(null);
+    setPendingSettings(null);
+    setSettingsRow(null);
+    setSettingsDraft(null);
     await loadParticipants();
     setMessageTone("success");
     setMessage(successMessage);
@@ -170,7 +166,7 @@ export function AdminParticipants() {
       {message ? <Alert tone={messageTone}>{message}</Alert> : null}
 
       <p className="admin-privacy-note">
-        Quản trị hệ thống cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản. Các vai trò nghiệp vụ còn lại do Hiệu trưởng quản lý tại trường.
+        Quản trị hệ thống có thể chuyển trường, cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản. Các vai trò nghiệp vụ còn lại do Hiệu trưởng quản lý tại trường.
       </p>
 
       <section className="admin-toolbar" aria-label="Bộ lọc người tham gia">
@@ -275,7 +271,13 @@ export function AdminParticipants() {
                   {rows.map((row) => (
                     <tr key={row.id}>
                       <td>
-                        <p className="admin-cell-title">{row.ho_ten}</p>
+                        <button
+                          className="admin-participant-name-button"
+                          type="button"
+                          onClick={() => openSettings(row)}
+                        >
+                          {row.ho_ten}
+                        </button>
                         <p className="admin-cell-meta">{row.email || "Chưa có email"}</p>
                       </td>
                       <td>{row.co_so_ten}</td>
@@ -295,31 +297,15 @@ export function AdminParticipants() {
                       </td>
                       <td>{formatDate(row.created_at)}</td>
                       <td>
-                        <div className="grid min-w-48 gap-2">
-                          {row.vai_tro_mas.includes("PRINCIPAL") ? (
-                            <StatusBadge tone="info">Hiệu trưởng hiện tại</StatusBadge>
-                          ) : row.trang_thai === "active" ? (
-                            <button
-                              className="button-secondary min-h-9 px-4 py-2 text-xs"
-                              type="button"
-                              onClick={() => setPendingPrincipal(row)}
-                            >
-                              Đặt làm Hiệu trưởng
-                            </button>
-                          ) : (
-                            <span className="admin-cell-meta">Kích hoạt tài khoản trước khi cấp quyền</span>
-                          )}
-
-                          {row.vai_tro_mas.includes("SYSTEM_ADMIN") ? (
-                            <span className="admin-cell-meta">Trạng thái tài khoản được bảo vệ</span>
-                          ) : (
-                            <ParticipantStatusControl
-                              key={`${row.id}-${row.trang_thai}`}
-                              row={row}
-                              onRequest={(nextStatus) => setPendingUpdate({ row, status: nextStatus })}
-                            />
-                          )}
-                        </div>
+                        <button
+                          aria-label={`Cài đặt ${row.ho_ten}`}
+                          className="admin-row-action-button button-secondary min-h-9 gap-2 px-4 py-2 text-xs"
+                          type="button"
+                          onClick={() => openSettings(row)}
+                        >
+                          <Settings aria-hidden="true" className="h-4 w-4" />
+                          Cài đặt
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -332,68 +318,286 @@ export function AdminParticipants() {
         </section>
       )}
 
-      <ConfirmDialog
-        confirmLabel="Lưu trạng thái"
-        description={
-          pendingUpdate
-            ? `Tài khoản ${pendingUpdate.row.ho_ten} sẽ chuyển sang trạng thái “${statusLabels[pendingUpdate.status]}”.`
-            : ""
-        }
-        isOpen={Boolean(pendingUpdate)}
-        isWorking={working}
-        title="Cập nhật trạng thái tài khoản?"
-        tone={pendingUpdate?.status === "locked" ? "danger" : "warning"}
-        onCancel={() => setPendingUpdate(null)}
-        onConfirm={() => void updateStatus()}
+      <ParticipantSettingsDialog
+        draft={settingsDraft}
+        row={settingsRow}
+        schools={schools}
+        onChange={setSettingsDraft}
+        onClose={() => {
+          setSettingsRow(null);
+          setSettingsDraft(null);
+        }}
+        onSave={() => {
+          if (settingsRow && settingsDraft) {
+            setPendingSettings({ draft: settingsDraft, row: settingsRow });
+          }
+        }}
       />
 
       <ConfirmDialog
-        confirmLabel="Cấp quyền"
+        confirmLabel="Lưu thay đổi"
         description={
-          pendingPrincipal
-            ? `${pendingPrincipal.ho_ten} sẽ trở thành Hiệu trưởng của ${pendingPrincipal.co_so_ten}. Nếu trường đã có Hiệu trưởng, quyền đó sẽ được chuyển sang tài khoản này.`
+          pendingSettings
+            ? <SettingsConfirmation schools={schools} settings={pendingSettings} />
             : ""
         }
-        isOpen={Boolean(pendingPrincipal)}
+        isOpen={Boolean(pendingSettings)}
         isWorking={working}
-        title="Cấp quyền Hiệu trưởng?"
+        title="Lưu cài đặt người dùng?"
         tone="warning"
-        onCancel={() => setPendingPrincipal(null)}
-        onConfirm={() => void assignPrincipal()}
+        onCancel={() => setPendingSettings(null)}
+        onConfirm={() => void saveSettings()}
       />
     </div>
   );
 }
 
-function ParticipantStatusControl({
-  onRequest,
+function ParticipantSettingsDialog({
+  draft,
+  onChange,
+  onClose,
+  onSave,
   row,
+  schools,
 }: {
-  onRequest: (status: Exclude<ParticipantStatus, "invited">) => void;
-  row: ParticipantRow;
+  draft: ParticipantSettingsDraft | null;
+  onChange: (draft: ParticipantSettingsDraft) => void;
+  onClose: () => void;
+  onSave: () => void;
+  row: ParticipantRow | null;
+  schools: SchoolOption[];
 }) {
-  const initialStatus = row.trang_thai === "invited" ? "inactive" : row.trang_thai;
-  const [value, setValue] = useState<Exclude<ParticipantStatus, "invited">>(initialStatus);
+  const titleId = useId();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const changed = value !== row.trang_thai;
+  useEffect(() => {
+    if (!row || !draft) return;
+
+    const timer = window.setTimeout(() => closeButtonRef.current?.focus(), 0);
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = [...dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), select:not([disabled]), input:not([disabled])',
+      )];
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [draft, onClose, row]);
+
+  if (!row || !draft) return null;
+
+  const initialStatus = row.trang_thai === "invited" ? "inactive" : row.trang_thai;
+  const wasPrincipal = row.vai_tro_mas.includes("PRINCIPAL");
+  const schoolChanged = draft.schoolId !== row.co_so_id;
+  const changed = schoolChanged || draft.status !== initialStatus || draft.isPrincipal !== wasPrincipal;
+  const isSystemAdmin = row.vai_tro_mas.includes("SYSTEM_ADMIN");
+  const selectedSchool = schools.find((school) => school.id === draft.schoolId);
 
   return (
-    <div className="admin-inline-action">
-      <select
-        aria-label={`Trạng thái của ${row.ho_ten}`}
-        className="form-control"
-        value={value}
-        onChange={(event) => setValue(event.target.value as Exclude<ParticipantStatus, "invited">)}
+    <div className="admin-user-dialog-backdrop" role="presentation" onMouseDown={onClose}>
+      <div
+        aria-labelledby={titleId}
+        aria-modal="true"
+        className="admin-user-dialog"
+        ref={dialogRef}
+        role="dialog"
+        onMouseDown={(event) => event.stopPropagation()}
       >
-        <option value="active">Đang hoạt động</option>
-        <option value="inactive">Tạm ngừng</option>
-        <option value="locked">Đã khóa</option>
-      </select>
-      {changed ? (
-        <button className="button-primary" type="button" onClick={() => onRequest(value)}>
-          Lưu
-        </button>
-      ) : null}
+        <header className="admin-user-dialog-header">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="admin-user-dialog-icon" aria-hidden="true">
+              <Settings className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 id={titleId}>Cài đặt người dùng</h2>
+              <p>Quản lý trường, quyền Hiệu trưởng và trạng thái tài khoản.</p>
+            </div>
+          </div>
+          <button
+            aria-label="Đóng cài đặt người dùng"
+            className="admin-user-dialog-close"
+            ref={closeButtonRef}
+            type="button"
+            onClick={onClose}
+          >
+            <X aria-hidden="true" className="h-5 w-5" />
+          </button>
+        </header>
+
+        <div className="admin-user-dialog-profile">
+          <span className="admin-user-dialog-avatar" aria-hidden="true">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="admin-cell-title">{row.ho_ten}</p>
+            <p className="admin-cell-meta">{row.email || "Chưa có email"}</p>
+          </div>
+          <StatusBadge tone={statusTone(row.trang_thai)}>{statusLabels[row.trang_thai]}</StatusBadge>
+        </div>
+
+        <div className="admin-user-dialog-body">
+          <section className="admin-user-setting-section">
+            <div className="admin-user-setting-heading">
+              <Building2 aria-hidden="true" className="h-5 w-5" />
+              <div>
+                <h3>Cơ sở giáo dục</h3>
+                <p>Người dùng chỉ làm việc với dữ liệu của trường được chọn.</p>
+              </div>
+            </div>
+            <label className="admin-user-field">
+              Trường đang tham gia
+              <select
+                className="form-control"
+                value={draft.schoolId}
+                onChange={(event) => {
+                  const nextSchoolId = event.target.value;
+                  onChange({
+                    ...draft,
+                    isPrincipal: nextSchoolId === row.co_so_id ? wasPrincipal : false,
+                    schoolId: nextSchoolId,
+                  });
+                }}
+              >
+                {schools.map((school) => (
+                  <option key={school.id} value={school.id}>
+                    {school.ten}{school.ma_truong ? ` · ${school.ma_truong}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {schoolChanged ? (
+              <p className="admin-user-setting-notice">
+                Khi chuyển sang {selectedSchool?.ten || "trường mới"}, các phân công và vai trò Hội đồng tại {row.co_so_ten} sẽ được gỡ. Lịch sử tài liệu vẫn được giữ nguyên.
+              </p>
+            ) : null}
+          </section>
+
+          <section className="admin-user-setting-section">
+            <div className="admin-user-setting-heading">
+              <Crown aria-hidden="true" className="h-5 w-5" />
+              <div>
+                <h3>Quyền Hiệu trưởng</h3>
+                <p>Mỗi trường chỉ có một tài khoản giữ quyền Hiệu trưởng.</p>
+              </div>
+            </div>
+            <label className={`admin-user-principal-option${draft.isPrincipal ? " is-selected" : ""}`}>
+              <input
+                checked={draft.isPrincipal}
+                disabled={draft.status !== "active"}
+                type="checkbox"
+                onChange={(event) => onChange({ ...draft, isPrincipal: event.target.checked })}
+              />
+              <span>
+                <strong>Đặt làm Hiệu trưởng</strong>
+                <small>Nếu trường đã có Hiệu trưởng, quyền sẽ được chuyển sang người này.</small>
+              </span>
+            </label>
+            {draft.status !== "active" ? (
+              <p className="admin-cell-meta">Hãy kích hoạt tài khoản trước khi cấp quyền Hiệu trưởng.</p>
+            ) : null}
+          </section>
+
+          <section className="admin-user-setting-section">
+            <div className="admin-user-setting-heading">
+              <UserRound aria-hidden="true" className="h-5 w-5" />
+              <div>
+                <h3>Tài khoản</h3>
+                <p>Kiểm soát khả năng đăng nhập và làm việc trên hệ thống.</p>
+              </div>
+            </div>
+            <label className="admin-user-field">
+              Trạng thái
+              <select
+                className="form-control"
+                disabled={isSystemAdmin}
+                value={draft.status}
+                onChange={(event) => {
+                  const nextStatus = event.target.value as ParticipantSettingsDraft["status"];
+                  onChange({
+                    ...draft,
+                    isPrincipal: nextStatus === "active" ? draft.isPrincipal : false,
+                    status: nextStatus,
+                  });
+                }}
+              >
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Tạm ngừng</option>
+                <option value="locked">Đã khóa</option>
+              </select>
+            </label>
+            {isSystemAdmin ? (
+              <p className="admin-cell-meta">Trạng thái của Quản trị hệ thống được bảo vệ.</p>
+            ) : null}
+          </section>
+
+          <section className="admin-user-current-roles" aria-label="Vai trò hiện tại">
+            <p>Vai trò hiện tại</p>
+            <div className="flex flex-wrap gap-1.5">
+              {row.vai_tro_mas.map((code, index) => (
+                <StatusBadge key={code} tone={code === "SYSTEM_ADMIN" ? "info" : "default"}>
+                  {row.vai_tro_tens[index] || roleLabels[code] || code}
+                </StatusBadge>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <footer className="admin-user-dialog-footer">
+          <button className="button-secondary" type="button" onClick={onClose}>Hủy</button>
+          {changed ? (
+            <button className="button-primary" type="button" onClick={onSave}>Lưu thay đổi</button>
+          ) : null}
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function SettingsConfirmation({
+  schools,
+  settings,
+}: {
+  schools: SchoolOption[];
+  settings: { draft: ParticipantSettingsDraft; row: ParticipantRow };
+}) {
+  const { draft, row } = settings;
+  const school = schools.find((item) => item.id === draft.schoolId);
+  const schoolChanged = draft.schoolId !== row.co_so_id;
+  const principalChanged = draft.isPrincipal !== row.vai_tro_mas.includes("PRINCIPAL");
+  const initialStatus = row.trang_thai === "invited" ? "inactive" : row.trang_thai;
+
+  return (
+    <div className="grid gap-2">
+      <p>Các thay đổi sau sẽ được áp dụng cho {row.ho_ten}:</p>
+      <ul className="list-disc space-y-1 pl-5">
+        {schoolChanged ? <li>Chuyển từ {row.co_so_ten} sang {school?.ten || "trường đã chọn"}.</li> : null}
+        {principalChanged ? (
+          <li>{draft.isPrincipal ? "Cấp quyền Hiệu trưởng." : "Gỡ quyền Hiệu trưởng."}</li>
+        ) : null}
+        {draft.status !== initialStatus ? <li>Đổi trạng thái thành “{statusLabels[draft.status]}”.</li> : null}
+      </ul>
     </div>
   );
 }

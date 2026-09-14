@@ -93,21 +93,22 @@ test("tạo trường và cấp quyền Hiệu trưởng là hai thao tác độ
   await expect(page.getByRole("button", { name: "Tạo cơ sở giáo dục" })).toBeVisible();
 
   await page.goto("/quan-tri/nguoi-tham-gia");
-  await expect(page.getByRole("button", { name: "Đặt làm Hiệu trưởng" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Cài đặt / }).first()).toBeVisible();
 });
 
-test("chỉ hiện nút lưu trạng thái khi quản trị thay đổi lựa chọn", async ({ page }) => {
+test("cài đặt người dùng chỉ hiện nút lưu sau khi có thay đổi", async ({ page }) => {
   await loginAs(page, "SYSTEM_ADMIN");
   await page.goto("/quan-tri/nguoi-tham-gia");
 
-  const statusControl = page.locator(".admin-inline-action").first();
-  await expect(statusControl).toBeVisible();
-  await expect(statusControl.getByRole("button", { name: "Lưu", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: /^Cài đặt / }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Cài đặt người dùng" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Trường đang tham gia")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Lưu thay đổi" })).toHaveCount(0);
 
-  const select = statusControl.getByRole("combobox");
-  const current = await select.inputValue();
-  await select.selectOption(current === "active" ? "inactive" : "active");
-  await expect(statusControl.getByRole("button", { name: "Lưu", exact: true })).toBeVisible();
+  const principal = dialog.getByLabel("Đặt làm Hiệu trưởng");
+  await principal.setChecked(!(await principal.isChecked()));
+  await expect(dialog.getByRole("button", { name: "Lưu thay đổi" })).toBeVisible();
 });
 
 test("tài khoản kiêm nhiệm chuyển được giữa hai workspace", async ({ page }) => {

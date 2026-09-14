@@ -462,7 +462,7 @@ function SchoolEvidenceTable({
                   </td>
                   <td>{school.cap_nhat_gan_nhat ? formatDateTime(school.cap_nhat_gan_nhat) : "Chưa có dữ liệu"}</td>
                   <td>
-                    <button className="button-secondary min-h-9 px-4 py-2 text-xs" type="button" onClick={() => onOpen(school)}>
+                    <button className="admin-row-action-button button-secondary min-h-9 px-4 py-2 text-xs" type="button" onClick={() => onOpen(school)}>
                       Mở kho
                     </button>
                   </td>

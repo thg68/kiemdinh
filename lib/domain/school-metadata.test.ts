@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAP_HOC_THEO_LOAI_HINH, capHocHopLoaiHinh, validateSchoolOnboarding } from "./school-metadata";
+import { CAP_HOC_THEO_LOAI_HINH, capHocHopLoaiHinh, validateSchoolCreation } from "./school-metadata";
 
 describe("metadata cơ sở giáo dục", () => {
   it("chỉ cung cấp cấp học phù hợp với từng loại hình", () => {
@@ -19,24 +19,34 @@ describe("metadata cơ sở giáo dục", () => {
   });
 
   it("kiểm tra tên, năm học và ngày trước khi gọi RPC", () => {
-    expect(validateSchoolOnboarding({
+    expect(validateSchoolCreation({
       tenCoSo: "Trường A",
+      maTruong: "TRUONG-A",
       loaiHinh: "mam_non",
       capHoc: ["mam_non"],
       tenNamHoc: "2026-2027",
       ngayBatDau: "2026-09-01",
       ngayKetThuc: "2027-05-31",
-      hoTenHieuTruong: "Nguyễn Văn A",
     })).toBeNull();
 
-    expect(validateSchoolOnboarding({
+    expect(validateSchoolCreation({
       tenCoSo: " ",
+      maTruong: "TRUONG-A",
       loaiHinh: "mam_non",
       capHoc: ["mam_non"],
       tenNamHoc: "2026-2027",
       ngayBatDau: "2026-09-01",
       ngayKetThuc: "2027-05-31",
-      hoTenHieuTruong: "Nguyễn Văn A",
     })).toContain("Tên cơ sở");
+
+    expect(validateSchoolCreation({
+      tenCoSo: "Trường A",
+      maTruong: " ",
+      loaiHinh: "mam_non",
+      capHoc: ["mam_non"],
+      tenNamHoc: "2026-2027",
+      ngayBatDau: "2026-09-01",
+      ngayKetThuc: "2027-05-31",
+    })).toContain("Mã trường");
   });
 });

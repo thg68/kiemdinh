@@ -18,6 +18,21 @@ describe("rate limit dùng PostgreSQL", () => {
     });
   });
 
+  it("dùng bộ đếm riêng cho lượt tạo bản nháp AI", async () => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: [{ duoc_phep: true, con_lai: 11, thu_lai_sau_giay: 300 }],
+      error: null,
+    });
+
+    await expect(enforceRateLimit({ rpc }, "ai_generate")).resolves.toMatchObject({
+      allowed: true,
+      remaining: 11,
+    });
+    expect(rpc).toHaveBeenCalledWith("fn_kiem_tra_gioi_han_api", {
+      p_hanh_dong: "ai_generate",
+    });
+  });
+
   it("trả lỗi 429 có Retry-After khi hết lượt", async () => {
     const rpc = vi.fn().mockResolvedValue({
       data: [{ duoc_phep: false, con_lai: 0, thu_lai_sau_giay: 42 }],

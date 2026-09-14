@@ -4,6 +4,7 @@ export const RATE_LIMIT_ACTIONS = [
   "report_export",
   "evidence_zip",
   "evidence_signed_url",
+  "ai_generate",
 ] as const;
 
 export type RateLimitAction = (typeof RATE_LIMIT_ACTIONS)[number];

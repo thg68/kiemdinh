@@ -17,6 +17,7 @@ import {
   LoaderCircle,
   RotateCcw,
   Send,
+  Sparkles,
 } from "lucide-react";
 import {
   createBrowserSupabaseClient,
@@ -33,6 +34,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { useScopedRequest } from "@/components/shared/use-scoped-request";
 import { ReportSubnav } from "@/components/reports/report-subnav";
 import { hasCapability } from "@/lib/auth/capabilities";
+import { requestAiDraft } from "@/lib/ai/client";
 
 type Profile = {
   id: string;
@@ -223,6 +225,7 @@ export function ReportExportWorkspace() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [downloading, setDownloading] = useState("");
+  const [aiDraftingStandardId, setAiDraftingStandardId] = useState("");
   const [roleCodes, setRoleCodes] = useState<string[]>([]);
 
   const capHocList = school?.cap_hoc?.length ? school.cap_hoc : [selectedCapHoc];
@@ -554,6 +557,51 @@ export function ReportExportWorkspace() {
         },
       ];
     });
+  }
+
+  async function generateStandardNote(standard: Standard) {
+    if (!supabase || !selectedYearId || !selectedCapHoc) {
+      setMessage("Chưa đủ dữ liệu để tạo bản nháp AI.");
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      setMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    const note = standardNotes.find((item) => item.tieu_chuan_id === standard.id);
+    setAiDraftingStandardId(standard.id);
+    setMessage("");
+
+    try {
+      const result = await requestAiDraft(accessToken, {
+        kind: "report_standard",
+        namHocId: selectedYearId,
+        capHoc: selectedCapHoc,
+        standardId: standard.id,
+        currentDraft: {
+          diem_manh_noi_bat: note?.diem_manh_noi_bat ?? "",
+          han_che_trong_tam: note?.han_che_trong_tam ?? "",
+          dinh_huong_cai_tien: note?.dinh_huong_cai_tien ?? "",
+        },
+      });
+
+      if (result.kind !== "report_standard") {
+        throw new Error("AI trả về loại bản nháp không phù hợp.");
+      }
+
+      updateNote(standard.id, "diem_manh_noi_bat", result.draft.diem_manh_noi_bat);
+      updateNote(standard.id, "han_che_trong_tam", result.draft.han_che_trong_tam);
+      updateNote(standard.id, "dinh_huong_cai_tien", result.draft.dinh_huong_cai_tien);
+      setMessage(`Đã tạo bản nháp AI cho Tiêu chuẩn ${standard.so_thu_tu}. Hãy rà soát trước khi lưu.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không tạo được bản nháp AI.");
+    } finally {
+      setAiDraftingStandardId("");
+    }
   }
 
   async function saveStandardNotes() {
@@ -1003,7 +1051,9 @@ export function ReportExportWorkspace() {
       ) : null}
 
       <StandardNotesForm
+        aiDraftingStandardId={aiDraftingStandardId}
         notes={standardNotes}
+        onGenerateAi={generateStandardNote}
         onSave={saveStandardNotes}
         onUpdate={updateNote}
         standards={standards}
@@ -1366,8 +1416,10 @@ function SupportingExportRow(props: {
 }
 
 function StandardNotesForm(props: {
+  aiDraftingStandardId: string;
   standards: Standard[];
   notes: StandardNote[];
+  onGenerateAi: (standard: Standard) => Promise<void>;
   onUpdate: (
     standardId: string,
     field: keyof Omit<StandardNote, "id" | "tieu_chuan_id">,
@@ -1393,8 +1445,21 @@ function StandardNotesForm(props: {
 
           return (
             <fieldset className="surface-card grid gap-3 p-4" key={standard.id}>
-              <legend className="px-2 text-sm font-semibold text-[var(--color-ink-navy)]">
-                Tiêu chuẩn {standard.so_thu_tu}: {standard.ten}
+              <legend className="w-full px-2 text-sm font-semibold text-[var(--color-ink-navy)]">
+                <span className="flex w-full flex-wrap items-center justify-between gap-3">
+                  <span>Tiêu chuẩn {standard.so_thu_tu}: {standard.ten}</span>
+                  <button
+                    className="button-secondary"
+                    disabled={Boolean(props.aiDraftingStandardId)}
+                    type="button"
+                    onClick={() => void props.onGenerateAi(standard)}
+                  >
+                    {props.aiDraftingStandardId === standard.id
+                      ? <LoaderCircle aria-hidden="true" className="animate-spin" size={17} />
+                      : <Sparkles aria-hidden="true" size={17} />}
+                    {props.aiDraftingStandardId === standard.id ? "Đang soạn…" : "AI soạn bản nháp"}
+                  </button>
+                </span>
               </legend>
               <label className="text-sm font-medium">
                 Điểm mạnh nổi bật

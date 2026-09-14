@@ -17,6 +17,7 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Sparkles,
   UserRound,
   X,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import { useAppContext } from "@/components/shared/use-app-context";
 import { useScopedRequest } from "@/components/shared/use-scoped-request";
 import { CapHoc } from "@/lib/assessment/level-engine";
+import { requestAiDraft } from "@/lib/ai/client";
 
 type Standard = {
   id: string;
@@ -218,6 +220,7 @@ export function ImprovementPlanWorkspace() {
   const [editingPlanId, setEditingPlanId] = useState("");
   const [showArchived, setShowArchived] = useState(false);
   const [updatingPlanId, setUpdatingPlanId] = useState("");
+  const [aiDraftingPlan, setAiDraftingPlan] = useState(false);
 
   const effectiveYearId = selectedYearId || activeYear?.id || "";
   const schoolCapHoc = (school?.cap_hoc ?? []) as CapHoc[];
@@ -611,6 +614,56 @@ export function ImprovementPlanWorkspace() {
     setIsPlanEditorOpen(false);
   }
 
+  async function generateImprovementDraft() {
+    if (!supabase || !effectiveYearId || !selectedCriterionId) {
+      setMessage("Hãy chọn tiêu chí trước khi tạo bản nháp AI.");
+      return;
+    }
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) {
+      setMessage("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    setAiDraftingPlan(true);
+    setMessage("");
+
+    try {
+      const result = await requestAiDraft(accessToken, {
+        kind: "improvement_task",
+        namHocId: effectiveYearId,
+        capHoc: reportCapHoc,
+        criterionId: selectedCriterionId,
+        currentDraft: {
+          noi_dung: noiDung,
+          muc_tieu: mucTieu,
+          hoat_dong: hoatDong,
+          chi_so_ket_qua: chiSoKetQua,
+          nguon_luc: nguonLuc,
+          minh_chung_du_kien: minhChungDuKien,
+        },
+      });
+
+      if (result.kind !== "improvement_task") {
+        throw new Error("AI trả về loại bản nháp không phù hợp.");
+      }
+
+      setNoiDung(result.draft.noi_dung);
+      setMucTieu(result.draft.muc_tieu);
+      setHoatDong(result.draft.hoat_dong);
+      setChiSoKetQua(result.draft.chi_so_ket_qua);
+      setNguonLuc(result.draft.nguon_luc);
+      setMinhChungDuKien(result.draft.minh_chung_du_kien);
+      setMessage("Đã tạo bản nháp nhiệm vụ bằng AI. Hãy kiểm tra lại trước khi lưu.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không tạo được bản nháp AI.");
+    } finally {
+      setAiDraftingPlan(false);
+    }
+  }
+
   async function setPlanArchived(plan: Plan, archived: boolean) {
     if (!supabase || !profile) return;
     setUpdatingPlanId(plan.id);
@@ -944,6 +997,15 @@ export function ImprovementPlanWorkspace() {
               <div className="grid content-start gap-6 p-5">
                 <fieldset className="grid gap-4"><legend className="mb-3 font-semibold text-[var(--color-ink-navy)]">1. Nội dung và mục tiêu</legend>
                   <label className="text-sm font-medium">Tiêu chí<select className="form-control mt-2" required value={selectedCriterionId} onChange={(event) => setSelectedCriterionId(event.target.value)}>{criteria.map((criterion) => <option key={criterion.id} value={criterion.id}>{criterion.ma} - {criterion.ten}</option>)}</select></label>
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-[6px] border border-[var(--color-border)] bg-[var(--color-paper)]/55 px-4 py-3">
+                    <p className="max-w-[48ch] text-sm leading-6 text-[var(--color-graphite)]/72">AI dùng kết quả tự đánh giá và mã minh chứng của tiêu chí đang chọn để soạn bản nháp.</p>
+                    <button className="button-secondary" disabled={aiDraftingPlan} type="button" onClick={() => void generateImprovementDraft()}>
+                      {aiDraftingPlan
+                        ? <LoaderCircle aria-hidden="true" className="animate-spin" size={17} />
+                        : <Sparkles aria-hidden="true" size={17} />}
+                      {aiDraftingPlan ? "Đang soạn…" : "AI gợi ý nhiệm vụ"}
+                    </button>
+                  </div>
                   <TextArea label="Nội dung cần cải tiến" description="Nêu rõ hạn chế hoặc vấn đề cần khắc phục." required value={noiDung} onChange={setNoiDung} />
                   <TextArea label="Mục tiêu" description="Mô tả kết quả cụ thể cần đạt được." required value={mucTieu} onChange={setMucTieu} />
                 </fieldset>

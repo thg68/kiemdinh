@@ -81,6 +81,21 @@ test("quản trị minh chứng được chia theo kho của từng trường", 
   await expect(page.getByRole("link", { name: /tải|xem.*tệp/i })).toHaveCount(0);
 });
 
+test("tạo trường và cấp quyền Hiệu trưởng là hai thao tác độc lập", async ({ page }) => {
+  await loginAs(page, "SYSTEM_ADMIN");
+  await page.goto("/quan-tri/co-so");
+
+  await page.getByRole("button", { name: "Thêm cơ sở" }).click();
+  await expect(page.getByLabel("Tên cơ sở giáo dục")).toBeVisible();
+  await expect(page.getByLabel("Mã trường")).toBeVisible();
+  await expect(page.getByLabel("Email Hiệu trưởng")).toHaveCount(0);
+  await expect(page.getByLabel("Họ và tên Hiệu trưởng")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Tạo cơ sở giáo dục" })).toBeVisible();
+
+  await page.goto("/quan-tri/nguoi-tham-gia");
+  await expect(page.getByRole("button", { name: "Đặt làm Hiệu trưởng" }).first()).toBeVisible();
+});
+
 test("chỉ hiện nút lưu trạng thái khi quản trị thay đổi lựa chọn", async ({ page }) => {
   await loginAs(page, "SYSTEM_ADMIN");
   await page.goto("/quan-tri/nguoi-tham-gia");

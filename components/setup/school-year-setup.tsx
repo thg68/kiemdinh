@@ -8,14 +8,12 @@ import {
   isSupabaseConfigured,
 } from "@/lib/supabase/client";
 import { Alert } from "@/components/ui/alert";
+import { AiSessionSettings } from "@/components/ai/ai-session-settings";
 import { SchoolPicker } from "@/components/auth/school-picker";
 import { LoadingState } from "@/components/ui/loading-state";
 import { DEFAULT_PAGE_SIZE, Pagination } from "@/components/ui/pagination";
 import {
-  CAP_HOC_THEO_LOAI_HINH,
   type CapHocValue,
-  type LoaiHinh,
-  validateSchoolOnboarding,
 } from "@/lib/domain/school-metadata";
 import type { RegistrationSchool } from "@/lib/schools/directory";
 
@@ -160,7 +158,6 @@ export function SchoolYearSetup() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [canManageUsers, setCanManageUsers] = useState(false);
   const [canManageAssignments, setCanManageAssignments] = useState(false);
-  const [isSystemAdmin, setIsSystemAdmin] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
   const [registrationSchools, setRegistrationSchools] = useState<RegistrationSchool[]>([]);
   const [selectedRegistrationSchoolId, setSelectedRegistrationSchoolId] = useState("");
@@ -168,12 +165,6 @@ export function SchoolYearSetup() {
   const [managedInvitations, setManagedInvitations] = useState<ManagedInvitation[]>([]);
   const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
 
-  const [tenCoSo, setTenCoSo] = useState("");
-  const [maTruong, setMaTruong] = useState("");
-  const [loaiHinh, setLoaiHinh] = useState<LoaiHinh>("mam_non");
-  const [capHoc, setCapHoc] = useState<CapHocValue[]>(["mam_non"]);
-  const [emailHieuTruong, setEmailHieuTruong] = useState("");
-  const [hoTenHieuTruong, setHoTenHieuTruong] = useState("");
   const [tenNamHoc, setTenNamHoc] = useState("2026-2027");
   const [ngayBatDau, setNgayBatDau] = useState("2026-09-01");
   const [ngayKetThuc, setNgayKetThuc] = useState("2027-05-31");
@@ -195,23 +186,6 @@ export function SchoolYearSetup() {
       router.replace("/login");
       return;
     }
-
-    const { data: systemAdminData, error: systemAdminError } = await supabase.rpc(
-      "fn_la_quan_tri_he_thong",
-    );
-
-    if (systemAdminError) {
-      setMessage(
-        toUserMessage(
-          systemAdminError,
-          "Không kiểm tra được quyền quản trị hệ thống. Vui lòng tải lại trang.",
-        ),
-      );
-      setLoading(false);
-      return;
-    }
-
-    setIsSystemAdmin(Boolean(systemAdminData));
 
     const { data: profileData, error: profileError } = await supabase
       .from("nguoi_dung")
@@ -381,53 +355,6 @@ export function SchoolYearSetup() {
     return () => window.clearTimeout(timer);
   }, [loadData]);
 
-  async function handleCreateSchool(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!supabase) {
-      setMessage("Chưa cấu hình Supabase trong .env.local.");
-      return;
-    }
-
-    setMessage("");
-
-    const validationMessage = validateSchoolOnboarding({
-      tenCoSo,
-      loaiHinh,
-      capHoc,
-      tenNamHoc,
-      ngayBatDau,
-      ngayKetThuc,
-      hoTenHieuTruong,
-    });
-    if (validationMessage) {
-      setMessage(validationMessage);
-      return;
-    }
-
-    const { error } = await supabase.rpc("fn_quan_tri_tao_co_so_va_nam_hoc", {
-      p_ten_co_so: tenCoSo,
-      p_ma_truong: maTruong,
-      p_loai_hinh: loaiHinh,
-      p_cap_hoc: capHoc,
-      p_nam_hoc_ten: tenNamHoc,
-      p_ngay_bat_dau: ngayBatDau,
-      p_ngay_ket_thuc: ngayKetThuc,
-      p_email_hieu_truong: emailHieuTruong,
-      p_ho_ten_hieu_truong: hoTenHieuTruong,
-    });
-
-    if (error) {
-      setMessage(toUserMessage(error));
-      return;
-    }
-
-    setMessage("Đã tạo đơn vị, năm học và gửi lời mời nhận vai trò Hiệu trưởng.");
-    setEmailHieuTruong("");
-    setHoTenHieuTruong("");
-    await loadData();
-  }
-
   async function respondToInvitation(invitationId: string, accept: boolean) {
     if (!supabase) return;
     setMessage("");
@@ -516,19 +443,6 @@ export function SchoolYearSetup() {
     await loadData();
   }
 
-  function changeLoaiHinh(value: LoaiHinh) {
-    setLoaiHinh(value);
-    setCapHoc([CAP_HOC_THEO_LOAI_HINH[value][0]]);
-  }
-
-  function toggleCapHoc(value: CapHocValue) {
-    setCapHoc((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value],
-    );
-  }
-
   function userRoles(user: ManagedUser) {
     return (user.nguoi_dung_vai_tro ?? [])
       .map((item) => (Array.isArray(item.vai_tro) ? item.vai_tro[0] : item.vai_tro))
@@ -598,6 +512,10 @@ export function SchoolYearSetup() {
         </div>
       </section>
 
+      <div className={setupPanel === "school" ? "" : "hidden"}>
+        <AiSessionSettings />
+      </div>
+
       <section className={`surface-card surface-card-pad ${setupPanel === "school" ? "" : "hidden"}`}>
         <h2 className="section-title text-xl">Năm học</h2>
         <div className="mt-4 grid gap-3">
@@ -649,35 +567,6 @@ export function SchoolYearSetup() {
           Tạo và chọn năm học
         </button>
       </form>
-
-      {isSystemAdmin && setupPanel === "school" ? (
-        <form className="surface-card grid gap-5 p-6" onSubmit={handleCreateSchool}>
-          <div>
-            <h2 className="section-title text-xl">Tạo đơn vị mới</h2>
-            <p className="muted mt-1 text-sm">Chỉ Quản trị hệ thống thực hiện. Hiệu trưởng sẽ nhận lời mời qua đúng email bên dưới.</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium">Tên cơ sở giáo dục<input className="form-control mt-2" value={tenCoSo} onChange={(event) => setTenCoSo(event.target.value)} required /></label>
-            <label className="text-sm font-medium">Mã trường<input className="form-control mt-2" value={maTruong} onChange={(event) => setMaTruong(event.target.value)} /></label>
-            <label className="text-sm font-medium">Loại hình<select className="form-control mt-2" value={loaiHinh} onChange={(event) => changeLoaiHinh(event.target.value as LoaiHinh)}><option value="mam_non">Mầm non</option><option value="pho_thong">Phổ thông</option><option value="gdtx">GDTX</option></select></label>
-            <label className="text-sm font-medium">Email Hiệu trưởng<input className="form-control mt-2" type="email" value={emailHieuTruong} onChange={(event) => setEmailHieuTruong(event.target.value)} required /></label>
-            <label className="text-sm font-medium md:col-span-2">Họ và tên Hiệu trưởng<input className="form-control mt-2" value={hoTenHieuTruong} onChange={(event) => setHoTenHieuTruong(event.target.value)} required /></label>
-          </div>
-          <fieldset className="grid gap-2 text-sm font-medium">
-            <legend>Cấp học</legend>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {capHocOptions.filter((option) => CAP_HOC_THEO_LOAI_HINH[loaiHinh].includes(option.value as CapHocValue)).map((option) => (
-                <label className="surface-card flex items-center gap-2 px-3 py-3" key={option.value}>
-                  <input type="checkbox" checked={capHoc.includes(option.value as CapHocValue)} onChange={() => toggleCapHoc(option.value as CapHocValue)} />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <YearFields tenNamHoc={tenNamHoc} ngayBatDau={ngayBatDau} ngayKetThuc={ngayKetThuc} setTenNamHoc={setTenNamHoc} setNgayBatDau={setNgayBatDau} setNgayKetThuc={setNgayKetThuc} />
-          <button className="button-primary justify-self-start">Tạo đơn vị và gửi lời mời</button>
-        </form>
-      ) : null}
 
       {setupPanel === "users" ? (
       <UserRoleManager

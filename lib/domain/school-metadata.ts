@@ -14,17 +14,17 @@ export function capHocHopLoaiHinh(loaiHinh: LoaiHinh, capHoc: readonly string[])
   return capHoc.length > 0 && new Set(capHoc).size === capHoc.length && capHoc.every((item) => allowed.has(item));
 }
 
-export function validateSchoolOnboarding(input: {
+export function validateSchoolCreation(input: {
   tenCoSo: string;
+  maTruong: string;
   loaiHinh: LoaiHinh;
   capHoc: readonly string[];
   tenNamHoc: string;
   ngayBatDau: string;
   ngayKetThuc: string;
-  hoTenHieuTruong: string;
 }) {
   if (!input.tenCoSo.trim()) return "Tên cơ sở giáo dục không được để trống.";
-  if (!input.hoTenHieuTruong.trim()) return "Họ và tên Hiệu trưởng không được để trống.";
+  if (!input.maTruong.trim()) return "Mã trường không được để trống.";
   if (!capHocHopLoaiHinh(input.loaiHinh, input.capHoc)) return "Cấp học chưa phù hợp với loại hình đơn vị.";
 
   try {

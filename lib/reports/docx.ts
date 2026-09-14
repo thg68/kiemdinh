@@ -8,11 +8,13 @@ import {
   Paragraph,
   Table,
   TableCell,
+  TableLayoutType,
   TableOfContents,
   TableRow,
   TextRun,
   WidthType,
 } from "docx";
+import { schoolLevelLabel } from "./approved-report";
 import { assessmentLabel, CANH_BAO_THIEU_DU_LIEU, evidenceCodes, formatDateRange } from "./format";
 import { ImprovementPlan, ReportCriterion, ReportData, ReportEvidence } from "./data";
 
@@ -67,6 +69,77 @@ function table(rows: TableRow[]) {
   });
 }
 
+function fixedTable(rows: TableRow[]) {
+  return new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    layout: TableLayoutType.FIXED,
+    rows,
+  });
+}
+
+function compactCell(
+  value: string,
+  width: number,
+  options: { bold?: boolean; warning?: boolean; size?: number } = {},
+) {
+  const warning = options.warning ?? false;
+
+  return new TableCell({
+    width: { size: width, type: WidthType.PERCENTAGE },
+    margins: { top: 55, bottom: 55, left: 55, right: 55 },
+    borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+    children: [
+      p([
+        text(value || (warning ? CANH_BAO_THIEU_DU_LIEU : ""), {
+          bold: options.bold,
+          color: warning ? RED : undefined,
+          size: options.size ?? 18,
+        }),
+      ], { spacing: 0 }),
+    ],
+  });
+}
+
+function reportStyles(defaultSize: number) {
+  return {
+    default: {
+      document: {
+        run: { font: FONT, size: defaultSize, color: "000000" },
+        paragraph: { spacing: { after: 120 } },
+      },
+    },
+    paragraphStyles: [
+      {
+        id: "Heading1",
+        name: "Heading 1",
+        basedOn: "Normal",
+        next: "Normal",
+        quickFormat: true,
+        run: { font: FONT, size: 30, bold: true, color: "000000" },
+        paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 0 },
+      },
+      {
+        id: "Heading2",
+        name: "Heading 2",
+        basedOn: "Normal",
+        next: "Normal",
+        quickFormat: true,
+        run: { font: FONT, size: 28, bold: true, color: "000000" },
+        paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 1 },
+      },
+      {
+        id: "Heading3",
+        name: "Heading 3",
+        basedOn: "Normal",
+        next: "Normal",
+        quickFormat: true,
+        run: { font: FONT, size: 26, bold: true, color: "000000" },
+        paragraph: { spacing: { before: 160, after: 80 }, outlineLevel: 2 },
+      },
+    ],
+  };
+}
+
 function criterionEvidence(data: ReportData, criterionId: string) {
   return data.evidence.filter((item) => item.tieuChiIds.includes(criterionId));
 }
@@ -106,6 +179,7 @@ function criterionSection(data: ReportData, criterion: ReportCriterion) {
     table([
       new TableRow({
         tableHeader: true,
+        cantSplit: true,
         children: [
           plainCell("Mức", 12),
           plainCell("Hiện trạng, kết quả đạt được kèm mã minh chứng", 68),
@@ -113,6 +187,7 @@ function criterionSection(data: ReportData, criterion: ReportCriterion) {
         ],
       }),
       new TableRow({
+        cantSplit: true,
         children: [
           plainCell("Mức 1", 12),
           plainCell(muc1.text, 68, muc1.warning),
@@ -120,6 +195,7 @@ function criterionSection(data: ReportData, criterion: ReportCriterion) {
         ],
       }),
       new TableRow({
+        cantSplit: true,
         children: [
           plainCell("Mức 2", 12),
           plainCell(muc2.text, 68, muc2.warning),
@@ -137,6 +213,7 @@ function standardSummary(data: ReportData, standardId: string) {
   return table([
     new TableRow({
       tableHeader: true,
+      cantSplit: true,
       children: [plainCell("Tiêu chí", 20), plainCell("Bắt buộc", 20), plainCell("Kết quả", 30), plainCell("Minh chứng", 30)],
     }),
     ...standardCriteria.map((criterion) => {
@@ -144,6 +221,7 @@ function standardSummary(data: ReportData, standardId: string) {
       const linkedEvidence = criterionEvidence(data, criterion.id);
 
       return new TableRow({
+        cantSplit: true,
         children: [
           plainCell(criterion.ma, 20),
           plainCell(criterion.la_bat_buoc ? "Có" : "Không", 20),
@@ -181,7 +259,7 @@ function cover(data: ReportData) {
     p([""], { spacing: 1000 }),
     p([text("BÁO CÁO TỰ ĐÁNH GIÁ", { bold: true, size: 32 })], { center: true }),
     p([text(`Năm học ${data.year.ten}`, { bold: true, size: 28 })], { center: true }),
-    p([text(`Cấp học: ${data.capHoc}`, { size: 26 })], { center: true }),
+    p([text(`Cấp học: ${schoolLevelLabel(data.capHoc)}`, { size: 26 })], { center: true }),
     p([""], { spacing: 2400 }),
     p([data.school.dia_chi ?? "", " ", new Date().getFullYear().toString()], { center: true }),
   ];
@@ -266,14 +344,7 @@ export async function buildSelfAssessmentDocx(data: ReportData) {
   );
 
   const document = new Document({
-    styles: {
-      default: {
-        document: {
-          run: { font: FONT, size: 26 },
-          paragraph: { spacing: { after: 120 } },
-        },
-      },
-    },
+    styles: reportStyles(26),
     sections: [
       {
         properties: {
@@ -291,27 +362,37 @@ export async function buildSelfAssessmentDocx(data: ReportData) {
 }
 
 function evidenceTable(evidence: ReportEvidence[]) {
-  return table([
+  const widths = [6, 14, 33, 27, 20];
+
+  return fixedTable([
     new TableRow({
       tableHeader: true,
-      children: [plainCell("TT", 8), plainCell("Mã", 18), plainCell("Tên", 38), plainCell("Vị trí/đường dẫn", 26), plainCell("Ghi chú", 10)],
+      cantSplit: true,
+      children: ["TT", "Mã", "Tên", "Vị trí/đường dẫn", "Ghi chú"].map((header, index) =>
+        compactCell(header, widths[index], { bold: true }),
+      ),
     }),
     ...(evidence.length > 0
       ? evidence.map(
-          (item, index) =>
-            new TableRow({
-              children: [
-                plainCell(String(index + 1), 8),
-                plainCell(item.ma, 18),
-                plainCell(item.ten, 38),
-                plainCell(item.duong_dan || item.storage_path || "", 26),
-                plainCell(item.ghi_chu ?? "", 10),
+        (item, index) =>
+          new TableRow({
+            cantSplit: true,
+            children: [
+                compactCell(String(index + 1), widths[0]),
+                compactCell(item.ma, widths[1]),
+                compactCell(item.ten, widths[2]),
+                compactCell(item.duong_dan || item.storage_path || "", widths[3]),
+                compactCell(item.ghi_chu ?? "", widths[4]),
               ],
             }),
         )
       : [
           new TableRow({
-            children: [plainCell("1", 8), plainCell(CANH_BAO_THIEU_DU_LIEU, 92, true)],
+            cantSplit: true,
+            children: [
+              compactCell("1", widths[0]),
+              compactCell(CANH_BAO_THIEU_DU_LIEU, 94, { warning: true }),
+            ],
           }),
         ]),
   ]);
@@ -343,9 +424,7 @@ export async function buildImprovementPlanDocx(data: ReportData) {
   ];
 
   const document = new Document({
-    styles: {
-      default: { document: { run: { font: FONT, size: 24 } } },
-    },
+    styles: reportStyles(24),
     sections: [
       {
         properties: {
@@ -375,33 +454,40 @@ function improvementPlanTable(plans: ImprovementPlan[]) {
     "Minh chứng dự kiến",
     "Mức độ thực hiện",
   ];
+  const widths = [3, 11, 14, 16, 12, 9, 9, 8, 11, 7];
 
-  return table([
+  return fixedTable([
     new TableRow({
       tableHeader: true,
-      children: headers.map((header) => plainCell(header)),
+      cantSplit: true,
+      children: headers.map((header, index) => compactCell(header, widths[index], { bold: true, size: 16 })),
     }),
     ...(plans.length > 0
       ? plans.map(
           (plan, index) =>
             new TableRow({
+              cantSplit: true,
               children: [
-                plainCell(String(index + 1)),
-                plainCell(plan.noi_dung ?? "", undefined, !plan.noi_dung),
-                plainCell(plan.muc_tieu ?? "", undefined, !plan.muc_tieu),
-                plainCell(plan.hoat_dong ?? "", undefined, !plan.hoat_dong),
-                plainCell(plan.chi_so_ket_qua ?? "", undefined, !plan.chi_so_ket_qua),
-                plainCell(formatDateRange(plan.thoi_gian_bat_dau, plan.thoi_gian_ket_thuc)),
-                plainCell(plan.phu_trach?.ho_ten ?? ""),
-                plainCell(plan.nguon_luc ?? ""),
-                plainCell(plan.minh_chung_du_kien ?? ""),
-                plainCell(plan.muc_do_thuc_hien ?? ""),
+                compactCell(String(index + 1), widths[0], { size: 16 }),
+                compactCell(plan.noi_dung ?? "", widths[1], { warning: !plan.noi_dung, size: 16 }),
+                compactCell(plan.muc_tieu ?? "", widths[2], { warning: !plan.muc_tieu, size: 16 }),
+                compactCell(plan.hoat_dong ?? "", widths[3], { warning: !plan.hoat_dong, size: 16 }),
+                compactCell(plan.chi_so_ket_qua ?? "", widths[4], { warning: !plan.chi_so_ket_qua, size: 16 }),
+                compactCell(formatDateRange(plan.thoi_gian_bat_dau, plan.thoi_gian_ket_thuc), widths[5], { size: 16 }),
+                compactCell(plan.phu_trach?.ho_ten ?? "", widths[6], { size: 16 }),
+                compactCell(plan.nguon_luc ?? "", widths[7], { size: 16 }),
+                compactCell(plan.minh_chung_du_kien ?? "", widths[8], { size: 16 }),
+                compactCell(plan.muc_do_thuc_hien ?? "", widths[9], { size: 16 }),
               ],
             }),
         )
       : [
           new TableRow({
-            children: [plainCell("1"), plainCell(CANH_BAO_THIEU_DU_LIEU, undefined, true)],
+            cantSplit: true,
+            children: [
+              compactCell("1", widths[0], { size: 16 }),
+              compactCell(CANH_BAO_THIEU_DU_LIEU, 97, { warning: true, size: 16 }),
+            ],
           }),
         ]),
   ]);

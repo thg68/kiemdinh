@@ -64,6 +64,7 @@ export function AdminParticipants() {
     row: ParticipantRow;
     status: Exclude<ParticipantStatus, "invited">;
   } | null>(null);
+  const [pendingPrincipal, setPendingPrincipal] = useState<ParticipantRow | null>(null);
   const deferredKeyword = useDeferredValue(keyword.trim());
 
   useEffect(() => {
@@ -139,12 +140,37 @@ export function AdminParticipants() {
     setMessage(successMessage);
   }
 
+  async function assignPrincipal() {
+    if (!pendingPrincipal) return;
+
+    setWorking(true);
+    const { error } = await supabase.rpc("fn_admin_gan_hieu_truong", {
+      p_co_so_id: pendingPrincipal.co_so_id,
+      p_nguoi_dung_id: pendingPrincipal.id,
+    });
+
+    if (error) {
+      setMessageTone("warning");
+      setMessage(toUserMessage(error, "Không cấp được quyền Hiệu trưởng."));
+      setWorking(false);
+      setPendingPrincipal(null);
+      return;
+    }
+
+    const successMessage = `Đã cấp quyền Hiệu trưởng của ${pendingPrincipal.co_so_ten} cho ${pendingPrincipal.ho_ten}.`;
+    setWorking(false);
+    setPendingPrincipal(null);
+    await loadParticipants();
+    setMessageTone("success");
+    setMessage(successMessage);
+  }
+
   return (
     <div className="grid gap-5">
       {message ? <Alert tone={messageTone}>{message}</Alert> : null}
 
       <p className="admin-privacy-note">
-        Quản trị hệ thống kiểm soát trạng thái tài khoản. Vai trò nghiệp vụ tại trường được Hiệu trưởng quản lý trong khu vực “Nghiệp vụ nhà trường”.
+        Quản trị hệ thống cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản. Các vai trò nghiệp vụ còn lại do Hiệu trưởng quản lý tại trường.
       </p>
 
       <section className="admin-toolbar" aria-label="Bộ lọc người tham gia">
@@ -269,15 +295,31 @@ export function AdminParticipants() {
                       </td>
                       <td>{formatDate(row.created_at)}</td>
                       <td>
-                        {row.vai_tro_mas.includes("SYSTEM_ADMIN") ? (
-                          <span className="admin-cell-meta">Tài khoản được bảo vệ</span>
-                        ) : (
-                          <ParticipantStatusControl
-                            key={`${row.id}-${row.trang_thai}`}
-                            row={row}
-                            onRequest={(nextStatus) => setPendingUpdate({ row, status: nextStatus })}
-                          />
-                        )}
+                        <div className="grid min-w-48 gap-2">
+                          {row.vai_tro_mas.includes("PRINCIPAL") ? (
+                            <StatusBadge tone="info">Hiệu trưởng hiện tại</StatusBadge>
+                          ) : row.trang_thai === "active" ? (
+                            <button
+                              className="button-secondary min-h-9 px-4 py-2 text-xs"
+                              type="button"
+                              onClick={() => setPendingPrincipal(row)}
+                            >
+                              Đặt làm Hiệu trưởng
+                            </button>
+                          ) : (
+                            <span className="admin-cell-meta">Kích hoạt tài khoản trước khi cấp quyền</span>
+                          )}
+
+                          {row.vai_tro_mas.includes("SYSTEM_ADMIN") ? (
+                            <span className="admin-cell-meta">Trạng thái tài khoản được bảo vệ</span>
+                          ) : (
+                            <ParticipantStatusControl
+                              key={`${row.id}-${row.trang_thai}`}
+                              row={row}
+                              onRequest={(nextStatus) => setPendingUpdate({ row, status: nextStatus })}
+                            />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -303,6 +345,21 @@ export function AdminParticipants() {
         tone={pendingUpdate?.status === "locked" ? "danger" : "warning"}
         onCancel={() => setPendingUpdate(null)}
         onConfirm={() => void updateStatus()}
+      />
+
+      <ConfirmDialog
+        confirmLabel="Cấp quyền"
+        description={
+          pendingPrincipal
+            ? `${pendingPrincipal.ho_ten} sẽ trở thành Hiệu trưởng của ${pendingPrincipal.co_so_ten}. Nếu trường đã có Hiệu trưởng, quyền đó sẽ được chuyển sang tài khoản này.`
+            : ""
+        }
+        isOpen={Boolean(pendingPrincipal)}
+        isWorking={working}
+        title="Cấp quyền Hiệu trưởng?"
+        tone="warning"
+        onCancel={() => setPendingPrincipal(null)}
+        onConfirm={() => void assignPrincipal()}
       />
     </div>
   );

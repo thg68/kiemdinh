@@ -1,0 +1,727 @@
+{
+  "tieu_chi": [
+    {
+      "id": "criterion-1-1",
+      "ma": "1.1",
+      "ten": "Tầm nhìn, sứ mạng/mục tiêu và kế hoạch phát triển",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chuan": {
+        "id": "standard-1",
+        "so_thu_tu": 1,
+        "ten": "Quản trị nhà trường và bảo đảm chất lượng"
+      },
+      "muc_1": "Nhà trường xác định mục tiêu, chỉ tiêu và kế hoạch năm học hoặc kế hoạch phát triển phù hợp với nhiệm vụ nuôi dưỡng, chăm sóc, giáo dục trẻ; quy mô, loại hình, điều kiện thực tế của nhà trường, địa phương, đặc điểm trẻ và Chương trình giáo dục mầm non.",
+      "muc_2": "Nhà trường rà soát kết quả thực hiện kế hoạch để điều chỉnh mục tiêu, nhiệm vụ, nguồn lực và tổ chức hoạt động trong chu kỳ tiếp theo. Việc điều chỉnh có căn cứ từ kết quả thực hiện, dữ liệu quản lý, phản hồi phù hợp và được công khai theo quy định."
+    },
+    {
+      "id": "criterion-1-2",
+      "ma": "1.2",
+      "ten": "Cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chuan": {
+        "id": "standard-1",
+        "so_thu_tu": 1,
+        "ten": "Quản trị nhà trường và bảo đảm chất lượng"
+      },
+      "muc_1": "Nhà trường có cơ cấu tổ chức, phân công nhiệm vụ và bố trí người phụ trách các hoạt động theo quy định, phù hợp với quy mô, loại hình, số nhóm/lớp và điều kiện thực tế. Nhiệm vụ của cán bộ quản lý cơ sở giáo dục, giáo viên, nhân viên và các bộ phận liên quan được phân công rõ ràng, bảo đảm phối hợp trong hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ và bảo đảm an toàn.",
+      "muc_2": "Nhà trường rà soát hiệu quả cơ cấu tổ chức, phân công nhiệm vụ và phối hợp nội bộ; kịp thời điều chỉnh các nhiệm vụ chồng chéo, bỏ sót hoặc quá tải. Các nhiệm vụ thiết yếu có người phụ trách, có cơ chế phối hợp hoặc thay thế khi có thay đổi nhân sự."
+    },
+    {
+      "id": "criterion-1-3",
+      "ma": "1.3",
+      "ten": "Quản lý kế hoạch, nguồn lực, thông tin và dữ liệu",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chuan": {
+        "id": "standard-1",
+        "so_thu_tu": 1,
+        "ten": "Quản trị nhà trường và bảo đảm chất lượng"
+      },
+      "muc_1": "Nhà trường có hồ sơ, thông tin và dữ liệu thiết yếu về kế hoạch, tài chính, trẻ, đội ngũ, nhóm/lớp, chương trình, cơ sở vật chất, sức khỏe, dinh dưỡng, chuyên cần, an toàn và phát triển của trẻ. Hồ sơ, thông tin và dữ liệu được cập nhật, lưu trữ, quản lý, sử dụng theo quy định, bảo đảm đầy đủ, đúng thời hạn, an toàn và bảo mật thông tin.",
+      "muc_2": "Nhà trường rà soát, đối chiếu, tổng hợp và sử dụng dữ liệu để xác định vấn đề, ưu tiên nguồn lực, điều chỉnh kế hoạch, hỗ trợ trẻ và cải thiện điều kiện nuôi dưỡng, chăm sóc, giáo dục. Các sai lệch dữ liệu ảnh hưởng đến quản lý, theo dõi chất lượng được phát hiện và khắc phục theo thời hạn quy định."
+    },
+    {
+      "id": "criterion-1-4",
+      "ma": "1.4",
+      "ten": "Tự đánh giá, cải tiến, công khai và trách nhiệm giải trình",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chuan": {
+        "id": "standard-1",
+        "so_thu_tu": 1,
+        "ten": "Quản trị nhà trường và bảo đảm chất lượng"
+      },
+      "muc_1": "Nhà trường thực hiện tự kiểm tra hoặc tự đánh giá để xác định điểm mạnh, hạn chế, nguyên nhân và nội dung cần cải tiến. Kết quả tự kiểm tra, tự đánh giá được sử dụng để xây dựng hoặc cập nhật kế hoạch cải tiến chất lượng với nhiệm vụ, người phụ trách, thời hạn thực hiện và kết quả dự kiến.",
+      "muc_2": "Nhà trường triển khai kế hoạch cải tiến dựa trên dữ liệu, phản hồi và kết quả tự đánh giá; kết quả cải tiến được theo dõi, kiểm chứng bằng minh chứng phù hợp. Chu trình tự đánh giá, cải tiến, công khai và giải trình được thực hiện hằng năm; kết quả cải tiến được sử dụng để điều chỉnh hoạt động quản lý, nuôi dưỡng, chăm sóc, giáo dục trẻ trong chu kỳ tiếp theo."
+    },
+    {
+      "id": "criterion-2-1",
+      "ma": "2.1",
+      "ten": "Cán bộ quản lý cơ sở giáo dục",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-2",
+      "tieu_chuan": {
+        "id": "standard-2",
+        "so_thu_tu": 2,
+        "ten": "Phát triển đội ngũ"
+      },
+      "muc_1": "Nhà trường có hiệu trưởng, phó hiệu trưởng theo quy định; cán bộ quản lý cơ sở giáo dục được bổ nhiệm, phân công nhiệm vụ phù hợp và đáp ứng tiêu chuẩn chức danh. Cán bộ quản lý cơ sở giáo dục thực hiện nhiệm vụ chỉ đạo, điều hành đối với kế hoạch giáo dục, đội ngũ, trẻ, tài chính, tài sản, an toàn, hồ sơ, dữ liệu và phối hợp với cha mẹ trẻ.",
+      "muc_2": "Cán bộ quản lý cơ sở giáo dục sử dụng dữ liệu, kết quả tự đánh giá, kiểm tra nội bộ và phản hồi phù hợp để điều chỉnh kế hoạch, phân công nhiệm vụ, phát triển đội ngũ và cải tiến chất lượng. Kết quả điều chỉnh, cải tiến được theo dõi, kiểm chứng và sử dụng trong quản lý nhà trường."
+    },
+    {
+      "id": "criterion-2-2",
+      "ma": "2.2",
+      "ten": "Giáo viên",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-2",
+      "tieu_chuan": {
+        "id": "standard-2",
+        "so_thu_tu": 2,
+        "ten": "Phát triển đội ngũ"
+      },
+      "muc_1": "Nhà trường có đội ngũ giáo viên đáp ứng yêu cầu thực hiện Chương trình giáo dục mầm non về số lượng, cơ cấu nhóm/lớp, trình độ đào tạo, phẩm chất, đạo đức nghề nghiệp và chuẩn nghề nghiệp hoặc tiêu chuẩn chức danh theo quy định. Giáo viên được phân công phù hợp với chuyên môn, năng lực và điều kiện thực tế; thực hiện nhiệm vụ nuôi dưỡng, chăm sóc, giáo dục trẻ; tham gia sinh hoạt chuyên môn, bồi dưỡng và theo dõi, đánh giá sự phát triển của trẻ.",
+      "muc_2": "Nhà trường theo dõi, rà soát tình hình đội ngũ giáo viên để điều chỉnh phân công, bồi dưỡng và hỗ trợ chuyên môn. Giáo viên sử dụng kết quả theo dõi sự phát triển của trẻ, sinh hoạt chuyên môn, bồi dưỡng và phản hồi phù hợp để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục và thực hiện biện pháp hỗ trợ trẻ."
+    },
+    {
+      "id": "criterion-2-3",
+      "ma": "2.3",
+      "ten": "Nhân sự hỗ trợ giáo dục",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-2",
+      "tieu_chuan": {
+        "id": "standard-2",
+        "so_thu_tu": 2,
+        "ten": "Phát triển đội ngũ"
+      },
+      "muc_1": "Nhà trường bố trí nhân sự hỗ trợ hoặc có phương án phân công, kiêm nhiệm, hợp đồng, phối hợp để thực hiện các nhiệm vụ thiết yếu về y tế, dinh dưỡng, an toàn, thiết bị, hành chính, tài chính, bảo vệ và hỗ trợ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ theo quy định và điều kiện thực tế. Nhiệm vụ của từng vị trí hoặc bộ phận hỗ trợ được phân công cụ thể.",
+      "muc_2": "Nhà trường rà soát mức độ đáp ứng của nhân sự hỗ trợ; kịp thời điều chỉnh phân công hoặc đề xuất bổ sung khi cần. Các nhiệm vụ thiết yếu về an toàn, y tế, dinh dưỡng, nuôi dưỡng, bảo vệ và hỗ trợ hoạt động của nhà trường được duy trì ổn định, không bị bỏ trống."
+    },
+    {
+      "id": "criterion-3-1",
+      "ma": "3.1",
+      "ten": "Tổ chức thực hiện chương trình giáo dục mầm non",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chuan": {
+        "id": "standard-3",
+        "so_thu_tu": 3,
+        "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em"
+      },
+      "muc_1": "Nhà trường xây dựng kế hoạch giáo dục và tổ chức thực hiện Chương trình giáo dục mầm non phù hợp với độ tuổi, nhóm trẻ, lớp mẫu giáo, điều kiện thực tế của nhà trường và địa phương. Các hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ được thực hiện theo kế hoạch, bảo đảm an toàn, phù hợp với đặc điểm phát triển của trẻ.",
+      "muc_2": "Nhà trường sử dụng kết quả theo dõi tiến độ thực hiện kế hoạch, chuyên cần, sức khỏe, dinh dưỡng, sự phát triển của trẻ và điều kiện thực tế để rà soát, điều chỉnh kế hoạch giáo dục. Việc thực hiện chương trình được duy trì ổn định; kế hoạch giáo dục được điều chỉnh, cải tiến phù hợp với nhu cầu của trẻ và điều kiện của nhà trường."
+    },
+    {
+      "id": "criterion-3-2",
+      "ma": "3.2",
+      "ten": "Đổi mới phương pháp chăm sóc, giáo dục và theo dõi, đánh giá sự phát triển, tiến bộ của trẻ em",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chuan": {
+        "id": "standard-3",
+        "so_thu_tu": 3,
+        "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em"
+      },
+      "muc_1": "Giáo viên áp dụng phương pháp nuôi dưỡng, chăm sóc, giáo dục phù hợp với độ tuổi, đặc điểm phát triển và nhu cầu của trẻ; thực hiện quan sát, theo dõi, đánh giá sự phát triển của trẻ theo quy định hoặc kế hoạch của nhà trường. Kết quả quan sát, theo dõi, đánh giá được sử dụng để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ.",
+      "muc_2": "Nhà trường tổ chức sinh hoạt chuyên môn để phân tích phương pháp nuôi dưỡng, chăm sóc, giáo dục, kết quả theo dõi trẻ và hỗ trợ giáo viên điều chỉnh hoạt động. Phương pháp nuôi dưỡng, chăm sóc, giáo dục được cải tiến; trẻ được tham gia hoạt động tích cực, phù hợp, an toàn và có tiến bộ được ghi nhận."
+    },
+    {
+      "id": "criterion-3-3",
+      "ma": "3.3",
+      "ten": "Tổ chức hoạt động giáo dục và phát triển toàn diện",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chuan": {
+        "id": "standard-3",
+        "so_thu_tu": 3,
+        "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em"
+      },
+      "muc_1": "Nhà trường tổ chức các hoạt động vui chơi, trải nghiệm, vận động, nghệ thuật, ngôn ngữ, khám phá, tự phục vụ và các hoạt động phù hợp khác theo độ tuổi. Trẻ được tham gia các hoạt động phát triển thể chất, nhận thức, ngôn ngữ, tình cảm - kỹ năng xã hội và thẩm mỹ theo Chương trình giáo dục mầm non.",
+      "muc_2": "Nhà trường theo dõi sự tham gia, nhu cầu, khả năng và tiến bộ của trẻ để điều chỉnh nội dung, hình thức tổ chức hoạt động giáo dục. Hoạt động phát triển toàn diện được duy trì, đa dạng, an toàn, phù hợp bối cảnh và hỗ trợ sự tiến bộ của trẻ."
+    },
+    {
+      "id": "criterion-3-4",
+      "ma": "3.4",
+      "ten": "Quản lý, theo dõi, hỗ trợ trẻ em và giáo dục hòa nhập",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chuan": {
+        "id": "standard-3",
+        "so_thu_tu": 3,
+        "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em"
+      },
+      "muc_1": "Nhà trường có hồ sơ quản lý trẻ; theo dõi chuyên cần, sức khỏe, dinh dưỡng, an toàn, sự phát triển và nhu cầu hỗ trợ của trẻ. Trẻ cần hỗ trợ, trẻ có nhu cầu đặc thù hoặc trẻ thuộc diện giáo dục hòa nhập được nhận diện, lập kế hoạch hỗ trợ, phân công người phụ trách và phối hợp với cha mẹ trẻ khi cần.",
+      "muc_2": "Kết quả hỗ trợ trẻ được theo dõi, đánh giá và điều chỉnh khi cần thiết. Nhà trường duy trì việc phát hiện sớm, hỗ trợ trẻ và phối hợp với cha mẹ trẻ, chuyên gia, cơ quan hoặc tổ chức liên quan khi phù hợp; bảo đảm trẻ được tôn trọng, an toàn, hòa nhập và có cơ hội phát triển."
+    },
+    {
+      "id": "criterion-3-5",
+      "ma": "3.5",
+      "ten": "Kết quả phát triển và sự tiến bộ của trẻ",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chuan": {
+        "id": "standard-3",
+        "so_thu_tu": 3,
+        "ten": "Thực hiện chương trình, đổi mới phương pháp giáo dục và phát triển trẻ em"
+      },
+      "muc_1": "Trẻ được theo dõi sự phát triển theo mục tiêu Chương trình giáo dục mầm non và đặc điểm độ tuổi. Nhà trường tổng hợp kết quả phát triển, chuyên cần, sức khỏe, dinh dưỡng và sự tiến bộ của trẻ để xác định nhóm trẻ cần hỗ trợ.",
+      "muc_2": "Nhà trường phân tích kết quả phát triển và sự tiến bộ của trẻ để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục và hỗ trợ trẻ. Kết quả theo dõi cho thấy sự tiến bộ của trẻ, đặc biệt đối với trẻ cần hỗ trợ hoặc trẻ 5 tuổi chuẩn bị vào lớp Một; việc xem xét kết quả chú trọng sự tiến bộ của trẻ, không áp dụng máy móc yêu cầu so sánh giữa các cơ sở giáo dục."
+    },
+    {
+      "id": "criterion-4-1",
+      "ma": "4.1",
+      "ten": "Cơ sở vật chất, thiết bị, học liệu và hạ tầng kỹ thuật phục vụ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-4",
+      "tieu_chuan": {
+        "id": "standard-4",
+        "so_thu_tu": 4,
+        "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội"
+      },
+      "muc_1": "Nhà trường có phòng học, khu chức năng, sân chơi, khu vệ sinh, nước sạch, thiết bị, đồ dùng, đồ chơi, học liệu, bếp ăn (nếu có) và các điều kiện vật chất cần thiết phục vụ hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ theo quy định, phù hợp với quy mô, độ tuổi và điều kiện thực tế. Các điều kiện này được quản lý, sử dụng, bảo trì, bảo quản và rà soát định kỳ; hạng mục thiếu, xuống cấp hoặc chưa bảo đảm an toàn có phương án khắc phục.",
+      "muc_2": "Nhà trường sử dụng dữ liệu về tình trạng cơ sở vật chất, thiết bị, đồ dùng, đồ chơi, học liệu và nhu cầu nuôi dưỡng, chăm sóc, giáo dục trẻ để lập kế hoạch sửa chữa, bảo trì, bổ sung, sắp xếp hoặc khai thác hiệu quả hơn. Việc cải thiện cơ sở vật chất, thiết bị, học liệu và điều kiện vật chất góp phần tạo môi trường nuôi dưỡng, chăm sóc, giáo dục an toàn, thân thiện, phù hợp với đặc điểm phát triển của trẻ."
+    },
+    {
+      "id": "criterion-4-2",
+      "ma": "4.2",
+      "ten": "Môi trường giáo dục an toàn, sức khỏe và hạnh phúc",
+      "la_bat_buoc": true,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-4",
+      "tieu_chuan": {
+        "id": "standard-4",
+        "so_thu_tu": 4,
+        "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội"
+      },
+      "muc_1": "Nhà trường có biện pháp bảo đảm an toàn thể chất, sức khỏe, vệ sinh, dinh dưỡng, phòng chống tai nạn, bạo lực, xâm hại và các rủi ro trong hoạt động nuôi dưỡng, chăm sóc, giáo dục trẻ. Nhà trường thực hiện quy trình đón, trả trẻ; kiểm soát người ra vào; bảo đảm an toàn bữa ăn, giấc ngủ, hoạt động ngoài trời, đồ chơi, thiết bị và khu vệ sinh; có kênh tiếp nhận phản ánh, quy trình xử lý sự cố, tai nạn, nghi ngờ bạo hành hoặc xâm hại trẻ. Các nguy cơ mất an toàn được phát hiện, ghi nhận, xử lý và theo dõi kết quả khắc phục.",
+      "muc_2": "Nhà trường phân tích dữ liệu sự cố, nguy cơ mất an toàn, phản hồi của cha mẹ trẻ và kết quả kiểm tra để phòng ngừa rủi ro tái diễn, cải thiện môi trường nuôi dưỡng, chăm sóc, giáo dục an toàn, lành mạnh, tích cực. Trẻ được tôn trọng, bảo vệ, hỗ trợ phù hợp; kết quả kiểm tra và phản hồi được sử dụng để điều chỉnh biện pháp phòng ngừa, xử lý và hỗ trợ trẻ."
+    },
+    {
+      "id": "criterion-4-3",
+      "ma": "4.3",
+      "ten": "Phối hợp với gia đình, cộng đồng và tổ chức liên quan",
+      "la_bat_buoc": false,
+      "loai_hinh_ap_dung": "mam_non",
+      "tieu_chuan_id": "standard-4",
+      "tieu_chuan": {
+        "id": "standard-4",
+        "so_thu_tu": 4,
+        "ten": "Điều kiện giáo dục, môi trường an toàn và phối hợp xã hội"
+      },
+      "muc_1": "Nhà trường có kênh phối hợp với cha mẹ trẻ, cộng đồng và tổ chức liên quan trong nuôi dưỡng, chăm sóc, giáo dục, bảo đảm an toàn và hỗ trợ trẻ. Hoạt động phối hợp được thực hiện định kỳ hoặc khi cần thiết, có ghi nhận nội dung trao đổi, phản hồi và kết quả xử lý.",
+      "muc_2": "Nhà trường sử dụng phản hồi và kết quả phối hợp để điều chỉnh hoạt động nuôi dưỡng, chăm sóc, giáo dục, bảo đảm an toàn và hỗ trợ trẻ. Cơ chế phối hợp hai chiều được duy trì ổn định, minh bạch; nguồn lực huy động hợp pháp và có tác động tích cực đến môi trường nuôi dưỡng, chăm sóc, giáo dục, an toàn hoặc hỗ trợ trẻ."
+    }
+  ],
+  "tu_danh_gia": [
+    {
+      "id": "assessment-1-1",
+      "tieu_chi_id": "criterion-1-1",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường đã ban hành kế hoạch phát triển giai đoạn 2026-2030 và kế hoạch năm học 2026-2027, trong đó xác định mục tiêu, chỉ tiêu, nhiệm vụ, nguồn lực và trách nhiệm thực hiện.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Kế hoạch xác định 6 mục tiêu, 14 chỉ tiêu và người phụ trách; kết quả học kỳ I được rà soát ngày 15/01/2027. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-1-2",
+      "tieu_chi_id": "criterion-1-2",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Cơ cấu tổ chức được kiện toàn; nhiệm vụ của cán bộ quản lý, giáo viên, nhân viên và các bộ phận được phân công bằng văn bản, có cơ chế phối hợp và thay thế.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "100% vị trí công việc có nhiệm vụ và người thay thế; hai nội dung chồng chéo đã được điều chỉnh sau rà soát. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-1-3",
+      "tieu_chi_id": "criterion-1-3",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường duy trì hồ sơ về trẻ, đội ngũ, tài chính, cơ sở vật chất, sức khỏe, dinh dưỡng, chuyên cần và an toàn; dữ liệu được phân quyền và sao lưu định kỳ.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Đối chiếu 12 nhóm dữ liệu cho thấy 10 nhóm cập nhật đúng hạn; 2 sai lệch về chuyên cần đã được xử lý trong 3 ngày. Nhà trường mới có dữ liệu của một chu kỳ và chưa đủ căn cứ xác nhận hiệu quả ổn định; nội dung này được đưa vào kế hoạch cải tiến năm học 2026-2027.",
+      "dat_muc_2": false,
+      "muc_dat": 1
+    },
+    {
+      "id": "assessment-1-4",
+      "tieu_chi_id": "criterion-1-4",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Hội đồng tự đánh giá đã rà soát 15 tiêu chí, xác định điểm mạnh, hạn chế và xây dựng kế hoạch cải tiến có người phụ trách, thời hạn và kết quả dự kiến.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Hội đồng xác định 5 nội dung cần cải tiến, thống nhất người phụ trách, thời hạn và chỉ số theo dõi cho từng nhiệm vụ. Nhà trường mới có dữ liệu của một chu kỳ và chưa đủ căn cứ xác nhận hiệu quả ổn định; nội dung này được đưa vào kế hoạch cải tiến năm học 2026-2027.",
+      "dat_muc_2": false,
+      "muc_dat": 1
+    },
+    {
+      "id": "assessment-2-1",
+      "tieu_chi_id": "criterion-2-1",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Cán bộ quản lý đáp ứng yêu cầu vị trí việc làm, được đánh giá theo nhiệm vụ và tham gia bồi dưỡng quản trị nhà trường theo kế hoạch.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Hai cán bộ quản lý được đánh giá theo nhiệm vụ; các góp ý sau đánh giá đã được đưa vào kế hoạch công tác học kỳ II. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-2-2",
+      "tieu_chi_id": "criterion-2-2",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường có đủ giáo viên theo cơ cấu nhóm lớp; hồ sơ phân công, đánh giá và kế hoạch bồi dưỡng chuyên môn được cập nhật đầy đủ.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "24/24 giáo viên tham gia bồi dưỡng; 19 giáo viên đã được dự giờ đánh giá việc vận dụng sau tập huấn. Nhà trường mới có dữ liệu của một chu kỳ và chưa đủ căn cứ xác nhận hiệu quả ổn định; nội dung này được đưa vào kế hoạch cải tiến năm học 2026-2027.",
+      "dat_muc_2": false,
+      "muc_dat": 1
+    },
+    {
+      "id": "assessment-2-3",
+      "tieu_chi_id": "criterion-2-3",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhân sự hỗ trợ được bố trí theo nhiệm vụ, có lịch làm việc, hướng dẫn chuyên môn và nhật ký theo dõi kết quả thực hiện.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Sáu nhân sự hỗ trợ có lịch trực và nhật ký; tỷ lệ nhiệm vụ hoàn thành đúng hạn đạt 96% trong học kỳ I. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-3-1",
+      "tieu_chi_id": "criterion-3-1",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Kế hoạch giáo dục nhà trường được xây dựng theo Chương trình giáo dục mầm non, phù hợp độ tuổi, điều kiện thực tế và đặc điểm của trẻ.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Kế hoạch giáo dục được xây dựng theo độ tuổi, điều kiện nhà trường và được điều chỉnh sau đánh giá giữa năm. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-3-2",
+      "tieu_chi_id": "criterion-3-2",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Giáo viên tổ chức hoạt động nuôi dưỡng, chăm sóc, giáo dục và theo dõi sự phát triển của trẻ theo kế hoạch; kết quả được ghi nhận trong hồ sơ lớp.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Có 128 phiếu quan sát trẻ; dữ liệu đã được tổng hợp theo nhóm tuổi nhưng cách ghi nhận giữa ba lớp chưa đồng nhất. Nhà trường mới có dữ liệu của một chu kỳ và chưa đủ căn cứ xác nhận hiệu quả ổn định; nội dung này được đưa vào kế hoạch cải tiến năm học 2026-2027.",
+      "dat_muc_2": false,
+      "muc_dat": 1
+    },
+    {
+      "id": "assessment-3-3",
+      "tieu_chi_id": "criterion-3-3",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường tổ chức các hoạt động phát triển thể chất, nhận thức, ngôn ngữ, tình cảm, kỹ năng xã hội và thẩm mỹ theo kế hoạch tuần và tháng.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Các hoạt động thể chất, ngôn ngữ, nhận thức, tình cảm và thẩm mỹ được tổ chức theo tuần và có rà soát kết quả. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-3-4",
+      "tieu_chi_id": "criterion-3-4",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Trẻ có nhu cầu hỗ trợ được nhận diện, lập hồ sơ theo dõi và xây dựng mục tiêu hỗ trợ phù hợp với gia đình và điều kiện của nhà trường.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Bảy trẻ cần hỗ trợ có hồ sơ theo dõi; sáu trẻ tiến bộ theo mục tiêu cá nhân, một trẻ được điều chỉnh biện pháp hỗ trợ. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-3-5",
+      "tieu_chi_id": "criterion-3-5",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Kết quả phát triển của trẻ được tổng hợp theo độ tuổi và lĩnh vực; các trường hợp cần hỗ trợ tiếp tục được bàn giao, theo dõi riêng.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Kết quả cuối học kỳ cho thấy 91% trẻ đạt mục tiêu theo độ tuổi; nhóm cần hỗ trợ được xác định và theo dõi riêng. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-4-1",
+      "tieu_chi_id": "criterion-4-1",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Cơ sở vật chất, thiết bị và học liệu được kiểm kê, bố trí theo nhóm lớp; hạng mục mất an toàn hoặc ảnh hưởng hoạt động được ưu tiên xử lý.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Kiểm kê 63 hạng mục, ghi nhận 4 hạng mục cần bảo trì; toàn bộ hạng mục ưu tiên đã hoàn thành trước 15/12/2026. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    },
+    {
+      "id": "assessment-4-2",
+      "tieu_chi_id": "criterion-4-2",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường thực hiện kiểm tra an toàn, vệ sinh, dinh dưỡng và sức khỏe định kỳ; nguy cơ phát hiện được ghi nhận, phân công và khắc phục.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Ba đợt kiểm tra ghi nhận 2 nguy cơ mức thấp đã khắc phục; chưa có bảng theo dõi phản hồi sức khỏe theo tháng. Nhà trường mới có dữ liệu của một chu kỳ và chưa đủ căn cứ xác nhận hiệu quả ổn định; nội dung này được đưa vào kế hoạch cải tiến năm học 2026-2027.",
+      "dat_muc_2": false,
+      "muc_dat": 1
+    },
+    {
+      "id": "assessment-4-3",
+      "tieu_chi_id": "criterion-4-3",
+      "cap_hoc": "mam_non",
+      "mo_ta_muc_1": "Nhà trường duy trì trao đổi với cha mẹ trẻ, chính quyền và các tổ chức liên quan; phản hồi được tiếp nhận, phân loại và chuyển người phụ trách.",
+      "dat_muc_1": true,
+      "mo_ta_muc_2": "Tỷ lệ cha mẹ trẻ tham gia trao đổi định kỳ đạt 88%; 17 phản hồi được tiếp nhận và 15 phản hồi đã xử lý đúng hạn. Kết quả rà soát đã được dùng để điều chỉnh kế hoạch hoặc biện pháp thực hiện trong chu kỳ tiếp theo.",
+      "dat_muc_2": true,
+      "muc_dat": 2
+    }
+  ],
+  "minh_chung": [
+    {
+      "id": "evidence-1-1",
+      "ma": "MC.1.1.01",
+      "ten": "Kế hoạch phát triển nhà trường giai đoạn 2026-2030",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-1-1-01.txt",
+      "hash_tep": "3344d0cde121ce51d15badaf1f749f5d918b502f765db3758bc2228c9fd28deb",
+      "kich_thuoc": 1171,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-1-1"
+      ]
+    },
+    {
+      "id": "evidence-1-2",
+      "ma": "MC.1.2.01",
+      "ten": "Quyết định phân công nhiệm vụ năm học 2026-2027",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-1-2-01.txt",
+      "hash_tep": "f0e6f217db509155e85d8ddeb6ecce6ef9c527366878068f9474f4edcb69824a",
+      "kich_thuoc": 1175,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-1-2"
+      ]
+    },
+    {
+      "id": "evidence-1-3",
+      "ma": "MC.1.3.01",
+      "ten": "Báo cáo rà soát dữ liệu quản lý tháng 10 năm 2026",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-1-3-01.txt",
+      "hash_tep": "74cd34896e6b14d2562ec5afe7d523ba07da32401584b4f0279f71abf2c3f2b4",
+      "kich_thuoc": 1176,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-1-3"
+      ]
+    },
+    {
+      "id": "evidence-1-4",
+      "ma": "MC.1.4.01",
+      "ten": "Biên bản họp tự đánh giá và kế hoạch cải tiến chất lượng",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-1-4-01.txt",
+      "hash_tep": "b889c8b6deb84bae091e9b56952d70753fc0ce26fc68b155fb298c569cec7e1b",
+      "kich_thuoc": 1211,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-1-4"
+      ]
+    },
+    {
+      "id": "evidence-2-1",
+      "ma": "MC.2.1.01",
+      "ten": "Hồ sơ đánh giá cán bộ quản lý năm học 2025-2026",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-2-1-01.txt",
+      "hash_tep": "a6a67e70298eac7838bbc1d53fb63d33a7a8476c1fdb04ca9db8062f7bedf21a",
+      "kich_thuoc": 1156,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-2-1"
+      ]
+    },
+    {
+      "id": "evidence-2-2",
+      "ma": "MC.2.2.01",
+      "ten": "Kế hoạch bồi dưỡng chuyên môn giáo viên năm học 2026-2027",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-2-2-01.txt",
+      "hash_tep": "00f42fd0741532f23855f1eadbe3eabe95e92e631eab4cc112e3c14aad00eb04",
+      "kich_thuoc": 1112,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-2-2"
+      ]
+    },
+    {
+      "id": "evidence-2-3",
+      "ma": "MC.2.3.01",
+      "ten": "Bảng phân công nhân sự hỗ trợ và nhật ký thực hiện nhiệm vụ",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-2-3-01.txt",
+      "hash_tep": "cefa8496ed06fcad314db6923730f7e5388d7202afe01cdb85d6f54e43bf2ecd",
+      "kich_thuoc": 1151,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-2-3"
+      ]
+    },
+    {
+      "id": "evidence-3-1",
+      "ma": "MC.3.1.01",
+      "ten": "Kế hoạch giáo dục nhà trường năm học 2026-2027",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-3-1-01.txt",
+      "hash_tep": "accf73b9cc356a88aa5652bbaa35d03f7161444a070dd202fed05b771b43592f",
+      "kich_thuoc": 1171,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-3-1"
+      ]
+    },
+    {
+      "id": "evidence-3-2",
+      "ma": "MC.3.2.01",
+      "ten": "Phiếu quan sát hoạt động giáo dục và tổng hợp đánh giá trẻ",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-3-2-01.txt",
+      "hash_tep": "e95910c26dbd4e02d79c7c7f0f7696771b0672ed9befcc86886cf4ffc06be7bc",
+      "kich_thuoc": 1251,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-3-2"
+      ]
+    },
+    {
+      "id": "evidence-3-3",
+      "ma": "MC.3.3.01",
+      "ten": "Kế hoạch tổ chức hoạt động phát triển toàn diện cho trẻ",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-3-3-01.txt",
+      "hash_tep": "c898d0a0d5432ad1235a1240afc54fcd08e4decc993f40e8072929e77d17f427",
+      "kich_thuoc": 1194,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-3-3"
+      ]
+    },
+    {
+      "id": "evidence-3-4",
+      "ma": "MC.3.4.01",
+      "ten": "Hồ sơ theo dõi trẻ cần hỗ trợ và kế hoạch giáo dục cá nhân",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-3-4-01.txt",
+      "hash_tep": "22c58a81f5dc46614aa8d7a2bd7af1b3db130121febf0b2f7eeeeefcda46eaab",
+      "kich_thuoc": 1211,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-3-4"
+      ]
+    },
+    {
+      "id": "evidence-3-5",
+      "ma": "MC.3.5.01",
+      "ten": "Báo cáo tổng hợp kết quả phát triển và sự tiến bộ của trẻ",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-3-5-01.txt",
+      "hash_tep": "001c45827ce1064910abe8bcd412a3230f292546d43eaf4c2a1c90e36f73d65d",
+      "kich_thuoc": 1190,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-3-5"
+      ]
+    },
+    {
+      "id": "evidence-4-1",
+      "ma": "MC.4.1.01",
+      "ten": "Biên bản kiểm kê cơ sở vật chất và kế hoạch bảo trì",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-4-1-01.txt",
+      "hash_tep": "f0f36b4479d907303f1f9813c3ea37bb599ffdacec79471a88c72bfa13d30255",
+      "kich_thuoc": 1263,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-4-1"
+      ]
+    },
+    {
+      "id": "evidence-4-2",
+      "ma": "MC.4.2.01",
+      "ten": "Biên bản kiểm tra an toàn vệ sinh và sức khỏe trường học",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-4-2-01.txt",
+      "hash_tep": "8acf02ebfd8e7e42b8b7acb0127317ac7c5349b075fcf8e8da04f5523bebff7f",
+      "kich_thuoc": 1177,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-4-2"
+      ]
+    },
+    {
+      "id": "evidence-4-3",
+      "ma": "MC.4.3.01",
+      "ten": "Biên bản phối hợp giữa nhà trường và cha mẹ trẻ",
+      "loai_tep": "text/plain",
+      "duong_dan": null,
+      "storage_path": "minh-chung/MC-4-3-01.txt",
+      "hash_tep": "f0b98a131e242beeeab2759c5e7abc4ad5fd54071d3388727e247f2372d2f83c",
+      "kich_thuoc": 1190,
+      "ngay_ban_hanh": "2026-08-20",
+      "ngay_het_gia_tri": null,
+      "ghi_chu": "Đã kiểm tra nội dung và liên kết tiêu chí.",
+      "tieuChiIds": [
+        "criterion-4-3"
+      ]
+    }
+  ],
+  "ke_hoach_cai_tien": [
+    {
+      "id": "plan-1",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chi_id": "criterion-1-3",
+      "noi_dung": "Chuẩn hóa thời hạn cập nhật và kiểm tra chéo dữ liệu quản lý",
+      "muc_tieu": "Đến tháng 12/2026, ít nhất 98% trường dữ liệu thiết yếu được cập nhật đúng hạn và mọi sai lệch được xử lý trong 3 ngày làm việc.",
+      "hoat_dong": "Lập danh mục dữ liệu; giao đầu mối; cấu hình lịch nhắc; kiểm tra chéo hằng tháng; công bố kết quả tại cuộc họp giao ban.",
+      "chi_so_ket_qua": "Tỷ lệ dữ liệu đúng hạn; số sai lệch; thời gian xử lý trung bình.",
+      "thoi_gian_bat_dau": "2026-09-01",
+      "thoi_gian_ket_thuc": "2026-12-20",
+      "nguon_luc": "Tổ văn phòng, biểu mẫu số và 12 giờ rà soát mỗi tháng.",
+      "minh_chung_du_kien": "Bảng kiểm dữ liệu hằng tháng; biên bản xử lý sai lệch; báo cáo tổng hợp tháng 12.",
+      "muc_do_thuc_hien": "Đang thực hiện - 40%",
+      "ghi_chu": "Theo dõi trên PDT Quality",
+      "phu_trach": {
+        "ho_ten": "Trần Văn Bình"
+      }
+    },
+    {
+      "id": "plan-2",
+      "tieu_chuan_id": "standard-1",
+      "tieu_chi_id": "criterion-1-4",
+      "noi_dung": "Thiết lập lịch rà soát tiến độ kế hoạch cải tiến theo quý",
+      "muc_tieu": "100% nhiệm vụ cải tiến có kết quả, minh chứng và quyết định điều chỉnh được ghi nhận theo quý.",
+      "hoat_dong": "Tổ chức họp Hội đồng vào tuần cuối mỗi quý; đối chiếu chỉ số; cập nhật người phụ trách, thời hạn và biện pháp khi có chậm tiến độ.",
+      "chi_so_ket_qua": "Tỷ lệ nhiệm vụ được rà soát đúng kỳ; số nhiệm vụ có điều chỉnh dựa trên dữ liệu.",
+      "thoi_gian_bat_dau": "2026-09-15",
+      "thoi_gian_ket_thuc": "2027-05-15",
+      "nguon_luc": "Hội đồng tự đánh giá, dữ liệu trên PDT Quality và 2 giờ họp mỗi quý.",
+      "minh_chung_du_kien": "Biên bản rà soát quý; ảnh chụp trạng thái nhiệm vụ; quyết định điều chỉnh kế hoạch.",
+      "muc_do_thuc_hien": "Chưa bắt đầu",
+      "ghi_chu": "Theo dõi trên PDT Quality",
+      "phu_trach": {
+        "ho_ten": "Nguyễn Thị An"
+      }
+    },
+    {
+      "id": "plan-3",
+      "tieu_chuan_id": "standard-2",
+      "tieu_chi_id": "criterion-2-2",
+      "noi_dung": "Đánh giá việc vận dụng sau bồi dưỡng chuyên môn của giáo viên",
+      "muc_tieu": "Đến tháng 03/2027, 24/24 giáo viên được dự giờ và nhận phản hồi; ít nhất 90% giáo viên vận dụng đạt yêu cầu.",
+      "hoat_dong": "Xây dựng phiếu quan sát; tổ chức dự giờ theo nhóm; phản hồi trong 3 ngày; hỗ trợ lại giáo viên chưa đạt và đánh giá lần hai.",
+      "chi_so_ket_qua": "Số giáo viên được dự giờ; tỷ lệ vận dụng đạt; số giáo viên được hỗ trợ lần hai.",
+      "thoi_gian_bat_dau": "2026-10-01",
+      "thoi_gian_ket_thuc": "2027-03-31",
+      "nguon_luc": "Tổ chuyên môn, 48 tiết dự giờ và tài liệu bồi dưỡng nội bộ.",
+      "minh_chung_du_kien": "Phiếu dự giờ; biên bản sinh hoạt chuyên môn; bảng tổng hợp kết quả vận dụng.",
+      "muc_do_thuc_hien": "Chưa bắt đầu",
+      "ghi_chu": "Theo dõi trên PDT Quality",
+      "phu_trach": {
+        "ho_ten": "Lê Thu Hà"
+      }
+    },
+    {
+      "id": "plan-4",
+      "tieu_chuan_id": "standard-3",
+      "tieu_chi_id": "criterion-3-2",
+      "noi_dung": "Thống nhất cách ghi nhận và phân tích kết quả quan sát trẻ",
+      "muc_tieu": "Từ tháng 01/2027, 100% nhóm lớp sử dụng cùng bộ mô tả và có báo cáo phân tích trẻ cần hỗ trợ mỗi tháng.",
+      "hoat_dong": "Rà soát phiếu hiện có; thống nhất bộ mô tả; tập huấn giáo viên; kiểm tra chéo hồ sơ ba lớp; tổng hợp nhóm trẻ cần hỗ trợ.",
+      "chi_so_ket_qua": "Tỷ lệ hồ sơ đúng cấu trúc; số sai lệch giữa các lớp; số trẻ có biện pháp hỗ trợ sau phân tích.",
+      "thoi_gian_bat_dau": "2026-11-01",
+      "thoi_gian_ket_thuc": "2027-02-28",
+      "nguon_luc": "Tổ chuyên môn, biểu mẫu điện tử và 4 buổi sinh hoạt chuyên đề.",
+      "minh_chung_du_kien": "Bộ phiếu quan sát thống nhất; biên bản kiểm tra chéo; báo cáo phân tích hằng tháng.",
+      "muc_do_thuc_hien": "Chưa bắt đầu",
+      "ghi_chu": "Theo dõi trên PDT Quality",
+      "phu_trach": {
+        "ho_ten": "Phạm Thị Mai"
+      }
+    },
+    {
+      "id": "plan-5",
+      "tieu_chuan_id": "standard-4",
+      "tieu_chi_id": "criterion-4-2",
+      "noi_dung": "Bổ sung cơ chế theo dõi phản hồi sức khỏe và an toàn theo tháng",
+      "muc_tieu": "Đến tháng 02/2027, 100% phản hồi sức khỏe, dinh dưỡng và an toàn được ghi nhận, phân loại và phản hồi trong 2 ngày làm việc.",
+      "hoat_dong": "Mở sổ phản hồi số; quy định đầu mối tiếp nhận; rà soát hằng tuần; tổng hợp xu hướng hằng tháng; thông báo kết quả xử lý cho cha mẹ trẻ.",
+      "chi_so_ket_qua": "Số phản hồi; tỷ lệ xử lý đúng hạn; số nguy cơ lặp lại sau xử lý.",
+      "thoi_gian_bat_dau": "2026-10-15",
+      "thoi_gian_ket_thuc": "2027-02-28",
+      "nguon_luc": "Nhân viên y tế, tổ nuôi dưỡng và biểu mẫu phản hồi trực tuyến.",
+      "minh_chung_du_kien": "Sổ phản hồi; phiếu xử lý; báo cáo xu hướng sức khỏe và an toàn theo tháng.",
+      "muc_do_thuc_hien": "Chưa bắt đầu",
+      "ghi_chu": "Theo dõi trên PDT Quality",
+      "phu_trach": {
+        "ho_ten": "Vũ Minh Châu"
+      }
+    }
+  ],
+  "ket_qua": {
+    "mucDat": "Đạt Mức 1",
+    "lyDo": "8/8 tiêu chí bắt buộc đạt Mức 1; 7/7 tiêu chí còn lại đạt Mức 1 trở lên",
+    "chanLenMucTiepTheo": [
+      "1.3 đang Mức 1",
+      "1.4 đang Mức 1",
+      "2.2 đang Mức 1",
+      "3.2 đang Mức 1",
+      "4.2 đang Mức 1"
+    ],
+    "khoangCach": "Cần nâng 5 tiêu chí bắt buộc lên Mức 2 và 0 tiêu chí còn lại lên Mức 2"
+  }
+}

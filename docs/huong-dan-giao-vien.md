@@ -6,8 +6,8 @@ Trang này dành cho giáo viên được phân công cung cấp minh chứng tr
 
 1. Mở ứng dụng và chọn **Tạo tài khoản**.
 2. Nhập họ tên, email và mật khẩu.
-3. Tìm trường bằng tên, mã trường hoặc phường/xã.
-4. Chọn đúng trường trong danh mục Quảng Ninh rồi tạo tài khoản.
+3. Chọn tỉnh/thành phố, rồi tìm trường bằng tên, mã trường hoặc phường/xã.
+4. Kiểm tra mã trường và địa phương, chọn đúng trường rồi tạo tài khoản.
 5. Xác nhận email và đăng nhập. Hệ thống tự tạo hồ sơ Giáo viên tại trường đã chọn.
 
 [CHÈN ẢNH: Màn hình đăng ký và chọn trường]

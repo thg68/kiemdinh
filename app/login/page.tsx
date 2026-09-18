@@ -19,7 +19,7 @@ export default function LoginPage() {
             Đăng nhập hệ thống quản trị nhà trường
           </h1>
           <p className="page-copy mt-6">
-            Chọn trường trong danh mục Quảng Ninh khi đăng ký để bắt đầu với vai trò Giáo viên.
+            Chọn tỉnh/thành phố và trường đang công tác khi đăng ký để bắt đầu với vai trò Giáo viên.
             Các vai trò quản lý và nghiệp vụ được người có thẩm quyền của đơn vị phân công sau.
           </p>
           <div className="mt-8 grid gap-3 text-sm text-[var(--color-graphite)]/78 sm:grid-cols-3">

@@ -57,6 +57,8 @@ export function AdminParticipants() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [rows, setRows] = useState<ParticipantRow[]>([]);
   const [schools, setSchools] = useState<SchoolOption[]>([]);
+  const [schoolSearch, setSchoolSearch] = useState("");
+  const [settingsSchoolSearch, setSettingsSchoolSearch] = useState("");
   const [keyword, setKeyword] = useState("");
   const [schoolId, setSchoolId] = useState("");
   const [role, setRole] = useState("");
@@ -74,23 +76,40 @@ export function AdminParticipants() {
     row: ParticipantRow;
   } | null>(null);
   const deferredKeyword = useDeferredValue(keyword.trim());
+  const deferredSchoolSearch = useDeferredValue((settingsRow ? settingsSchoolSearch : schoolSearch).trim());
 
   useEffect(() => {
     let activeRequest = true;
-
-    async function loadSchoolOptions() {
-      const { data } = await supabase.rpc("fn_admin_tuy_chon_co_so", {
-        p_limit: 500,
-        p_tu_khoa: null,
+    const timer = window.setTimeout(() => {
+      void supabase.rpc("fn_admin_tuy_chon_co_so", {
+        p_limit: 100,
+        p_tu_khoa: deferredSchoolSearch || null,
+      }).then(({ data }) => {
+        if (!activeRequest || !data) return;
+        setSchools((current) => {
+          const byId = new Map(current.map((school) => [school.id, school]));
+          for (const school of data as SchoolOption[]) byId.set(school.id, school);
+          return [...byId.values()];
+        });
       });
-      if (activeRequest) setSchools((data ?? []) as SchoolOption[]);
-    }
+    }, 250);
 
-    void loadSchoolOptions();
     return () => {
       activeRequest = false;
+      window.clearTimeout(timer);
     };
-  }, [supabase]);
+  }, [deferredSchoolSearch, supabase]);
+
+  const filteredSchools = useMemo(() => {
+    const query = schoolSearch.trim().toLocaleLowerCase("vi");
+    const matching = query
+      ? schools.filter((school) => `${school.ten} ${school.ma_truong ?? ""}`.toLocaleLowerCase("vi").includes(query))
+      : schools;
+    const selected = schools.find((school) => school.id === schoolId);
+    return selected && !matching.some((school) => school.id === selected.id)
+      ? [selected, ...matching]
+      : matching;
+  }, [schoolId, schoolSearch, schools]);
 
   const loadParticipants = useCallback(async () => {
     setLoading(true);
@@ -125,6 +144,10 @@ export function AdminParticipants() {
 
   function openSettings(row: ParticipantRow) {
     setSettingsRow(row);
+    setSettingsSchoolSearch("");
+    setSchools((current) => current.some((school) => school.id === row.co_so_id)
+      ? current
+      : [...current, { id: row.co_so_id, ma_truong: null, ten: row.co_so_ten }]);
     setSettingsDraft({
       isPrincipal: row.vai_tro_mas.includes("PRINCIPAL"),
       schoolId: row.co_so_id,
@@ -184,8 +207,19 @@ export function AdminParticipants() {
         </label>
         <label>
           Cơ sở giáo dục
+          <input
+            aria-label="Tìm cơ sở giáo dục để lọc người tham gia"
+            className="form-control mt-2"
+            placeholder="Tìm tên hoặc mã trường"
+            value={schoolSearch}
+            onChange={(event) => {
+              setPage(1);
+              setSchoolId("");
+              setSchoolSearch(event.target.value);
+            }}
+          />
           <select
-            className="form-control"
+            className="form-control mt-2"
             value={schoolId}
             onChange={(event) => {
               setPage(1);
@@ -193,9 +227,9 @@ export function AdminParticipants() {
             }}
           >
             <option value="">Tất cả cơ sở</option>
-            {schools.map((school) => (
+            {filteredSchools.map((school) => (
               <option key={school.id} value={school.id}>
-                {school.ten}
+                {school.ten}{school.ma_truong ? ` · ${school.ma_truong}` : ""}
               </option>
             ))}
           </select>
@@ -322,7 +356,9 @@ export function AdminParticipants() {
         draft={settingsDraft}
         row={settingsRow}
         schools={schools}
+        schoolSearch={settingsSchoolSearch}
         onChange={setSettingsDraft}
+        onSchoolSearch={setSettingsSchoolSearch}
         onClose={() => {
           setSettingsRow(null);
           setSettingsDraft(null);
@@ -357,14 +393,18 @@ function ParticipantSettingsDialog({
   onChange,
   onClose,
   onSave,
+  onSchoolSearch,
   row,
+  schoolSearch,
   schools,
 }: {
   draft: ParticipantSettingsDraft | null;
   onChange: (draft: ParticipantSettingsDraft) => void;
   onClose: () => void;
   onSave: () => void;
+  onSchoolSearch: (value: string) => void;
   row: ParticipantRow | null;
+  schoolSearch: string;
   schools: SchoolOption[];
 }) {
   const titleId = useId();
@@ -414,6 +454,13 @@ function ParticipantSettingsDialog({
   const changed = schoolChanged || draft.status !== initialStatus || draft.isPrincipal !== wasPrincipal;
   const isSystemAdmin = row.vai_tro_mas.includes("SYSTEM_ADMIN");
   const selectedSchool = schools.find((school) => school.id === draft.schoolId);
+  const normalizedSchoolSearch = schoolSearch.trim().toLocaleLowerCase("vi");
+  const matchingSchools = normalizedSchoolSearch
+    ? schools.filter((school) => `${school.ten} ${school.ma_truong ?? ""}`.toLocaleLowerCase("vi").includes(normalizedSchoolSearch))
+    : schools;
+  const schoolOptions = selectedSchool && !matchingSchools.some((school) => school.id === selectedSchool.id)
+    ? [selectedSchool, ...matchingSchools]
+    : matchingSchools;
 
   return (
     <div className="admin-user-dialog-backdrop" role="presentation" onMouseDown={onClose}>
@@ -468,8 +515,15 @@ function ParticipantSettingsDialog({
             </div>
             <label className="admin-user-field">
               Trường đang tham gia
+              <input
+                aria-label="Tìm trường để chuyển người tham gia"
+                className="form-control mt-2"
+                placeholder="Tìm tên hoặc mã trường"
+                value={schoolSearch}
+                onChange={(event) => onSchoolSearch(event.target.value)}
+              />
               <select
-                className="form-control"
+                className="form-control mt-2"
                 value={draft.schoolId}
                 onChange={(event) => {
                   const nextSchoolId = event.target.value;
@@ -480,7 +534,7 @@ function ParticipantSettingsDialog({
                   });
                 }}
               >
-                {schools.map((school) => (
+                {schoolOptions.map((school) => (
                   <option key={school.id} value={school.id}>
                     {school.ten}{school.ma_truong ? ` · ${school.ma_truong}` : ""}
                   </option>

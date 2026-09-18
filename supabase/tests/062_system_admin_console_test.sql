@@ -166,7 +166,7 @@ select throws_ok(
 );
 
 select throws_ok(
-  $$ select * from public.fn_admin_danh_sach_co_so(null, null, null, 25, 0) $$,
+  $$ select * from public.fn_admin_danh_sach_co_so(null, null, null, 25, 0, null) $$,
   '42501',
   'Tai khoan khong co quyen quan tri he thong.',
   'Nguoi dung thuong khong doc duoc danh sach co so admin'
@@ -219,7 +219,7 @@ select is(
 select ok(
   exists (
     select 1
-    from public.fn_admin_danh_sach_co_so(null, null, null, 100, 0) school
+    from public.fn_admin_danh_sach_co_so(null, null, null, 100, 0, null) school
     where school.id = '64000000-0000-0000-0000-000000000102'
   ),
   'Admin thay co so khac trong danh sach toan he thong'

@@ -253,6 +253,11 @@ function standardNoteParagraph(data: ReportData, standardId: string, field: "die
 }
 
 function cover(data: ReportData) {
+  const address = data.school.dia_chi?.trim() || "";
+  const province = data.school.tinh_thanh?.trim() || "";
+  const coverLocation = address && province && !address.toLocaleLowerCase("vi").includes(province.toLocaleLowerCase("vi"))
+    ? `${address}, ${province}`
+    : address || province;
   return [
     p([data.school.co_quan_quan_ly ?? ""], { center: true }),
     p([data.school.ten.toUpperCase()], { center: true }),
@@ -261,7 +266,7 @@ function cover(data: ReportData) {
     p([text(`Năm học ${data.year.ten}`, { bold: true, size: 28 })], { center: true }),
     p([text(`Cấp học: ${schoolLevelLabel(data.capHoc)}`, { size: 26 })], { center: true }),
     p([""], { spacing: 2400 }),
-    p([data.school.dia_chi ?? "", " ", new Date().getFullYear().toString()], { center: true }),
+    p([coverLocation, " ", new Date().getFullYear().toString()], { center: true }),
   ];
 }
 

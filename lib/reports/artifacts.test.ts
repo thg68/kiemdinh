@@ -100,6 +100,24 @@ describe("kiểm tra đọc ngược file xuất", () => {
     expect(xml).toContain(CANH_BAO_THIEU_DU_LIEU);
   });
 
+  it("Mẫu 1 dùng tỉnh trên bìa khi trường chưa có địa chỉ chi tiết", async () => {
+    const data = taoDuLieuBaoCao();
+    data.school.dia_chi = null;
+    data.school.tinh_thanh = "Quảng Ninh";
+
+    const xml = await docxXml(await buildSelfAssessmentDocx(data));
+    expect(xml).toContain("Quảng Ninh");
+  });
+
+  it("Mẫu 1 ghép tỉnh vào địa chỉ chưa có tên tỉnh", async () => {
+    const data = taoDuLieuBaoCao();
+    data.school.dia_chi = "Phường Hạ Long";
+    data.school.tinh_thanh = "Quảng Ninh";
+
+    const xml = await docxXml(await buildSelfAssessmentDocx(data));
+    expect(xml).toContain("Phường Hạ Long, Quảng Ninh");
+  });
+
   it("Mẫu 2 chứa đủ tám mục và cảnh báo khi chưa có kế hoạch", async () => {
     const xml = await docxXml(await buildImprovementPlanDocx(taoDuLieuBaoCao()));
 

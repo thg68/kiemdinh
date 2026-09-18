@@ -15,6 +15,7 @@ const schools: RegistrationSchool[] = [
     cong_lap: false,
     dia_chi: "Hạ Long",
     phuong_xa: "Phường Hạ Long",
+    tinh_thanh: "Quảng Ninh",
     loai_hinh_dao_tao: "Tư thục",
     loai_hinh_truong: "TH-THCS-THPT",
   },
@@ -27,6 +28,7 @@ const schools: RegistrationSchool[] = [
     cong_lap: true,
     dia_chi: null,
     phuong_xa: "Phường Bãi Cháy",
+    tinh_thanh: "Quảng Ninh",
     loai_hinh_dao_tao: "Công lập",
     loai_hinh_truong: "MN",
   },
@@ -43,6 +45,10 @@ describe("school directory search", () => {
 
   it("finds schools by MOET code and ward", () => {
     expect(filterRegistrationSchools(schools, "2200004001 ha long")).toEqual([schools[0]]);
+  });
+
+  it("finds schools by province", () => {
+    expect(filterRegistrationSchools(schools, "quang ninh")).toEqual(schools);
   });
 
   it("limits the initial list", () => {

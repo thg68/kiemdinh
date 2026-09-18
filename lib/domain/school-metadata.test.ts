@@ -22,6 +22,7 @@ describe("metadata cơ sở giáo dục", () => {
     expect(validateSchoolCreation({
       tenCoSo: "Trường A",
       maTruong: "TRUONG-A",
+      tinhThanh: "Quảng Ninh",
       loaiHinh: "mam_non",
       capHoc: ["mam_non"],
       tenNamHoc: "2026-2027",
@@ -32,6 +33,7 @@ describe("metadata cơ sở giáo dục", () => {
     expect(validateSchoolCreation({
       tenCoSo: " ",
       maTruong: "TRUONG-A",
+      tinhThanh: "Quảng Ninh",
       loaiHinh: "mam_non",
       capHoc: ["mam_non"],
       tenNamHoc: "2026-2027",
@@ -42,11 +44,23 @@ describe("metadata cơ sở giáo dục", () => {
     expect(validateSchoolCreation({
       tenCoSo: "Trường A",
       maTruong: " ",
+      tinhThanh: "Quảng Ninh",
       loaiHinh: "mam_non",
       capHoc: ["mam_non"],
       tenNamHoc: "2026-2027",
       ngayBatDau: "2026-09-01",
       ngayKetThuc: "2027-05-31",
     })).toContain("Mã trường");
+
+    expect(validateSchoolCreation({
+      tenCoSo: "Trường A",
+      maTruong: "TRUONG-A",
+      tinhThanh: "",
+      loaiHinh: "mam_non",
+      capHoc: ["mam_non"],
+      tenNamHoc: "2026-2027",
+      ngayBatDau: "2026-09-01",
+      ngayKetThuc: "2027-05-31",
+    })).toContain("Tỉnh/thành phố");
   });
 });

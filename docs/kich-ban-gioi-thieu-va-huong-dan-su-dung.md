@@ -38,8 +38,8 @@ Sau buổi giới thiệu, người xem cần hiểu được ba điều:
 
 1. Chọn tab **Tạo tài khoản**.
 2. Nhập họ tên và email.
-3. Tìm trường bằng tên, mã trường hoặc phường xã.
-4. Chọn đúng trường trong danh mục Quảng Ninh.
+3. Chọn tỉnh/thành phố rồi tìm trường bằng tên, mã trường hoặc phường xã.
+4. Kiểm tra mã trường và địa phương trước khi chọn.
 5. Giải thích bước xác nhận email, sau đó chuyển sang tài khoản đã chuẩn bị.
 6. Đăng nhập và chỉ vào khu vực vai trò ở thanh bên.
 
@@ -256,7 +256,7 @@ Sau buổi giới thiệu, người xem cần hiểu được ba điều:
 ## 5. Câu trả lời cho phần hỏi đáp
 
 **Giáo viên có cần Hiệu trưởng mời vào trường không?**
-Không. Giáo viên chọn trường trong danh mục Quảng Ninh khi đăng ký và được tạo hồ sơ Giáo viên sau khi xác nhận email. Vai trò cao hơn vẫn phải được phân công.
+Không. Giáo viên chọn tỉnh/thành phố và đúng trường trong danh mục khi đăng ký, sau đó được tạo hồ sơ Giáo viên khi xác nhận email. Vai trò cao hơn vẫn phải được phân công.
 
 **Một minh chứng có dùng cho nhiều tiêu chí không?**
 Có. Minh chứng giữ một mã duy nhất và có thể liên kết với nhiều tiêu chí phù hợp.

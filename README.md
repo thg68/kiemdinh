@@ -69,7 +69,7 @@ thử lại; không bấm liên tục.
 
 Nội dung sáu phần thuyết minh của Mẫu 2 được nhập tại `/ke-hoach-cai-tien`; hai phần còn lại lấy từ thông tin năm học và bảng kế hoạch. Báo cáo chỉ được phê duyệt khi database xác nhận đủ điều kiện và snapshot thật đã lưu trong Storage.
 
-Nhập dữ liệu trường thí điểm theo hướng dẫn `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
+Quản trị hệ thống có thể nhập danh mục cơ sở giáo dục từ Excel tại `/quan-tri/co-so`; xem `docs/import-danh-muc-co-so.md`. Để nhập minh chứng và nội dung tự đánh giá của trường thí điểm theo năm học, xem `docs/import-du-lieu-truong-that.md`; file manifest mẫu nằm tại `data/import-manifest.example.csv`.
 
 ## Tài Liệu Sprint 6
 

@@ -58,7 +58,8 @@ export function ApplicationShell({
     () => schoolRoles.map((role) => role.ma),
     [schoolRoles],
   );
-  const navigation = navigationForRoles(schoolRoleCodes);
+  const isAdminProfile = active === "profile" && roleCodes.includes("SYSTEM_ADMIN");
+  const navigation = isAdminProfile ? [] : navigationForRoles(schoolRoleCodes);
   const requiredCapability = capabilityForPath(pathname);
   const isOnboardingAccount = pathname.startsWith("/thiet-lap") && roleCodes.length === 0;
   const canAccess =
@@ -196,7 +197,7 @@ export function ApplicationShell({
             Quản trị chất lượng nhà trường từ vận hành hằng ngày.
           </p>
 
-          <WorkspaceSwitcher current="school" roleCodes={roleCodes} />
+          <WorkspaceSwitcher current={isAdminProfile ? "admin" : "school"} roleCodes={roleCodes} />
 
           <nav
             aria-busy={rolesLoading || undefined}
@@ -223,6 +224,10 @@ export function ApplicationShell({
                   </Link>
                 );
               })
+            ) : isAdminProfile ? (
+              <Link className="app-nav-link" href="/quan-tri" onClick={closeMenu}>
+                Quay lại quản trị hệ thống
+              </Link>
             ) : (
               <p className="muted px-3 py-2 text-sm">
                 Tài khoản chưa được cấp vai trò sử dụng.
@@ -231,9 +236,20 @@ export function ApplicationShell({
           </nav>
 
           {roleMessage ? <Alert className="mt-4" tone="warning">{roleMessage}</Alert> : null}
-          <CurrentUserRoles roles={schoolRoles} title="Vai trò tại trường" />
+          <CurrentUserRoles
+            roles={isAdminProfile ? roles.filter((role) => role.ma === "SYSTEM_ADMIN") : schoolRoles}
+            title={isAdminProfile ? "Vai trò hệ thống" : "Vai trò tại trường"}
+          />
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
+            <Link
+              aria-current={pathname === "/ho-so" ? "page" : undefined}
+              className={`app-nav-link mb-3 ${pathname === "/ho-so" ? "app-nav-link-active" : ""}`}
+              href="/ho-so"
+              onClick={closeMenu}
+            >
+              Hồ sơ của tôi
+            </Link>
             <LogoutButton />
           </div>
         </aside>

@@ -210,6 +210,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <CurrentUserRoles roles={systemAdminRoles} title="Vai trò hệ thống" />
 
           <div className="mt-8 border-t border-[var(--color-border)] pt-6">
+            <Link
+              className="app-nav-link mb-3"
+              href="/ho-so"
+              onClick={closeMenu}
+            >
+              Hồ sơ của tôi
+            </Link>
             <LogoutButton />
           </div>
         </aside>

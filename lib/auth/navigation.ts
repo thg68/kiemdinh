@@ -9,7 +9,8 @@ export type ActiveNav =
   | "reports"
   | "legal"
   | "audit"
-  | "settings";
+  | "settings"
+  | "profile";
 
 import { hasCapability, type PageCapability } from "./capabilities";
 

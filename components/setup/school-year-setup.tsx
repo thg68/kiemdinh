@@ -159,8 +159,8 @@ export function SchoolYearSetup() {
   const [canManageUsers, setCanManageUsers] = useState(false);
   const [canManageAssignments, setCanManageAssignments] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<PendingInvitation[]>([]);
-  const [registrationSchools, setRegistrationSchools] = useState<RegistrationSchool[]>([]);
-  const [selectedRegistrationSchoolId, setSelectedRegistrationSchoolId] = useState("");
+  const [selectedRegistrationSchool, setSelectedRegistrationSchool] = useState<RegistrationSchool | null>(null);
+  const selectedRegistrationSchoolId = selectedRegistrationSchool?.id ?? "";
   const [isJoiningSchool, setIsJoiningSchool] = useState(false);
   const [managedInvitations, setManagedInvitations] = useState<ManagedInvitation[]>([]);
   const [setupPanel, setSetupPanel] = useState<"assignments" | "school" | "users">("school");
@@ -200,24 +200,13 @@ export function SchoolYearSetup() {
     }
 
     if (!profileData) {
-      const [
-        { data: invitationData, error: invitationError },
-        { data: registrationSchoolData, error: registrationSchoolError },
-      ] = await Promise.all([
-        supabase.rpc("fn_danh_sach_loi_moi_cua_toi"),
-        supabase.rpc("fn_danh_sach_truong_dang_ky", {
-          p_limit: 500,
-          p_tu_khoa: null,
-        }),
-      ]);
+      const { data: invitationData, error: invitationError } = await supabase.rpc("fn_danh_sach_loi_moi_cua_toi");
       setPendingInvitations((invitationData ?? []) as PendingInvitation[]);
-      setRegistrationSchools((registrationSchoolData ?? []) as RegistrationSchool[]);
-      const onboardingError = invitationError ?? registrationSchoolError;
-      if (onboardingError) {
+      if (invitationError) {
         setMessage(
           toUserMessage(
-            onboardingError,
-            "Không tải được danh mục trường. Vui lòng tải lại trang.",
+            invitationError,
+            "Không tải được lời mời. Vui lòng tải lại trang.",
           ),
         );
       }
@@ -459,11 +448,10 @@ export function SchoolYearSetup() {
         invitations={pendingInvitations}
         isJoining={isJoiningSchool}
         message={message}
-        schools={registrationSchools}
-        selectedSchoolId={selectedRegistrationSchoolId}
+        selectedSchool={selectedRegistrationSchool}
         onJoin={joinSelectedSchool}
         onRespond={respondToInvitation}
-        onSelectSchool={setSelectedRegistrationSchoolId}
+        onSelectSchool={setSelectedRegistrationSchool}
       />
     );
   }
@@ -607,8 +595,7 @@ function SchoolRegistrationPanel({
   invitations,
   isJoining,
   message,
-  schools,
-  selectedSchoolId,
+  selectedSchool,
   onJoin,
   onRespond,
   onSelectSchool,
@@ -616,11 +603,10 @@ function SchoolRegistrationPanel({
   invitations: PendingInvitation[];
   isJoining: boolean;
   message: string;
-  schools: RegistrationSchool[];
-  selectedSchoolId: string;
+  selectedSchool: RegistrationSchool | null;
   onJoin: () => Promise<void>;
   onRespond: (invitationId: string, accept: boolean) => Promise<void>;
-  onSelectSchool: (schoolId: string) => void;
+  onSelectSchool: (school: RegistrationSchool | null) => void;
 }) {
   return (
     <section className="surface-card overflow-hidden">
@@ -628,19 +614,18 @@ function SchoolRegistrationPanel({
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-electric-cobalt)]">Hoàn tất hồ sơ</p>
         <h2 className="section-title mt-2 text-2xl">Chọn trường đang công tác</h2>
         <p className="muted mt-2 max-w-2xl text-sm leading-6">
-          Tìm trường trong danh mục Quảng Ninh. Hệ thống sẽ tạo hồ sơ Giáo viên và đưa bạn vào đúng đơn vị ngay sau khi xác nhận.
+          Chọn tỉnh/thành phố rồi tìm trường đang công tác. Hệ thống sẽ tạo hồ sơ Giáo viên và đưa bạn vào đúng đơn vị sau khi xác nhận.
         </p>
       </div>
       <div className="grid gap-4 p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
         <SchoolPicker
           disabled={isJoining}
-          schools={schools}
-          selectedSchoolId={selectedSchoolId}
+          selectedSchool={selectedSchool}
           onSelect={onSelectSchool}
         />
         <button
           className="button-primary min-h-12 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={!selectedSchoolId || isJoining}
+          disabled={!selectedSchool || isJoining}
           type="button"
           onClick={() => void onJoin()}
         >

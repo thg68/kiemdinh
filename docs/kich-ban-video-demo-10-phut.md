@@ -13,7 +13,7 @@ Kịch bản này dùng để quay một video liền mạch, tập trung vào m
 
 ### Dữ liệu
 
-- Một trường Quảng Ninh đã có năm học đang hoạt động.
+- Một trường đã khai báo tỉnh/thành phố và có năm học đang hoạt động.
 - Một tệp minh chứng không chứa thông tin nhạy cảm.
 - Một tiêu chí có nội dung Mức 1 và Mức 2.
 - Sáu phần nội dung chung của Mẫu 2 và ít nhất một nhiệm vụ cải tiến nếu muốn quay trạng thái sẵn sàng.
@@ -44,7 +44,7 @@ Kịch bản này dùng để quay một video liền mạch, tập trung vào m
 
 1. Mở tab **Tạo tài khoản**.
 2. Tìm trường bằng tên hoặc mã trường.
-3. Chọn một trường trong danh mục Quảng Ninh.
+3. Chọn tỉnh/thành phố, tìm và chọn một trường trong danh mục.
 4. Chuyển sang tài khoản Giáo viên đã chuẩn bị và đăng nhập.
 
 **Lời thoại**

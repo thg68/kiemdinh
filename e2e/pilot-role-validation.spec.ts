@@ -60,7 +60,7 @@ test.describe("Sprint 12 - xác nhận tài khoản thực tế của 7 vai trò
   for (const role of roles) {
     test(`${role.label} đăng nhập và nhận đúng vai trò`, async ({ page }) => {
       await loginAs(page, role.code);
-      await expect(page.getByText(role.label, { exact: true })).toBeVisible();
+      await expect(page.getByLabel("Vai trò hiện tại").getByText(role.label, { exact: true })).toBeVisible();
     });
   }
 

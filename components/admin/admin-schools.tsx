@@ -1,7 +1,8 @@
 "use client";
 
 import { Plus, X } from "lucide-react";
-import { type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Fragment, type FormEvent, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { AdminSchoolImport } from "@/components/admin/admin-school-import";
 import { schoolLevelLabels, schoolTypeLabels } from "@/components/admin/admin-format";
 import { Alert } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -16,6 +17,7 @@ import {
   validateSchoolCreation,
 } from "@/lib/domain/school-metadata";
 import { toUserMessage } from "@/lib/errors/user-message";
+import { provinces } from "@/lib/localities/provinces";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type SchoolRow = {
@@ -49,6 +51,7 @@ export function AdminSchools() {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("");
   const [schoolType, setSchoolType] = useState("");
+  const [provinceFilter, setProvinceFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -60,6 +63,12 @@ export function AdminSchools() {
   const [pendingSchool, setPendingSchool] = useState<SchoolRow | null>(null);
   const [tenCoSo, setTenCoSo] = useState("");
   const [maTruong, setMaTruong] = useState("");
+  const [tinhThanh, setTinhThanh] = useState("");
+  const [editingSchool, setEditingSchool] = useState<SchoolRow | null>(null);
+  const [editProvince, setEditProvince] = useState("");
+  const [editWard, setEditWard] = useState("");
+  const [updatingLocality, setUpdatingLocality] = useState(false);
+  const [registrationWorkingId, setRegistrationWorkingId] = useState<string | null>(null);
   const [loaiHinh, setLoaiHinh] = useState<LoaiHinh>("mam_non");
   const [capHoc, setCapHoc] = useState<CapHocValue[]>(["mam_non"]);
   const [tenNamHoc, setTenNamHoc] = useState("2026-2027");
@@ -75,6 +84,7 @@ export function AdminSchools() {
       p_limit: DEFAULT_PAGE_SIZE,
       p_loai_hinh: schoolType || null,
       p_offset: (page - 1) * DEFAULT_PAGE_SIZE,
+      p_tinh_thanh: provinceFilter || null,
       p_trang_thai: status || null,
       p_tu_khoa: deferredKeyword || null,
     });
@@ -90,7 +100,7 @@ export function AdminSchools() {
     setRows(nextRows);
     setTotal(nextRows[0]?.total_count ?? 0);
     setLoading(false);
-  }, [deferredKeyword, page, schoolType, status, supabase]);
+  }, [deferredKeyword, page, provinceFilter, schoolType, status, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadSchools(), 0);
@@ -118,6 +128,7 @@ export function AdminSchools() {
       capHoc,
       loaiHinh,
       maTruong,
+      tinhThanh,
       ngayBatDau,
       ngayKetThuc,
       tenCoSo,
@@ -139,6 +150,7 @@ export function AdminSchools() {
       p_ngay_bat_dau: ngayBatDau,
       p_ngay_ket_thuc: ngayKetThuc,
       p_ten_co_so: tenCoSo.trim(),
+      p_tinh_thanh: tinhThanh,
     });
 
     if (error) {
@@ -151,6 +163,7 @@ export function AdminSchools() {
     const createdSchoolName = tenCoSo.trim();
     setTenCoSo("");
     setMaTruong("");
+    setTinhThanh("");
     setLoaiHinh("mam_non");
     setCapHoc(["mam_non"]);
     setShowCreateForm(false);
@@ -188,6 +201,54 @@ export function AdminSchools() {
     await loadSchools();
     setMessageTone("success");
     setMessage(successMessage);
+  }
+
+  function openLocalityEditor(school: SchoolRow) {
+    setEditingSchool(school);
+    setEditProvince(school.tinh_thanh ?? "");
+    setEditWard(school.phuong_xa ?? "");
+    setMessage("");
+  }
+
+  async function updateLocality(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingSchool || !editProvince) return;
+    setUpdatingLocality(true);
+    const { error } = await supabase.rpc("fn_admin_cap_nhat_dia_phuong_co_so", {
+      p_co_so_id: editingSchool.id,
+      p_tinh_thanh: editProvince,
+      p_phuong_xa: editWard.trim() || null,
+    });
+    setUpdatingLocality(false);
+    if (error) {
+      setMessageTone("warning");
+      setMessage(toUserMessage(error, "Không cập nhật được địa phương của cơ sở giáo dục."));
+      return;
+    }
+    const schoolName = editingSchool.ten;
+    setEditingSchool(null);
+    await loadSchools();
+    setMessageTone("success");
+    setMessage(`Đã cập nhật địa phương cho ${schoolName}.`);
+  }
+
+  async function updateRegistration(school: SchoolRow) {
+    setRegistrationWorkingId(school.id);
+    const { error } = await supabase.rpc("fn_admin_cap_nhat_tu_dang_ky_co_so", {
+      p_co_so_id: school.id,
+      p_cho_phep_tu_dang_ky: !school.cho_phep_tu_dang_ky,
+    });
+    setRegistrationWorkingId(null);
+    if (error) {
+      setMessageTone("warning");
+      setMessage(toUserMessage(error, "Không cập nhật được quyền tự đăng ký."));
+      return;
+    }
+    await loadSchools();
+    setMessageTone("success");
+    setMessage(school.cho_phep_tu_dang_ky
+      ? `Đã tắt tự đăng ký tại ${school.ten}.`
+      : `Đã bật tự đăng ký tại ${school.ten}.`);
   }
 
   return (
@@ -232,6 +293,20 @@ export function AdminSchools() {
                   value={maTruong}
                   onChange={(event) => setMaTruong(event.target.value)}
                 />
+              </label>
+              <label className="text-sm font-medium">
+                Tỉnh/thành phố
+                <select
+                  className="form-control mt-2"
+                  required
+                  value={tinhThanh}
+                  onChange={(event) => setTinhThanh(event.target.value)}
+                >
+                  <option value="">Chọn tỉnh/thành phố</option>
+                  {provinces.map((province) => (
+                    <option key={province.code} value={province.name}>{province.name}</option>
+                  ))}
+                </select>
               </label>
               <label className="text-sm font-medium">
                 Loại hình
@@ -310,6 +385,8 @@ export function AdminSchools() {
         ) : null}
       </section>
 
+      <AdminSchoolImport onImported={loadSchools} />
+
       <section className="admin-toolbar" aria-label="Bộ lọc cơ sở giáo dục">
         <label>
           Tìm theo trường, mã hoặc phường xã
@@ -322,6 +399,22 @@ export function AdminSchools() {
               setKeyword(event.target.value);
             }}
           />
+        </label>
+        <label>
+          Tỉnh/thành phố
+          <select
+            className="form-control"
+            value={provinceFilter}
+            onChange={(event) => {
+              setPage(1);
+              setProvinceFilter(event.target.value);
+            }}
+          >
+            <option value="">Tất cả</option>
+            {provinces.map((province) => (
+              <option key={province.code} value={province.name}>{province.name}</option>
+            ))}
+          </select>
         </label>
         <label>
           Trạng thái
@@ -389,13 +482,15 @@ export function AdminSchools() {
                 </thead>
                 <tbody>
                   {rows.map((school) => (
-                    <tr key={school.id}>
+                    <Fragment key={school.id}>
+                    <tr>
                       <td>
                         <p className="admin-cell-title">{school.ten}</p>
                         <p className="admin-cell-meta">
                           {school.ma_truong || "Chưa có mã trường"}
                           {school.phuong_xa ? ` · ${school.phuong_xa}` : ""}
                         </p>
+                        <p className="admin-cell-meta">{school.tinh_thanh || "Chưa khai báo tỉnh/thành phố"}</p>
                       </td>
                       <td>
                         <p>{schoolTypeLabels[school.loai_hinh] ?? school.loai_hinh}</p>
@@ -417,15 +512,58 @@ export function AdminSchools() {
                         ) : null}
                       </td>
                       <td>
-                        <button
-                          className="button-secondary min-h-9 px-4 py-2 text-xs"
-                          type="button"
-                          onClick={() => setPendingSchool(school)}
-                        >
-                          {school.trang_thai === "active" ? "Tạm ngừng" : "Kích hoạt"}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="button-secondary min-h-9 px-4 py-2 text-xs"
+                            type="button"
+                            onClick={() => openLocalityEditor(school)}
+                          >Sửa địa phương</button>
+                          <button
+                            className="button-secondary min-h-9 px-4 py-2 text-xs"
+                            disabled={registrationWorkingId === school.id}
+                            type="button"
+                            onClick={() => void updateRegistration(school)}
+                          >
+                            {registrationWorkingId === school.id
+                              ? "Đang cập nhật…"
+                              : school.cho_phep_tu_dang_ky ? "Tắt tự đăng ký" : "Bật tự đăng ký"}
+                          </button>
+                          <button
+                            className="button-secondary min-h-9 px-4 py-2 text-xs"
+                            type="button"
+                            onClick={() => setPendingSchool(school)}
+                          >
+                            {school.trang_thai === "active" ? "Tạm ngừng" : "Kích hoạt"}
+                          </button>
+                        </div>
                       </td>
                     </tr>
+                    {editingSchool?.id === school.id ? (
+                      <tr>
+                        <td colSpan={6}>
+                          <form className="grid gap-4 bg-[var(--color-paper-warm)] p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end" onSubmit={updateLocality}>
+                            <label className="text-sm font-medium">
+                              Tỉnh/thành phố
+                              <select className="form-control mt-2" required value={editProvince} onChange={(event) => setEditProvince(event.target.value)}>
+                                <option value="">Chọn tỉnh/thành phố</option>
+                                {provinces.map((province) => (
+                                  <option key={province.code} value={province.name}>{province.name}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="text-sm font-medium">
+                              Phường/xã
+                              <input className="form-control mt-2" maxLength={150} value={editWard} onChange={(event) => setEditWard(event.target.value)} />
+                            </label>
+                            <div className="flex gap-2">
+                              <button className="button-primary" disabled={updatingLocality} type="submit">{updatingLocality ? "Đang lưu…" : "Lưu"}</button>
+                              <button className="button-secondary" disabled={updatingLocality} type="button" onClick={() => setEditingSchool(null)}>Hủy</button>
+                            </div>
+                          </form>
+                        </td>
+                      </tr>
+                    ) : null}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

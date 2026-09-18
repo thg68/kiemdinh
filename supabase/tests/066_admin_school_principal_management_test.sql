@@ -8,11 +8,11 @@ select no_plan();
 select ok(
   has_function_privilege(
     'authenticated',
-    'public.fn_admin_tao_co_so_va_nam_hoc(text,text,public.loai_hinh_co_so,public.cap_hoc[],character varying,date,date)',
+    'public.fn_admin_tao_co_so_va_nam_hoc(text,text,public.loai_hinh_co_so,public.cap_hoc[],character varying,date,date,text)',
     'execute'
   ) and not has_function_privilege(
     'anon',
-    'public.fn_admin_tao_co_so_va_nam_hoc(text,text,public.loai_hinh_co_so,public.cap_hoc[],character varying,date,date)',
+    'public.fn_admin_tao_co_so_va_nam_hoc(text,text,public.loai_hinh_co_so,public.cap_hoc[],character varying,date,date,text)',
     'execute'
   ),
   'Chi phien dang nhap co the di toi cong tao truong cua admin'
@@ -133,7 +133,7 @@ select set_config('request.jwt.claim.sub', '69000000-0000-0000-0000-000000000202
 select throws_ok(
   $$ select * from public.fn_admin_tao_co_so_va_nam_hoc(
     'Truong khong du quyen', 'ADMIN-069-DENIED', 'mam_non',
-    array['mam_non']::public.cap_hoc[], '2096-2097', '2096-09-01', '2097-05-31'
+    array['mam_non']::public.cap_hoc[], '2096-2097', '2096-09-01', '2097-05-31', 'Quảng Ninh'
   ) $$,
   '42501',
   'Tai khoan khong co quyen quan tri he thong.',
@@ -157,7 +157,7 @@ set local role authenticated;
 select lives_ok(
   $$ select * from public.fn_admin_tao_co_so_va_nam_hoc(
     'Truong moi 069', 'ADMIN-069-NEW', 'mam_non',
-    array['mam_non']::public.cap_hoc[], '2096-2097', '2096-09-01', '2097-05-31'
+    array['mam_non']::public.cap_hoc[], '2096-2097', '2096-09-01', '2097-05-31', 'Quảng Ninh'
   ) $$,
   'Quan tri he thong tao truong ma khong can thong tin Hieu truong'
 );
@@ -171,6 +171,48 @@ select ok(
       and school.cho_phep_tu_dang_ky
   ),
   'Truong moi san sang cho nguoi dung tu chon khi dang ky'
+);
+
+select lives_ok(
+  $$ select * from public.fn_admin_tao_co_so_va_nam_hoc(
+    'Truong Ha Noi 069', 'ADMIN-069-HN', 'mam_non',
+    array['mam_non']::public.cap_hoc[], '2096-2097', '2096-09-01', '2097-05-31', 'Hà Nội'
+  ) $$,
+  'Quan tri tao duoc truong ngoai Quang Ninh'
+);
+
+select ok(
+  exists (
+    select 1 from public.fn_danh_sach_truong_dang_ky('ADMIN-069-HN', 20, 'Hà Nội') school
+    where school.ma_truong = 'ADMIN-069-HN'
+  ),
+  'Danh muc dang ky tim duoc truong theo tinh ngoai Quang Ninh'
+);
+
+select ok(
+  exists (
+    select 1 from public.fn_admin_danh_sach_co_so(null, null, null, 25, 0, 'Hà Nội') school
+    where school.ma_truong = 'ADMIN-069-HN'
+  ),
+  'Quan tri loc duoc co so theo tinh'
+);
+
+select lives_ok(
+  $$ select public.fn_admin_cap_nhat_dia_phuong_co_so(
+    (select school.id from public.co_so_giao_duc school where school.ma_truong = 'ADMIN-069-HN'),
+    'Quảng Ninh', 'Phường Hạ Long'
+  ) $$,
+  'Quan tri sua duoc tinh va phuong xa'
+);
+
+select ok(
+  exists (
+    select 1 from public.co_so_giao_duc school
+    where school.ma_truong = 'ADMIN-069-HN'
+      and school.tinh_thanh = 'Quảng Ninh'
+      and school.phuong_xa = 'Phường Hạ Long'
+  ),
+  'Dia phuong moi duoc luu tren co so'
 );
 
 select is(

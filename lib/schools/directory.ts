@@ -7,6 +7,7 @@ export type RegistrationSchool = {
   cong_lap: boolean;
   dia_chi: string | null;
   phuong_xa: string | null;
+  tinh_thanh: string | null;
   loai_hinh_dao_tao: string | null;
   loai_hinh_truong: string | null;
 };
@@ -37,7 +38,7 @@ export function filterRegistrationSchools(
   return schools
     .filter((school) => {
       const searchable = normalizeSchoolSearch(
-        [school.ten, school.ma_truong, school.phuong_xa, school.dia_chi]
+        [school.ten, school.ma_truong, school.phuong_xa, school.tinh_thanh, school.dia_chi]
           .filter(Boolean)
           .join(" "),
       );

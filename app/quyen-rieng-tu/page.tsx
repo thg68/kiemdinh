@@ -26,7 +26,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-bold text-[var(--color-ink-navy)]">Dữ liệu được xử lý</h2>
             <p className="mt-3">
               Hệ thống lưu thông tin đơn vị, năm học, tài khoản, bộ tiêu chuẩn, minh chứng, tự đánh giá,
-              kế hoạch cải tiến và báo cáo. Hồ sơ nhạy cảm của học sinh chỉ được quản lý dưới dạng chỉ mục;
+              kế hoạch cải tiến và báo cáo. Thông tin tài khoản gồm họ tên, email, số điện thoại và ngày sinh
+              nếu người dùng cung cấp. Hồ sơ nhạy cảm của học sinh chỉ được quản lý dưới dạng chỉ mục;
               nội dung chi tiết không được lưu trong ứng dụng ở giai đoạn này.
             </p>
           </section>
@@ -35,22 +36,26 @@ export default function PrivacyPage() {
             <p className="mt-3">
               Dữ liệu chỉ phục vụ vận hành, tự đánh giá và bảo đảm chất lượng của đơn vị. Quyền truy cập
               được giới hạn theo vai trò và cơ sở giáo dục tại tầng cơ sở dữ liệu. Tệp minh chứng được mở
-              bằng liên kết có thời hạn, không dùng địa chỉ công khai vĩnh viễn.
+              bằng liên kết có thời hạn, không dùng địa chỉ công khai vĩnh viễn. Trong ứng dụng, ngày sinh
+              được lưu riêng và chỉ chủ tài khoản được xem, sửa; họ tên và số điện thoại có thể hiển thị cho
+              người cùng cơ sở để phối hợp công việc.
             </p>
           </section>
           <section>
             <h2 className="text-xl font-bold text-[var(--color-ink-navy)]">Lưu giữ và xóa dữ liệu</h2>
             <p className="mt-3">
               Thời hạn lưu giữ do đơn vị vận hành xác định theo nghĩa vụ pháp lý và quy chế nội bộ. Yêu cầu
-              sửa, xuất hoặc xóa dữ liệu cần được gửi cho người phụ trách hệ thống của đơn vị để kiểm tra
-              quyền và ảnh hưởng đến hồ sơ đã phê duyệt.
+              xuất hoặc xóa dữ liệu cần được gửi cho người phụ trách hệ thống của đơn vị để kiểm tra quyền
+              và ảnh hưởng đến hồ sơ đã phê duyệt.
             </p>
           </section>
           <section>
             <h2 className="text-xl font-bold text-[var(--color-ink-navy)]">Quyền của người dùng</h2>
             <p className="mt-3">
-              Người dùng có thể đề nghị xem, điều chỉnh hoặc xuất dữ liệu liên quan đến mình. Kênh tiếp
-              nhận yêu cầu và người chịu trách nhiệm được từng đơn vị công bố trong quy chế sử dụng hệ thống.
+              Người dùng đã đăng nhập có thể tự điều chỉnh họ tên, số điện thoại, ngày sinh và mật khẩu tại
+              <Link className="font-semibold text-[var(--color-electric-cobalt)]" href="/ho-so"> Hồ sơ của tôi</Link>.
+              Để điều chỉnh thông tin khác hoặc đề nghị xuất, xóa dữ liệu, hãy liên hệ người phụ trách hệ thống
+              theo quy chế của đơn vị.
             </p>
           </section>
         </div>

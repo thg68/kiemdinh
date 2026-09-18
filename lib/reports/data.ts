@@ -17,6 +17,7 @@ export type ReportSchool = {
   loai_hinh: string;
   cap_hoc: CapHoc[];
   dia_chi: string | null;
+  tinh_thanh?: string | null;
   co_quan_quan_ly: string | null;
 };
 
@@ -238,7 +239,7 @@ export async function collectReportData(
   ] = await Promise.all([
     supabase
       .from("co_so_giao_duc")
-      .select("id, ten, ma_truong, loai_hinh, cap_hoc, dia_chi, co_quan_quan_ly")
+      .select("id, ten, ma_truong, loai_hinh, cap_hoc, dia_chi, tinh_thanh, co_quan_quan_ly")
       .eq("id", profile.co_so_id)
       .maybeSingle(),
     supabase

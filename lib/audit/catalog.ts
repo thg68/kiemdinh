@@ -2,6 +2,9 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   ACTIVE_SCHOOL_YEAR_CHANGED: "Đổi năm học đang hoạt động",
   ADMIN_EVIDENCE_TECHNICAL_FLAG_UPDATED: "Cập nhật cờ kỹ thuật minh chứng",
   ADMIN_SCHOOL_STATUS_UPDATED: "Cập nhật trạng thái cơ sở",
+  ADMIN_SCHOOL_LOCALITY_UPDATED: "Cập nhật địa phương của cơ sở",
+  ADMIN_SCHOOL_REGISTRATION_UPDATED: "Cập nhật quyền tự đăng ký của cơ sở",
+  ADMIN_SCHOOL_DIRECTORY_IMPORTED: "Nhập danh mục cơ sở giáo dục",
   ADMIN_USER_STATUS_UPDATED: "Cập nhật trạng thái tài khoản",
   ASSESSMENT_SAVED_ATOMIC: "Lưu nội dung tự đánh giá",
   ASSESSMENT_STATUS_UPDATED: "Cập nhật trạng thái tự đánh giá",
@@ -31,6 +34,7 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   USER_ROLE_ASSIGNED: "Gán vai trò người dùng",
   USER_ROLE_UPDATED: "Cập nhật vai trò người dùng",
   USER_ROLES_UPDATED: "Cập nhật vai trò người dùng",
+  USER_PROFILE_UPDATED: "Cập nhật hồ sơ cá nhân",
 };
 
 export const AUDIT_OBJECT_LABELS: Record<string, string> = {

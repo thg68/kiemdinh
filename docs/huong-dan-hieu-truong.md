@@ -91,7 +91,7 @@ Hiệu trưởng có thể thêm, cập nhật hoặc xóa kế hoạch cải ti
 
 ## 7. Quản lý thành viên và vai trò
 
-1. Giáo viên tự chọn trường trong danh mục Quảng Ninh khi đăng ký và xác nhận email.
+1. Giáo viên chọn tỉnh/thành phố và đúng trường trong danh mục khi đăng ký, rồi xác nhận email.
 2. Vào **Thiết lập** rồi mở **Danh sách thành viên**.
 3. Danh sách được sắp xếp theo mức độ quan trọng của vai trò.
 4. Chọn ô vai trò của một thành viên để mở danh sách lựa chọn.

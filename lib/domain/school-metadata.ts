@@ -17,6 +17,7 @@ export function capHocHopLoaiHinh(loaiHinh: LoaiHinh, capHoc: readonly string[])
 export function validateSchoolCreation(input: {
   tenCoSo: string;
   maTruong: string;
+  tinhThanh: string;
   loaiHinh: LoaiHinh;
   capHoc: readonly string[];
   tenNamHoc: string;
@@ -25,6 +26,7 @@ export function validateSchoolCreation(input: {
 }) {
   if (!input.tenCoSo.trim()) return "Tên cơ sở giáo dục không được để trống.";
   if (!input.maTruong.trim()) return "Mã trường không được để trống.";
+  if (!input.tinhThanh.trim()) return "Tỉnh/thành phố không được để trống.";
   if (!capHocHopLoaiHinh(input.loaiHinh, input.capHoc)) return "Cấp học chưa phù hợp với loại hình đơn vị.";
 
   try {

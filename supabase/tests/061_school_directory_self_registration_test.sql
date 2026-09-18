@@ -3,10 +3,10 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(15);
+select plan(19);
 
 select ok(
-  has_function_privilege('anon', 'public.fn_danh_sach_truong_dang_ky(text, integer)', 'execute'),
+  has_function_privilege('anon', 'public.fn_danh_sach_truong_dang_ky(text, integer, text)', 'execute'),
   'Khach chua dang nhap co the doc danh muc truong an toan'
 );
 
@@ -22,9 +22,9 @@ select ok(
 
 set local role anon;
 select is(
-  (select count(*) from public.fn_danh_sach_truong_dang_ky(null, 500)),
-  347::bigint,
-  'Danh muc dang ky cong khai co du 347 truong Quang Ninh'
+  (select count(*) from public.fn_danh_sach_truong_dang_ky(null, 50, 'Quảng Ninh')),
+  50::bigint,
+  'Tim truong Quang Ninh theo tinh voi gioi han phan trang'
 );
 
 set local role postgres;
@@ -77,6 +77,32 @@ select is(
   'Moi truong co nam hoc 2026-2027 va bo tieu chuan phu hop'
 );
 
+insert into public.co_so_giao_duc(
+  id, ten, ma_truong, loai_hinh, cap_hoc, trang_thai, tinh_thanh, cho_phep_tu_dang_ky
+) values (
+  '61000000-0000-0000-0000-000000000101',
+  'Truong ngoai tinh 061',
+  'HN-TEST-061',
+  'mam_non',
+  array['mam_non']::public.cap_hoc[],
+  'active',
+  'Hà Nội',
+  true
+);
+
+set local role anon;
+select is(
+  (select count(*) from public.fn_danh_sach_truong_dang_ky('HN-TEST-061', 20, 'Hà Nội')),
+  1::bigint,
+  'Khach tim duoc truong ngoai Quang Ninh theo tinh'
+);
+select is(
+  (select count(school.id) from public.co_so_giao_duc school where school.tinh_thanh = 'Hà Nội'),
+  1::bigint,
+  'RLS cho doc truong ngoai Quang Ninh duoc phep tu dang ky'
+);
+set local role postgres;
+
 create temporary table test_061_schools as
 select school.id, row_number() over (order by school.ma_truong) as rn
 from public.co_so_giao_duc school
@@ -107,6 +133,16 @@ values
     'authenticated',
     null,
     jsonb_build_object('ho_ten', 'Tai khoan chua xac nhan'),
+    now(),
+    now()
+  ),
+  (
+    '61000000-0000-0000-0000-000000000203',
+    'teacher-other-province@test.local',
+    'authenticated',
+    'authenticated',
+    now(),
+    jsonb_build_object('ho_ten', 'Giao vien Ha Noi'),
     now(),
     now()
   );
@@ -186,6 +222,21 @@ select throws_ok(
   '42501',
   'Ban can xac nhan email truoc khi tham gia truong.',
   'Email chua xac nhan khong the tham gia truong'
+);
+
+select set_config('request.jwt.claim.sub', '61000000-0000-0000-0000-000000000203', true);
+select lives_ok(
+  $$ select public.fn_tu_dang_ky_vao_co_so('61000000-0000-0000-0000-000000000101') $$,
+  'Tai khoan da xac nhan co the tham gia truong ngoai Quang Ninh'
+);
+select is(
+  (
+    select app_user.co_so_id
+    from public.nguoi_dung app_user
+    where app_user.auth_user_id = '61000000-0000-0000-0000-000000000203'
+  ),
+  '61000000-0000-0000-0000-000000000101'::uuid,
+  'Ho so cua giao vien ngoai Quang Ninh gan dung truong'
 );
 
 select * from finish();

@@ -6,7 +6,7 @@ export default function AdminSchoolsPage() {
     <>
       <AdminPageHeader
         title="Cơ sở giáo dục"
-        description="Tạo trường, khởi tạo năm học và quản lý trạng thái vận hành trên toàn hệ thống."
+        description="Tạo hoặc nhập danh mục trường từ Excel, khai báo địa phương và quản lý trạng thái vận hành trên toàn hệ thống."
       />
       <AdminSchools />
     </>

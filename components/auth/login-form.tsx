@@ -66,10 +66,8 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [hoTen, setHoTen] = useState("");
-  const [schools, setSchools] = useState<RegistrationSchool[]>([]);
-  const [selectedSchoolId, setSelectedSchoolId] = useState("");
-  const [schoolsLoading, setSchoolsLoading] = useState(() => Boolean(supabase));
-  const [schoolsError, setSchoolsError] = useState("");
+  const [selectedSchool, setSelectedSchool] = useState<RegistrationSchool | null>(null);
+  const selectedSchoolId = selectedSchool?.id ?? "";
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<MessageTone>("info");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -88,37 +86,6 @@ export function LoginForm() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
-    const client = supabase;
-    let active = true;
-
-    async function loadSchools() {
-      const { data, error } = await client.rpc("fn_danh_sach_truong_dang_ky", {
-        p_limit: 500,
-        p_tu_khoa: null,
-      });
-
-      if (!active) return;
-
-      if (error) {
-        setSchoolsError("Không tải được danh mục trường Quảng Ninh. Vui lòng tải lại trang.");
-      } else {
-        setSchools((data ?? []) as RegistrationSchool[]);
-      }
-      setSchoolsLoading(false);
-    }
-
-    void loadSchools();
-
-    return () => {
-      active = false;
-    };
-  }, [supabase]);
-
   async function finishSchoolRegistration(schoolId: string) {
     if (!supabase || !schoolId) return null;
 
@@ -135,6 +102,15 @@ export function LoginForm() {
     const roleCodes = roleError
       ? []
       : ((roleData ?? []) as Array<{ ma: string }>).map((role) => role.ma);
+
+    const requestedPath = new URLSearchParams(window.location.search).get("next");
+    if (requestedPath?.startsWith("/") && !requestedPath.startsWith("//") && !requestedPath.includes("\\")) {
+      const target = new URL(requestedPath, window.location.origin);
+      if (target.origin === window.location.origin) {
+        router.replace(`${target.pathname}${target.search}${target.hash}`);
+        return;
+      }
+    }
 
     router.replace(firstRouteForRoles(roleCodes));
   }
@@ -168,7 +144,7 @@ export function LoginForm() {
               data: {
                 ho_ten: hoTen.trim(),
                 co_so_id: selectedSchoolId,
-                ma_truong: schools.find((school) => school.id === selectedSchoolId)?.ma_truong,
+                ma_truong: selectedSchool?.ma_truong,
               },
             },
           });
@@ -278,11 +254,8 @@ export function LoginForm() {
             </label>
             <SchoolPicker
               disabled={isSubmitting}
-              error={schoolsError}
-              loading={schoolsLoading}
-              schools={schools}
-              selectedSchoolId={selectedSchoolId}
-              onSelect={setSelectedSchoolId}
+              selectedSchool={selectedSchool}
+              onSelect={setSelectedSchool}
             />
           </>
         ) : null}
@@ -323,7 +296,7 @@ export function LoginForm() {
         <button
           type="submit"
           className="button-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isSubmitting || (mode === "dang_ky" && (schoolsLoading || !selectedSchoolId))}
+          disabled={isSubmitting || (mode === "dang_ky" && !selectedSchoolId)}
         >
           {isSubmitting
             ? "Đang xử lý…"

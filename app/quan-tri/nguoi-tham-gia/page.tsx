@@ -5,8 +5,8 @@ export default function AdminParticipantsPage() {
   return (
     <>
       <AdminPageHeader
-        title="Người tham gia"
-        description="Quản lý trường tham gia, cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản."
+        title="Tài khoản người dùng"
+        description="Theo dõi email đăng ký, trạng thái xác thực, trường tham gia và quyền Hiệu trưởng."
       />
       <AdminParticipants />
     </>

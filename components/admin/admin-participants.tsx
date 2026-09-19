@@ -18,25 +18,34 @@ type SchoolOption = {
   ten: string;
 };
 
-type ParticipantStatus = "active" | "inactive" | "invited" | "locked";
+type ParticipantStatus = "active" | "inactive" | "invited" | "locked" | "pending_verification" | "pending_profile";
 
 type ParticipantRow = {
-  id: string;
+  auth_user_id: string;
+  nguoi_dung_id: string | null;
   ho_ten: string;
   email: string | null;
+  email_da_xac_thuc: boolean;
+  email_xac_thuc_luc: string | null;
   trang_thai: ParticipantStatus;
-  co_so_id: string;
-  co_so_ten: string;
+  co_so_id: string | null;
+  co_so_ten: string | null;
   vai_tro_mas: string[];
   vai_tro_tens: string[];
   created_at: string;
   total_count: number;
 };
 
+type EditableParticipantRow = ParticipantRow & {
+  nguoi_dung_id: string;
+  co_so_id: string;
+  co_so_ten: string;
+};
+
 type ParticipantSettingsDraft = {
   isPrincipal: boolean;
   schoolId: string;
-  status: Exclude<ParticipantStatus, "invited">;
+  status: "active" | "inactive" | "locked";
 };
 
 const statusLabels: Record<ParticipantStatus, string> = {
@@ -44,13 +53,19 @@ const statusLabels: Record<ParticipantStatus, string> = {
   inactive: "Tạm ngừng",
   invited: "Đang chờ tham gia",
   locked: "Đã khóa",
+  pending_verification: "Chờ xác thực email",
+  pending_profile: "Chờ hoàn tất hồ sơ",
 };
 
 function statusTone(status: ParticipantStatus) {
   if (status === "active") return "success" as const;
   if (status === "locked") return "danger" as const;
-  if (status === "invited") return "warning" as const;
+  if (status === "invited" || status.startsWith("pending_")) return "warning" as const;
   return "default" as const;
+}
+
+function isEditableParticipant(row: ParticipantRow): row is EditableParticipantRow {
+  return Boolean(row.nguoi_dung_id && row.co_so_id && row.co_so_ten);
 }
 
 export function AdminParticipants() {
@@ -63,17 +78,18 @@ export function AdminParticipants() {
   const [schoolId, setSchoolId] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
+  const [emailVerified, setEmailVerified] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "warning">("warning");
-  const [settingsRow, setSettingsRow] = useState<ParticipantRow | null>(null);
+  const [settingsRow, setSettingsRow] = useState<EditableParticipantRow | null>(null);
   const [settingsDraft, setSettingsDraft] = useState<ParticipantSettingsDraft | null>(null);
   const [pendingSettings, setPendingSettings] = useState<{
     draft: ParticipantSettingsDraft;
-    row: ParticipantRow;
+    row: EditableParticipantRow;
   } | null>(null);
   const deferredKeyword = useDeferredValue(keyword.trim());
   const deferredSchoolSearch = useDeferredValue((settingsRow ? settingsSchoolSearch : schoolSearch).trim());
@@ -115,8 +131,9 @@ export function AdminParticipants() {
     setLoading(true);
     setMessage("");
 
-    const { data, error } = await supabase.rpc("fn_admin_danh_sach_nguoi_tham_gia", {
+    const { data, error } = await supabase.rpc("fn_admin_danh_sach_tai_khoan", {
       p_co_so_id: schoolId || null,
+      p_email_da_xac_thuc: emailVerified === "" ? null : emailVerified === "true",
       p_limit: DEFAULT_PAGE_SIZE,
       p_offset: (page - 1) * DEFAULT_PAGE_SIZE,
       p_trang_thai: status || null,
@@ -126,7 +143,7 @@ export function AdminParticipants() {
 
     if (error) {
       setMessageTone("warning");
-      setMessage(toUserMessage(error, "Không tải được danh sách người tham gia."));
+      setMessage(toUserMessage(error, "Không tải được danh sách tài khoản."));
       setLoading(false);
       return;
     }
@@ -135,7 +152,7 @@ export function AdminParticipants() {
     setRows(nextRows);
     setTotal(nextRows[0]?.total_count ?? 0);
     setLoading(false);
-  }, [deferredKeyword, page, role, schoolId, status, supabase]);
+  }, [deferredKeyword, emailVerified, page, role, schoolId, status, supabase]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadParticipants(), 0);
@@ -143,6 +160,7 @@ export function AdminParticipants() {
   }, [loadParticipants]);
 
   function openSettings(row: ParticipantRow) {
+    if (!isEditableParticipant(row)) return;
     setSettingsRow(row);
     setSettingsSchoolSearch("");
     setSchools((current) => current.some((school) => school.id === row.co_so_id)
@@ -151,7 +169,9 @@ export function AdminParticipants() {
     setSettingsDraft({
       isPrincipal: row.vai_tro_mas.includes("PRINCIPAL"),
       schoolId: row.co_so_id,
-      status: row.trang_thai === "invited" ? "inactive" : row.trang_thai,
+      status: row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
+        ? row.trang_thai
+        : "inactive",
     });
   }
 
@@ -162,7 +182,7 @@ export function AdminParticipants() {
     const { error } = await supabase.rpc("fn_admin_cap_nhat_nguoi_tham_gia", {
       p_co_so_id: pendingSettings.draft.schoolId,
       p_la_hieu_truong: pendingSettings.draft.isPrincipal,
-      p_nguoi_dung_id: pendingSettings.row.id,
+      p_nguoi_dung_id: pendingSettings.row.nguoi_dung_id,
       p_trang_thai: pendingSettings.draft.status,
     });
 
@@ -192,7 +212,7 @@ export function AdminParticipants() {
         Quản trị hệ thống có thể chuyển trường, cấp quyền Hiệu trưởng và kiểm soát trạng thái tài khoản. Các vai trò nghiệp vụ còn lại do Hiệu trưởng quản lý tại trường.
       </p>
 
-      <section className="admin-toolbar" aria-label="Bộ lọc người tham gia">
+      <section className="admin-toolbar admin-participants-toolbar" aria-label="Bộ lọc tài khoản">
         <label>
           Tìm tên, email hoặc trường
           <input
@@ -208,7 +228,7 @@ export function AdminParticipants() {
         <label>
           Cơ sở giáo dục
           <input
-            aria-label="Tìm cơ sở giáo dục để lọc người tham gia"
+            aria-label="Tìm cơ sở giáo dục để lọc tài khoản"
             className="form-control mt-2"
             placeholder="Tìm tên hoặc mã trường"
             value={schoolSearch}
@@ -265,18 +285,35 @@ export function AdminParticipants() {
             <option value="inactive">Tạm ngừng</option>
             <option value="locked">Đã khóa</option>
             <option value="invited">Đang chờ tham gia</option>
+            <option value="pending_verification">Chờ xác thực email</option>
+            <option value="pending_profile">Chờ hoàn tất hồ sơ</option>
+          </select>
+        </label>
+        <label>
+          Xác thực email
+          <select
+            className="form-control"
+            value={emailVerified}
+            onChange={(event) => {
+              setPage(1);
+              setEmailVerified(event.target.value);
+            }}
+          >
+            <option value="">Tất cả</option>
+            <option value="true">Đã xác thực</option>
+            <option value="false">Chưa xác thực</option>
           </select>
         </label>
       </section>
 
       {loading ? (
-        <LoadingState label="Đang tải danh sách người tham gia…" />
+        <LoadingState label="Đang tải danh sách tài khoản…" />
       ) : (
         <section className="admin-table-shell">
           <div className="admin-table-header">
             <div>
-              <h2>Danh sách người tham gia</h2>
-              <p>Sắp xếp theo vai trò có mức trách nhiệm cao nhất</p>
+              <h2>Danh sách tài khoản</h2>
+              <p>Gồm cả tài khoản chưa xác thực hoặc chưa hoàn tất hồ sơ</p>
             </div>
             <StatusBadge>{total.toLocaleString("vi-VN")} tài khoản</StatusBadge>
           </div>
@@ -284,37 +321,41 @@ export function AdminParticipants() {
           {rows.length === 0 ? (
             <div className="p-5">
               <EmptyState
-                title="Không có người tham gia phù hợp"
+                title="Không có tài khoản phù hợp"
                 description="Hãy thay đổi từ khóa hoặc bộ lọc để xem lại danh sách."
               />
             </div>
           ) : (
             <div className="admin-table-scroll" data-lenis-prevent>
-              <table className="admin-table">
+              <table className="admin-table admin-account-table">
                 <thead>
                   <tr>
-                    <th scope="col">Thành viên</th>
+                    <th scope="col">Họ tên</th>
+                    <th scope="col">Email đăng ký</th>
                     <th scope="col">Cơ sở giáo dục</th>
                     <th scope="col">Vai trò</th>
+                    <th scope="col">Xác thực email</th>
                     <th scope="col">Trạng thái</th>
-                    <th scope="col">Ngày tham gia</th>
+                    <th scope="col">Ngày đăng ký</th>
                     <th scope="col"><span className="sr-only">Thao tác</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <tr key={row.id}>
+                    <tr key={row.auth_user_id}>
                       <td>
-                        <button
-                          className="admin-participant-name-button"
-                          type="button"
-                          onClick={() => openSettings(row)}
-                        >
-                          {row.ho_ten}
-                        </button>
-                        <p className="admin-cell-meta">{row.email || "Chưa có email"}</p>
+                        {isEditableParticipant(row) ? (
+                          <button
+                            className="admin-participant-name-button"
+                            type="button"
+                            onClick={() => openSettings(row)}
+                          >
+                            {row.ho_ten}
+                          </button>
+                        ) : row.ho_ten}
                       </td>
-                      <td>{row.co_so_ten}</td>
+                      <td className="break-all">{row.email || "Chưa có email"}</td>
+                      <td>{row.co_so_ten || <span className="admin-cell-meta">Chưa chọn trường</span>}</td>
                       <td>
                         <div className="flex max-w-sm flex-wrap gap-1.5">
                           {row.vai_tro_mas.length > 0 ? row.vai_tro_mas.map((code, index) => (
@@ -325,21 +366,31 @@ export function AdminParticipants() {
                         </div>
                       </td>
                       <td>
+                        <StatusBadge tone={row.email_da_xac_thuc ? "success" : "warning"}>
+                          {row.email_da_xac_thuc ? "Đã xác thực" : "Chưa xác thực"}
+                        </StatusBadge>
+                        {row.email_xac_thuc_luc ? (
+                          <p className="admin-cell-meta mt-1">{formatDate(row.email_xac_thuc_luc)}</p>
+                        ) : null}
+                      </td>
+                      <td>
                         <StatusBadge tone={statusTone(row.trang_thai)}>
                           {statusLabels[row.trang_thai]}
                         </StatusBadge>
                       </td>
                       <td>{formatDate(row.created_at)}</td>
                       <td>
-                        <button
-                          aria-label={`Cài đặt ${row.ho_ten}`}
-                          className="admin-row-action-button button-secondary min-h-9 gap-2 px-4 py-2 text-xs"
-                          type="button"
-                          onClick={() => openSettings(row)}
-                        >
-                          <Settings aria-hidden="true" className="h-4 w-4" />
-                          Cài đặt
-                        </button>
+                        {isEditableParticipant(row) ? (
+                          <button
+                            aria-label={`Cài đặt ${row.ho_ten}`}
+                            className="admin-row-action-button button-secondary min-h-9 gap-2 px-4 py-2 text-xs"
+                            type="button"
+                            onClick={() => openSettings(row)}
+                          >
+                            <Settings aria-hidden="true" className="h-4 w-4" />
+                            Cài đặt
+                          </button>
+                        ) : <span className="admin-cell-meta">Chưa thể cài đặt</span>}
                       </td>
                     </tr>
                   ))}
@@ -403,7 +454,7 @@ function ParticipantSettingsDialog({
   onClose: () => void;
   onSave: () => void;
   onSchoolSearch: (value: string) => void;
-  row: ParticipantRow | null;
+  row: EditableParticipantRow | null;
   schoolSearch: string;
   schools: SchoolOption[];
 }) {
@@ -448,7 +499,10 @@ function ParticipantSettingsDialog({
 
   if (!row || !draft) return null;
 
-  const initialStatus = row.trang_thai === "invited" ? "inactive" : row.trang_thai;
+  const initialStatus: ParticipantSettingsDraft["status"] =
+    row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
+      ? row.trang_thai
+      : "inactive";
   const wasPrincipal = row.vai_tro_mas.includes("PRINCIPAL");
   const schoolChanged = draft.schoolId !== row.co_so_id;
   const changed = schoolChanged || draft.status !== initialStatus || draft.isPrincipal !== wasPrincipal;
@@ -501,7 +555,12 @@ function ParticipantSettingsDialog({
             <p className="admin-cell-title">{row.ho_ten}</p>
             <p className="admin-cell-meta">{row.email || "Chưa có email"}</p>
           </div>
-          <StatusBadge tone={statusTone(row.trang_thai)}>{statusLabels[row.trang_thai]}</StatusBadge>
+          <div className="flex flex-wrap justify-end gap-1.5">
+            <StatusBadge tone={row.email_da_xac_thuc ? "success" : "warning"}>
+              {row.email_da_xac_thuc ? "Email đã xác thực" : "Email chưa xác thực"}
+            </StatusBadge>
+            <StatusBadge tone={statusTone(row.trang_thai)}>{statusLabels[row.trang_thai]}</StatusBadge>
+          </div>
         </div>
 
         <div className="admin-user-dialog-body">
@@ -516,7 +575,7 @@ function ParticipantSettingsDialog({
             <label className="admin-user-field">
               Trường đang tham gia
               <input
-                aria-label="Tìm trường để chuyển người tham gia"
+                aria-label="Tìm trường để chuyển tài khoản"
                 className="form-control mt-2"
                 placeholder="Tìm tên hoặc mã trường"
                 value={schoolSearch}
@@ -634,13 +693,16 @@ function SettingsConfirmation({
   settings,
 }: {
   schools: SchoolOption[];
-  settings: { draft: ParticipantSettingsDraft; row: ParticipantRow };
+  settings: { draft: ParticipantSettingsDraft; row: EditableParticipantRow };
 }) {
   const { draft, row } = settings;
   const school = schools.find((item) => item.id === draft.schoolId);
   const schoolChanged = draft.schoolId !== row.co_so_id;
   const principalChanged = draft.isPrincipal !== row.vai_tro_mas.includes("PRINCIPAL");
-  const initialStatus = row.trang_thai === "invited" ? "inactive" : row.trang_thai;
+  const initialStatus: ParticipantSettingsDraft["status"] =
+    row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
+      ? row.trang_thai
+      : "inactive";
 
   return (
     <div className="grid gap-2">

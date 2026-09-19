@@ -15,6 +15,7 @@ const eslintConfig = defineConfig([
     ".wrangler/**",
     ".tmp/**",
     "supabase/.temp/**",
+    "supabase/functions/**/*.ts",
     "coverage/**",
     "playwright-report/**",
     "test-results/**",

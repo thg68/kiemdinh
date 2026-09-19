@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -14,6 +14,15 @@ import { SchoolPicker } from "@/components/auth/school-picker";
 import { firstRouteForRoles } from "@/lib/auth/navigation";
 import { toUserMessage } from "@/lib/errors/user-message";
 import type { RegistrationSchool } from "@/lib/schools/directory";
+import { EmailVerificationDialog } from "@/components/auth/email-verification-dialog";
+import {
+  buildEmailVerificationRedirectUrl,
+  EMAIL_VERIFICATION_COOLDOWN_SECONDS,
+  isEmailNotConfirmedError,
+  normalizeEmail,
+  readResendCooldown,
+  rememberResend,
+} from "@/lib/auth/email-verification";
 
 type AuthMode = "dang_nhap" | "dang_ky";
 type MessageTone = "danger" | "info" | "success" | "warning";
@@ -71,6 +80,11 @@ export function LoginForm() {
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<MessageTone>("info");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [isResending, setIsResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   useEffect(() => {
     const search = new URLSearchParams(window.location.search);
@@ -85,6 +99,63 @@ export function LoginForm() {
       return () => window.clearTimeout(timer);
     }
   }, []);
+
+  useEffect(() => {
+    if (!verificationEmail) return;
+    const updateCooldown = () => setResendCooldown(readResendCooldown(sessionStorage, verificationEmail));
+    updateCooldown();
+    const timer = window.setInterval(updateCooldown, 1_000);
+    return () => window.clearInterval(timer);
+  }, [verificationEmail]);
+
+  const closeVerificationDialog = useCallback(() => {
+    setVerificationDialogOpen(false);
+    setMode("dang_nhap");
+  }, []);
+
+  async function resendVerification(targetEmail = verificationEmail || email) {
+    if (!supabase) return;
+
+    const normalizedEmail = normalizeEmail(targetEmail);
+    if (!normalizedEmail) {
+      setMessage("Hãy nhập email đã dùng để đăng ký.");
+      setMessageTone("warning");
+      return;
+    }
+
+    const currentCooldown = readResendCooldown(sessionStorage, normalizedEmail);
+    if (currentCooldown > 0) {
+      setResendCooldown(currentCooldown);
+      return;
+    }
+
+    setIsResending(true);
+    setResendMessage("");
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: { emailRedirectTo: buildEmailVerificationRedirectUrl(getPublicAppUrl()) },
+    });
+    setIsResending(false);
+
+    if (error) {
+      const rateLimited = error.status === 429 || error.message.toLowerCase().includes("rate");
+      const errorMessage = rateLimited
+        ? "Bạn đã gửi quá nhiều yêu cầu. Vui lòng chờ một lúc rồi thử lại."
+        : "Chưa thể gửi lại email xác thực. Vui lòng thử lại sau.";
+      setResendMessage(errorMessage);
+      setMessage(errorMessage);
+      setMessageTone("danger");
+      return;
+    }
+
+    rememberResend(sessionStorage, normalizedEmail);
+    setVerificationEmail(normalizedEmail);
+    setResendCooldown(EMAIL_VERIFICATION_COOLDOWN_SECONDS);
+    setResendMessage("Đã gửi lại email xác thực. Hãy kiểm tra hộp thư và thư rác.");
+    setMessage("Đã gửi lại email xác thực. Hãy kiểm tra hộp thư và thư rác.");
+    setMessageTone("success");
+  }
 
   async function finishSchoolRegistration(schoolId: string) {
     if (!supabase || !schoolId) return null;
@@ -140,7 +211,7 @@ export function LoginForm() {
             email,
             password,
             options: {
-              emailRedirectTo: `${getPublicAppUrl()}/login?xac_nhan_email=1`,
+              emailRedirectTo: buildEmailVerificationRedirectUrl(getPublicAppUrl()),
               data: {
                 ho_ten: hoTen.trim(),
                 co_so_id: selectedSchoolId,
@@ -151,7 +222,15 @@ export function LoginForm() {
 
     if (result.error) {
       setIsSubmitting(false);
-      setMessage(authErrorMessage(result.error.message));
+      const emailNotConfirmed = mode === "dang_nhap" && isEmailNotConfirmedError(result.error);
+      if (emailNotConfirmed) {
+        setVerificationEmail(normalizeEmail(email));
+      } else {
+        setVerificationEmail("");
+      }
+      setMessage(emailNotConfirmed
+        ? "Tài khoản chưa xác thực email. Hãy mở email xác thực hoặc yêu cầu gửi lại trước khi đăng nhập."
+        : authErrorMessage(result.error.message));
       setMessageTone("danger");
       void reportLoginFailure(result.error.message);
       return;
@@ -194,8 +273,13 @@ export function LoginForm() {
     }
 
     setIsSubmitting(false);
-    setMessage("Tài khoản đã được tạo. Hãy xác nhận email, sau đó đăng nhập để vào đúng trường đã chọn.");
-    setMessageTone("success");
+    const registeredEmail = normalizeEmail(email);
+    rememberResend(sessionStorage, registeredEmail);
+    setVerificationEmail(registeredEmail);
+    setResendCooldown(EMAIL_VERIFICATION_COOLDOWN_SECONDS);
+    setResendMessage("");
+    setVerificationDialogOpen(true);
+    setMessage("");
     setMode("dang_nhap");
   }
 
@@ -306,7 +390,35 @@ export function LoginForm() {
         </button>
       </form>
 
-      {message ? <Alert className="mt-4" id="login-status" tone={messageTone}>{message}</Alert> : null}
+      {message ? (
+        <Alert className="mt-4" id="login-status" tone={messageTone}>
+          <span>{message}</span>
+          {mode === "dang_nhap" && verificationEmail && messageTone === "danger" ? (
+            <button
+              className="ml-2 font-semibold underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={isResending || resendCooldown > 0}
+              type="button"
+              onClick={() => void resendVerification()}
+            >
+              {isResending
+                ? "Đang gửi…"
+                : resendCooldown > 0
+                  ? `Gửi lại sau ${resendCooldown} giây`
+                  : "Gửi lại email xác thực"}
+            </button>
+          ) : null}
+        </Alert>
+      ) : null}
+
+      <EmailVerificationDialog
+        cooldown={resendCooldown}
+        email={verificationEmail}
+        isOpen={verificationDialogOpen}
+        isSending={isResending}
+        message={resendMessage}
+        onContinue={closeVerificationDialog}
+        onResend={() => void resendVerification()}
+      />
     </div>
   );
 }

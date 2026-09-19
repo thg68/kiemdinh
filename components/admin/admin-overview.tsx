@@ -25,8 +25,8 @@ const quickLinks = [
   },
   {
     href: "/quan-tri/nguoi-tham-gia",
-    title: "Người tham gia",
-    description: "Kiểm soát trạng thái tài khoản trên toàn hệ thống.",
+    title: "Tài khoản người dùng",
+    description: "Kiểm tra email đăng ký, xác thực và trạng thái tài khoản toàn hệ thống.",
   },
   {
     href: "/quan-tri/minh-chung",

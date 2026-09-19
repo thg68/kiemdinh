@@ -170,7 +170,7 @@ export function AdminSchools() {
     setCreating(false);
     await loadSchools();
     setMessageTone("success");
-    setMessage(`Đã tạo ${createdSchoolName}. Bạn có thể cấp quyền Hiệu trưởng tại mục “Người tham gia”.`);
+    setMessage(`Đã tạo ${createdSchoolName}. Bạn có thể cấp quyền Hiệu trưởng tại mục “Tài khoản người dùng”.`);
   }
 
   async function updateStatus() {

@@ -48,6 +48,19 @@ if (appUrl.hostname === "localhost" || appUrl.hostname === "127.0.0.1") {
   process.exit(1);
 }
 
+if (
+  environment === "production"
+  && (
+    appUrl.origin !== "https://kdclgd.io.vn"
+    || appUrl.pathname !== "/"
+    || appUrl.search
+    || appUrl.hash
+  )
+) {
+  console.error("NEXT_PUBLIC_APP_URL production phải là chính xác https://kdclgd.io.vn.");
+  process.exit(1);
+}
+
 if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error("Không đưa SUPABASE_SERVICE_ROLE_KEY vào build hoặc runtime của ứng dụng.");
   process.exit(1);

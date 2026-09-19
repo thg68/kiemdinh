@@ -68,7 +68,9 @@ Cảnh báo vận hành cần theo dõi:
 - [x] Workers domain trả HTTPS, HSTS, CSP, X-Content-Type-Options và frame protection.
 - [ ] Supabase Authentication Site URL bằng domain production.
 - [ ] Redirect URLs gồm domain production và staging chính xác.
-- [ ] Email confirmation/reset redirect về đúng `/login` hoặc `/quen-mat-khau`.
+- [ ] Email confirmation/reset redirect về đúng `/xac-thuc-email` hoặc `/quen-mat-khau`.
+- [ ] Domain gửi Resend đã có SPF, DKIM và DMARC hợp lệ; Send Email Hook dùng đúng secret.
+- [ ] Kiểm tra email HTML và plain text trên Gmail, Outlook và màn hình điện thoại.
 - [ ] OAuth callback được khai báo nếu sau này bật OAuth; hiện chưa có OAuth trong phạm vi.
 - [x] CSP chỉ cho kết nối Supabase qua HTTPS/WSS.
 - [ ] Kiểm tra CORS tại mọi dịch vụ ngoài Supabase nếu bổ sung; hiện chưa có integration ngoài.

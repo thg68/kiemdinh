@@ -1362,6 +1362,14 @@ button:disabled {
   grid-template-columns: minmax(0, 720px);
 }
 
+.admin-toolbar.admin-participants-toolbar {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+
+.admin-account-table {
+  min-width: 1280px;
+}
+
 .admin-school-evidence-table {
   min-width: 1040px;
 }

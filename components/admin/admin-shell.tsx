@@ -21,7 +21,7 @@ import {
 const adminNavigation = [
   { href: "/quan-tri", label: "Tổng quan" },
   { href: "/quan-tri/co-so", label: "Cơ sở giáo dục" },
-  { href: "/quan-tri/nguoi-tham-gia", label: "Người tham gia" },
+  { href: "/quan-tri/nguoi-tham-gia", label: "Tài khoản người dùng" },
   { href: "/quan-tri/minh-chung", label: "Quản trị minh chứng" },
   { href: "/quan-tri/bo-tieu-chuan", label: "Bộ tiêu chuẩn" },
   { href: "/quan-tri/van-hanh", label: "Vận hành hệ thống" },

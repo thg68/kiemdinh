@@ -36,10 +36,8 @@ type ParticipantRow = {
   total_count: number;
 };
 
-type EditableParticipantRow = ParticipantRow & {
-  nguoi_dung_id: string;
-  co_so_id: string;
-  co_so_ten: string;
+type ConfigurableParticipantRow = ParticipantRow & {
+  email_da_xac_thuc: true;
 };
 
 type ParticipantSettingsDraft = {
@@ -64,8 +62,8 @@ function statusTone(status: ParticipantStatus) {
   return "default" as const;
 }
 
-function isEditableParticipant(row: ParticipantRow): row is EditableParticipantRow {
-  return Boolean(row.nguoi_dung_id && row.co_so_id && row.co_so_ten);
+function isConfigurableParticipant(row: ParticipantRow): row is ConfigurableParticipantRow {
+  return row.email_da_xac_thuc;
 }
 
 export function AdminParticipants() {
@@ -85,11 +83,11 @@ export function AdminParticipants() {
   const [working, setWorking] = useState(false);
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "warning">("warning");
-  const [settingsRow, setSettingsRow] = useState<EditableParticipantRow | null>(null);
+  const [settingsRow, setSettingsRow] = useState<ConfigurableParticipantRow | null>(null);
   const [settingsDraft, setSettingsDraft] = useState<ParticipantSettingsDraft | null>(null);
   const [pendingSettings, setPendingSettings] = useState<{
     draft: ParticipantSettingsDraft;
-    row: EditableParticipantRow;
+    row: ConfigurableParticipantRow;
   } | null>(null);
   const deferredKeyword = useDeferredValue(keyword.trim());
   const deferredSchoolSearch = useDeferredValue((settingsRow ? settingsSchoolSearch : schoolSearch).trim());
@@ -160,18 +158,18 @@ export function AdminParticipants() {
   }, [loadParticipants]);
 
   function openSettings(row: ParticipantRow) {
-    if (!isEditableParticipant(row)) return;
+    if (!isConfigurableParticipant(row)) return;
     setSettingsRow(row);
     setSettingsSchoolSearch("");
-    setSchools((current) => current.some((school) => school.id === row.co_so_id)
+    setSchools((current) => !row.co_so_id || !row.co_so_ten || current.some((school) => school.id === row.co_so_id)
       ? current
       : [...current, { id: row.co_so_id, ma_truong: null, ten: row.co_so_ten }]);
     setSettingsDraft({
       isPrincipal: row.vai_tro_mas.includes("PRINCIPAL"),
-      schoolId: row.co_so_id,
+      schoolId: row.co_so_id ?? "",
       status: row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
         ? row.trang_thai
-        : "inactive",
+        : "active",
     });
   }
 
@@ -179,12 +177,19 @@ export function AdminParticipants() {
     if (!pendingSettings) return;
 
     setWorking(true);
-    const { error } = await supabase.rpc("fn_admin_cap_nhat_nguoi_tham_gia", {
-      p_co_so_id: pendingSettings.draft.schoolId,
-      p_la_hieu_truong: pendingSettings.draft.isPrincipal,
-      p_nguoi_dung_id: pendingSettings.row.nguoi_dung_id,
-      p_trang_thai: pendingSettings.draft.status,
-    });
+    const { error } = pendingSettings.row.nguoi_dung_id
+      ? await supabase.rpc("fn_admin_cap_nhat_nguoi_tham_gia", {
+          p_co_so_id: pendingSettings.draft.schoolId,
+          p_la_hieu_truong: pendingSettings.draft.isPrincipal,
+          p_nguoi_dung_id: pendingSettings.row.nguoi_dung_id,
+          p_trang_thai: pendingSettings.draft.status,
+        })
+      : await supabase.rpc("fn_admin_cau_hinh_tai_khoan_da_xac_thuc", {
+          p_auth_user_id: pendingSettings.row.auth_user_id,
+          p_co_so_id: pendingSettings.draft.schoolId,
+          p_la_hieu_truong: pendingSettings.draft.isPrincipal,
+          p_trang_thai: pendingSettings.draft.status,
+        });
 
     if (error) {
       setMessageTone("warning");
@@ -194,7 +199,9 @@ export function AdminParticipants() {
       return;
     }
 
-    const successMessage = `Đã cập nhật cài đặt của ${pendingSettings.row.ho_ten}.`;
+    const successMessage = pendingSettings.row.nguoi_dung_id
+      ? `Đã cập nhật cài đặt của ${pendingSettings.row.ho_ten}.`
+      : `Đã tạo hồ sơ và cài đặt tài khoản của ${pendingSettings.row.ho_ten}.`;
     setWorking(false);
     setPendingSettings(null);
     setSettingsRow(null);
@@ -344,7 +351,7 @@ export function AdminParticipants() {
                   {rows.map((row) => (
                     <tr key={row.auth_user_id}>
                       <td>
-                        {isEditableParticipant(row) ? (
+                        {isConfigurableParticipant(row) ? (
                           <button
                             className="admin-participant-name-button"
                             type="button"
@@ -380,7 +387,7 @@ export function AdminParticipants() {
                       </td>
                       <td>{formatDate(row.created_at)}</td>
                       <td>
-                        {isEditableParticipant(row) ? (
+                        {isConfigurableParticipant(row) ? (
                           <button
                             aria-label={`Cài đặt ${row.ho_ten}`}
                             className="admin-row-action-button button-secondary min-h-9 gap-2 px-4 py-2 text-xs"
@@ -390,7 +397,7 @@ export function AdminParticipants() {
                             <Settings aria-hidden="true" className="h-4 w-4" />
                             Cài đặt
                           </button>
-                        ) : <span className="admin-cell-meta">Chưa thể cài đặt</span>}
+                        ) : <span className="admin-cell-meta">Cần xác thực email</span>}
                       </td>
                     </tr>
                   ))}
@@ -415,7 +422,7 @@ export function AdminParticipants() {
           setSettingsDraft(null);
         }}
         onSave={() => {
-          if (settingsRow && settingsDraft) {
+          if (settingsRow && settingsDraft?.schoolId) {
             setPendingSettings({ draft: settingsDraft, row: settingsRow });
           }
         }}
@@ -454,7 +461,7 @@ function ParticipantSettingsDialog({
   onClose: () => void;
   onSave: () => void;
   onSchoolSearch: (value: string) => void;
-  row: EditableParticipantRow | null;
+  row: ConfigurableParticipantRow | null;
   schoolSearch: string;
   schools: SchoolOption[];
 }) {
@@ -502,10 +509,11 @@ function ParticipantSettingsDialog({
   const initialStatus: ParticipantSettingsDraft["status"] =
     row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
       ? row.trang_thai
-      : "inactive";
+      : "active";
   const wasPrincipal = row.vai_tro_mas.includes("PRINCIPAL");
   const schoolChanged = draft.schoolId !== row.co_so_id;
-  const changed = schoolChanged || draft.status !== initialStatus || draft.isPrincipal !== wasPrincipal;
+  const needsProfile = !row.nguoi_dung_id;
+  const changed = needsProfile || schoolChanged || draft.status !== initialStatus || draft.isPrincipal !== wasPrincipal;
   const isSystemAdmin = row.vai_tro_mas.includes("SYSTEM_ADMIN");
   const selectedSchool = schools.find((school) => school.id === draft.schoolId);
   const normalizedSchoolSearch = schoolSearch.trim().toLocaleLowerCase("vi");
@@ -593,6 +601,7 @@ function ParticipantSettingsDialog({
                   });
                 }}
               >
+                <option disabled value="">Chọn cơ sở giáo dục</option>
                 {schoolOptions.map((school) => (
                   <option key={school.id} value={school.id}>
                     {school.ten}{school.ma_truong ? ` · ${school.ma_truong}` : ""}
@@ -600,7 +609,11 @@ function ParticipantSettingsDialog({
                 ))}
               </select>
             </label>
-            {schoolChanged ? (
+            {needsProfile && draft.schoolId ? (
+              <p className="admin-user-setting-notice">
+                Khi lưu, hệ thống sẽ tạo hồ sơ tại {selectedSchool?.ten || "trường đã chọn"} và cấp vai trò Giáo viên.
+              </p>
+            ) : schoolChanged ? (
               <p className="admin-user-setting-notice">
                 Khi chuyển sang {selectedSchool?.ten || "trường mới"}, các phân công và vai trò Hội đồng tại {row.co_so_ten} sẽ được gỡ. Lịch sử tài liệu vẫn được giữ nguyên.
               </p>
@@ -668,11 +681,11 @@ function ParticipantSettingsDialog({
           <section className="admin-user-current-roles" aria-label="Vai trò hiện tại">
             <p>Vai trò hiện tại</p>
             <div className="flex flex-wrap gap-1.5">
-              {row.vai_tro_mas.map((code, index) => (
+              {row.vai_tro_mas.length > 0 ? row.vai_tro_mas.map((code, index) => (
                 <StatusBadge key={code} tone={code === "SYSTEM_ADMIN" ? "info" : "default"}>
                   {row.vai_tro_tens[index] || roleLabels[code] || code}
                 </StatusBadge>
-              ))}
+              )) : <span className="admin-cell-meta">Chưa có vai trò; hệ thống sẽ cấp Giáo viên khi lưu.</span>}
             </div>
           </section>
         </div>
@@ -680,7 +693,7 @@ function ParticipantSettingsDialog({
         <footer className="admin-user-dialog-footer">
           <button className="button-secondary" type="button" onClick={onClose}>Hủy</button>
           {changed ? (
-            <button className="button-primary" type="button" onClick={onSave}>Lưu thay đổi</button>
+            <button className="button-primary" disabled={!draft.schoolId} type="button" onClick={onSave}>Lưu thay đổi</button>
           ) : null}
         </footer>
       </div>
@@ -693,7 +706,7 @@ function SettingsConfirmation({
   settings,
 }: {
   schools: SchoolOption[];
-  settings: { draft: ParticipantSettingsDraft; row: EditableParticipantRow };
+  settings: { draft: ParticipantSettingsDraft; row: ConfigurableParticipantRow };
 }) {
   const { draft, row } = settings;
   const school = schools.find((item) => item.id === draft.schoolId);
@@ -702,13 +715,18 @@ function SettingsConfirmation({
   const initialStatus: ParticipantSettingsDraft["status"] =
     row.trang_thai === "active" || row.trang_thai === "inactive" || row.trang_thai === "locked"
       ? row.trang_thai
-      : "inactive";
+      : "active";
 
   return (
     <div className="grid gap-2">
       <p>Các thay đổi sau sẽ được áp dụng cho {row.ho_ten}:</p>
       <ul className="list-disc space-y-1 pl-5">
-        {schoolChanged ? <li>Chuyển từ {row.co_so_ten} sang {school?.ten || "trường đã chọn"}.</li> : null}
+        {!row.nguoi_dung_id ? (
+          <>
+            <li>Tạo hồ sơ tại {school?.ten || "trường đã chọn"}.</li>
+            <li>Cấp vai trò Giáo viên.</li>
+          </>
+        ) : schoolChanged ? <li>Chuyển từ {row.co_so_ten} sang {school?.ten || "trường đã chọn"}.</li> : null}
         {principalChanged ? (
           <li>{draft.isPrincipal ? "Cấp quyền Hiệu trưởng." : "Gỡ quyền Hiệu trưởng."}</li>
         ) : null}
